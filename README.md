@@ -1,3 +1,3 @@
 # redux-automata
 
-DRY and OOP redux
+An attempt on DRY and OOP redux

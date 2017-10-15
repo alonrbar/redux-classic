@@ -1,6 +1,6 @@
 import { Store } from "redux";
 
-const DEFAULT_STORE_KEY = Symbol('default_store');
+const DEFAULT_STORE_KEY = Symbol('DEFAULT_STORE');
 
 interface IStoresMap {
     [storeId: string]: Store<any>;

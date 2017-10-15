@@ -1,5 +1,7 @@
-import { Reducer, AnyAction } from "redux";
-import { ReducerCreator, IActionsMap, IStateListener } from "./types";
+import { Reducer, AnyAction, combineReducers, ReducersMapObject } from "redux";
+import { AUTOMATON_CREATOR } from "../automata";
+import { IActionsMap } from "../actions";
+import { ReducerCreator, IStateListener } from "./types";
 
 export function createReducer<TState, TActions extends IActionsMap<TState>>(creator: ReducerCreator<TState, TActions>, listener?: IStateListener<TState>): Reducer<TState> {
 

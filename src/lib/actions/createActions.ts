@@ -1,12 +1,10 @@
 import { Dispatch } from 'redux';
-import { ReducerCreator, IActionsMap } from './types';
+import { IActionsMap } from './types';
 
 export function createActions<TState, TActions extends IActionsMap<TState>>(dispatch: Dispatch<TState>, actions: TActions): TActions {
 
-    console.warn('createActions');
-
     if (!Object.keys(actions).length)
-        throw new Error("Argument 'actions' expected to have at least one action.");
+        console.warn("Argument 'actions' expected to have at least one action but have none.");
 
     var outputActions: TActions;
     (outputActions as any) = {};
