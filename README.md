@@ -1,3 +1,3 @@
 # redux-automata
 
-An attempt on DRY and OOP redux
+An attempt at a type-safe, DRY and OO redux
