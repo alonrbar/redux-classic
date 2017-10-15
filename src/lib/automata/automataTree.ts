@@ -18,11 +18,15 @@ export function createTree(store: Store<any>, map: ICreatorsMap | AutomatonCreat
         }
         return resultTree;
 
-    } else if (typeof map === 'function' && (map as any)[AUTOMATON_CREATOR]) {
-        return new Automaton(store, map);
+    } else if (typeof map === 'function') {
+        if ((map as any)[AUTOMATON_CREATOR]) {
+            return new Automaton(store, map);
+        } else {
+            throw new Error("Invalid argument 'map'. Function is not an automaton creator. Did you forget to call 'createAutomaton' or to invoke the creator?")
+        }
 
     } else {
-        throw new Error("Invalid argument 'map'. ")
+        throw new Error("Invalid argument 'map'. Must be an object or a function.")
     }
 }
 

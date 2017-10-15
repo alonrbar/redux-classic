@@ -1,13 +1,16 @@
-import { Reducer, AnyAction, combineReducers, ReducersMapObject } from "redux";
-import { AUTOMATON_CREATOR } from "../automata";
-import { IActionsMap } from "../actions";
-import { ReducerCreator, IStateListener } from "./types";
+import { AnyAction, combineReducers, Reducer, ReducersMapObject } from 'redux';
+import { IActionsMap } from '../actions';
+import { AUTOMATON_CREATOR, AUTOMATON_INITIAL_STATE } from '../automata';
+import { IStateListener, ReducerCreator } from './types';
 
 export function createReducer<TState, TActions extends IActionsMap<TState>>(creator: ReducerCreator<TState, TActions>, listener?: IStateListener<TState>): Reducer<TState> {
 
     var reducersMap = creator(undefined);
 
     return (state: TState, action: AnyAction) => {
+
+        if (state === undefined)
+            return (creator as any)[AUTOMATON_INITIAL_STATE];
 
         // check if should use this reducer
         if (typeof reducersMap[action.type] !== 'function')
