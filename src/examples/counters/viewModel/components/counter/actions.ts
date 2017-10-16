@@ -16,3 +16,5 @@ export const counterComponentActions = (state: CounterComponentState) => ({
         }
     }
 });
+const actions = counterComponentActions(undefined);
+export type CounterComponentActions = typeof actions;
