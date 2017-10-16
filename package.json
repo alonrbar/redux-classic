@@ -12,12 +12,16 @@
   "dependencies": {
     "aurelia-bootstrapper": "^2.1.1",
     "aurelia-framework": "^1.1.5",
+    "redux": "^3.7.2",
+    "redux-devtools-extension": "^2.13.2"
+  },
+  "devDependencies": {
     "aurelia-webpack-plugin": "^2.0.0-rc.5",
     "html-webpack-plugin": "^2.30.1",
     "progress-bar-webpack-plugin": "^1.10.0",
-    "redux": "^3.7.2",
-    "redux-devtools-extension": "^2.13.2",
     "ts-loader": "^2.3.7",
+    "ts-nameof": "^0.10.2",
+    "ts-nameof-loader": "^1.0.1",
     "typescript": "^2.5.3",
     "webpack": "^3.7.1",
     "webpack-dev-server": "^2.9.2",

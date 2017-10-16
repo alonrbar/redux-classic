@@ -1,3 +1,4 @@
+export * from './actions';
 export * from './component';
-export * from './componentCreator';
+export * from './componentSchema';
 export * from './componentTree';

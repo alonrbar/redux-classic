@@ -1,7 +1,6 @@
-import { CounterComponentState } from "./counterComponentState";
-import { componentCreator } from "lib";
+import { CounterComponentState } from "./state";
 
-export const createCounter = componentCreator(() => new CounterComponentState(), (state: CounterComponentState) => ({
+export const counterComponentActions = (state: CounterComponentState) => ({
     INCREMENT: (counterId: number) => {
         if (counterId !== state.counter.id){
             console.log(state.counter.id);
@@ -16,4 +15,4 @@ export const createCounter = componentCreator(() => new CounterComponentState(),
             }
         }
     }
-}));
+});

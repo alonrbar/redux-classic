@@ -1,16 +1,16 @@
 import { bootstrap } from 'aurelia-bootstrapper';
 import { Aurelia, PLATFORM } from 'aurelia-framework';
-import { appCreator } from 'examples/counters/viewModel/app';
-import { createApp, createTree } from 'lib';
+import { appSchema } from 'examples/counters/viewModel/components/app';
 import { devToolsEnhancer } from 'redux-devtools-extension';
+import { ReduxApp } from 'lib';
 //
 // bootstrap redux
 // 
 
-const app = createApp(appCreator, devToolsEnhancer(undefined));
-(app.component as any).counter1.actions.INCREMENT(1);
-(app.component as any).counter1.actions.INCREMENT(1);
-(app.component as any).counter2.actions.INCREMENT(2);
+const app = new ReduxApp(appSchema, devToolsEnhancer(undefined));
+app.root.children.counter1.component.actions.INCREMENT(1);
+app.root.children.counter1.component.actions.INCREMENT(1);
+app.root.children.counter2.component.actions.INCREMENT(2);
 
 //
 // bootstrap Aurelia

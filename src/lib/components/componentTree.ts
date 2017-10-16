@@ -1,43 +1,47 @@
 import { combineReducers, Reducer, ReducersMapObject, Store } from 'redux';
-import { createReducer } from '../reducers';
 import { Component } from './component';
-import { ICreatorsMap, ComponentCreator, COMPONENT_CREATOR } from './componentCreator';
+import { COMPONENT_CREATOR, ComponentSchema, IComponentSchemaTree } from './componentSchema';
 
-export interface IComponentTree {
-    [key: string]: Component<any, any> | IComponentTree;
-}
+export type ComponentTreeCreator = IComponentSchemaTree | ComponentSchema<any, any>;
 
-export function createTree(store: Store<any>, map: ICreatorsMap | ComponentCreator<any, any>): IComponentTree | Component<any, any> {
+export class ComponentTree {
 
-    if (typeof map === 'object') {
-        var resultTree: IComponentTree = {};
-        for (let key of Object.keys(map)) {
-            let subTree = createTree(store, map[key] as any);
-            if (subTree !== null)
-                resultTree[key] = subTree;
-        }
-        return resultTree;
+    public component: Component<any, any>;
+    public children: { [key: string]: ComponentTree; } = {}
 
-    } else if (typeof map === 'function') {
-        if ((map as any)[COMPONENT_CREATOR]) {
-            return new Component(store, map);
-        } else {
-            throw new Error("Invalid argument 'map'. Function is not a component creator. Did you forget to call 'createComponent' or to invoke the creator?")
+    constructor(store: Store<any>, schema: ComponentTreeCreator) {
+
+        if (schema instanceof ComponentSchema) {
+            this.createSelf(store, schema);
+        } else if (typeof schema === 'object') {
+            this.createChildren(store, schema);
         }
 
-    } else {
-        throw new Error("Invalid argument 'map'. Must be an object or a function.")
+        if (!this.component && !this.children)
+            throw new Error(`Invalid ${nameof(schema)}. ${nameof(ComponentTree)} initialization failed.`)
     }
-}
 
-export function getReducer(component: IComponentTree | Component<any, any>): Reducer<any> {
-    if (component instanceof Component) {
-        return component.reducer;
-    } else {
-        const result: ReducersMapObject = {};
-        for (let key of Object.keys(component)) {
-            result[key] = getReducer(component[key]);
+    public getReducer(): Reducer<any> {
+        if (this.component) {
+            return this.component.reducer;
+        } else {
+            const result: ReducersMapObject = {};
+            for (let key of Object.keys(this.children)) {
+                result[key] = this.children[key].getReducer();
+            }
+            return combineReducers(result);
         }
-        return combineReducers(result);
+    }
+
+    private createSelf(store: Store<any>, schema: ComponentSchema<any, any>): void {
+        this.component = new Component(store.dispatch, schema);
+    }
+
+    private createChildren(store: Store<any>, schema: IComponentSchemaTree): void {
+        for (let key of Object.keys(schema)) {
+            let subTree = new ComponentTree(store, schema[key]);
+            if (subTree !== null)
+                this.children[key] = subTree;
+        }
     }
 }
