@@ -1,7 +1,7 @@
 import { Store, createStore, StoreEnhancer } from "redux";
 import { ComponentTree, ComponentTreeCreator } from "./components";
 
-export class ReduxApp<S> {
+export class ReduxApp<S = any> {
 
     public readonly root: ComponentTree;
     public readonly store: Store<S>;

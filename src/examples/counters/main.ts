@@ -13,6 +13,8 @@ const app = new ReduxApp(appSchema, devToolsEnhancer(undefined));
 app.root.children.counter1.component.actions.INCREMENT(1);
 app.root.children.counter2.component.actions.INCREMENT(2);
 
+console.log(app.root.getState());
+
 //
 // bootstrap Aurelia
 //

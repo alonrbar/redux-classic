@@ -33,6 +33,25 @@ export class ComponentTree {
         }
     }
 
+    public getState(): any {
+
+        var selfState: any = {};
+        if (this.component)
+            selfState = this.component.state;
+
+        var childrenState: any = {};
+        if (this.children) {
+            Object.keys(this.children).forEach(key => {
+                childrenState[key] = this.children[key].getState();
+            })
+        }
+
+        return {
+            ...selfState,
+            ...childrenState
+        };
+    }
+
     private createSelf(store: Store<any>, schema: ComponentSchema<any, any>): void {
         this.component = new Component(store.dispatch, schema);
     }

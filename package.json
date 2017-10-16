@@ -1,6 +1,6 @@
 {
   "name": "redux-app",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "An attempt at a type-safe, DRY and OO redux",
   "main": "index.js",
   "scripts": {
