@@ -1,7 +1,7 @@
 {
-  "name": "redux-automata",
-  "version": "1.0.0",
-  "description": "DRY and OOP redux",
+  "name": "redux-app",
+  "version": "0.0.0",
+  "description": "An attempt at a type-safe, DRY and OO redux",
   "main": "index.js",
   "scripts": {
     "start": "webpack-dev-server --watch",
