@@ -1,7 +1,7 @@
 import { AnyAction, combineReducers, Reducer, ReducersMapObject } from 'redux';
 import { IActionsMap } from '../actions';
-import { AUTOMATON_CREATOR, AUTOMATON_INITIAL_STATE } from '../automata';
 import { IStateListener, ReducerCreator } from './types';
+import { COMPONENT_INITIAL_STATE } from '../components';
 
 export function createReducer<TState, TActions extends IActionsMap<TState>>(creator: ReducerCreator<TState, TActions>, listener?: IStateListener<TState>): Reducer<TState> {
 
@@ -10,7 +10,7 @@ export function createReducer<TState, TActions extends IActionsMap<TState>>(crea
     return (state: TState, action: AnyAction) => {
 
         if (state === undefined)
-            return (creator as any)[AUTOMATON_INITIAL_STATE];
+            return (creator as any)[COMPONENT_INITIAL_STATE];
 
         // check if should use this reducer
         if (typeof reducersMap[action.type] !== 'function')

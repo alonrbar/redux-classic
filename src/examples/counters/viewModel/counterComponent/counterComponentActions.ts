@@ -1,7 +1,7 @@
 import { CounterComponentState } from "./counterComponentState";
-import { automatonCreator } from "lib/automata";
+import { componentCreator } from "lib";
 
-export const counterAutoCreate = automatonCreator(() => new CounterComponentState(), (state: CounterComponentState) => ({
+export const createCounter = componentCreator(() => new CounterComponentState(), (state: CounterComponentState) => ({
     INCREMENT: (counterId: number) => {
         if (counterId !== state.counter.id){
             console.log(state.counter.id);

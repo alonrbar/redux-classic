@@ -1,17 +1,17 @@
 import { Dispatch, Reducer, Store } from 'redux';
 import { createActions, IActionsMap } from '../actions';
-import { AutomatonCreator } from '../automata';
 import { createReducer } from '../reducers';
+import { ComponentCreator } from './componentCreator';
 
-export class Automaton<TState, TActions extends IActionsMap<TState>> {
+export class Component<TState, TActions extends IActionsMap<TState>> {
 
     public reducer: Reducer<TState>;
     public actions: IActionsMap<TState>;
     public state: TState;
 
-    constructor(store: Store<TState>, creator: AutomatonCreator<TState, TActions>);
-    constructor(dispatch: Dispatch<TState>, creator: AutomatonCreator<TState, TActions>); // tslint:disable-line:unified-signatures
-    constructor(storeOrDispatch: Store<TState> | Dispatch<TState>, creator: AutomatonCreator<TState, TActions>) {
+    constructor(store: Store<TState>, creator: ComponentCreator<TState, TActions>);
+    constructor(dispatch: Dispatch<TState>, creator: ComponentCreator<TState, TActions>); // tslint:disable-line:unified-signatures
+    constructor(storeOrDispatch: Store<TState> | Dispatch<TState>, creator: ComponentCreator<TState, TActions>) {
         
         var dispatch = (storeOrDispatch as any).dispatch || storeOrDispatch;
 

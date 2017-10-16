@@ -1,6 +1,6 @@
 
-export type AutomatonAction<TState> = (...payload: any[]) => TState;
+export type ComponentAction<TState> = (...payload: any[]) => TState;
 
 export interface IActionsMap<TState> {
-    [actionName: string]: AutomatonAction<TState>;
+    [actionName: string]: ComponentAction<TState>;
 }
