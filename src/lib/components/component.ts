@@ -1,35 +1,101 @@
-import { AnyAction, Dispatch, Reducer, Store } from 'redux';
-import { IActionsMap } from './actions';
-import { COMPONENT_INITIAL_STATE, ComponentSchema, ReducerCreator, COMPONENT_CREATOR } from './componentSchema';
+import { AnyAction, combineReducers, Dispatch, Reducer, ReducersMapObject, Store } from 'redux';
+import { ComponentSchema, IActionsMap, IComponentSchemaTree, isComponentSchema, isComponentSchemaTree, ReducerCreator, IStateListener } from './types';
 
-export type IStateListener<TState> = (state: TState) => void;
+export type ComponentKeys<TState> = (keyof TState) | 'actions' | 'state';
 
-export class Component<TState, TActions extends IActionsMap<TState>> {
+export type TypedComponent<TState, TActions> = IComponent<TState, TActions> & TState;
 
-    public reducer: Reducer<TState>;
-    public actions: IActionsMap<TState>;
+export interface IComponent<TState, TActions> {
+    actions: TActions;
+    state: TState;
+    getReducer(): Reducer<any>;
+    getStateDeep(): TState;
+}
+
+const COMPONENT_INITIAL_STATE = Symbol('COMPONENT_INITIAL_STATE');
+
+export class Component<TState, TActions extends IActionsMap<TState>> implements IComponent<TState, TActions> {
+
+    public actions: TActions;
     public state: TState;
+    [subComponentName: string]: Component<any, any> | any;
 
-    constructor(dispatch: Dispatch<TState>, schema: ComponentSchema<TActions>) {
-        this.reducer = this.createReducer(this.getReducerCreator(schema), this.updateState.bind(this));
+    private ownReducer: Reducer<TState>;
+
+    constructor(dispatch: Dispatch<TState>, schema: IComponentSchemaTree, throwOnEmpty = true) {
+
+        if (isComponentSchema(schema)) {
+            this.createSelf(dispatch, schema);
+        } else if (isComponentSchemaTree(schema)) {
+            this.createChildren(dispatch, schema);
+        }
+
+        if (Object.keys(this).every(key => this[key] === 'undefined')) {
+            if (throwOnEmpty) {
+                throw new Error(`Invalid ${nameof(schema)}. Could not c ${nameof(Component)} initialization failed.`)
+            } else {
+                return undefined;
+            }
+        }
+    }
+
+    public getReducer(): Reducer<any> {
+        if (this.ownReducer) {
+            return this.ownReducer;
+        } else {
+            const result: ReducersMapObject = {};
+            for (let key of Object.keys(this)) {
+                if (this[key] instanceof Component)
+                    result[key] = this[key].getReducer();
+            }
+            return combineReducers(result);
+        }
+    }
+
+    public getStateDeep(): TState {
+
+        var selfState: any = {};
+        if (this.component)
+            selfState = this.component.state;
+
+        var childrenState: any = {};
+        for (let key of Object.keys(this)) {
+            if (this[key] instanceof Component)
+                childrenState[key] = this[key].getStateDeep();
+        }
+
+        return {
+            ...selfState,
+            ...childrenState
+        };
+    }
+
+    private createSelf(dispatch: Dispatch<TState>, schema: ComponentSchema<TState, TActions>): void {
+        this.ownReducer = this.createReducer(this.getReducerCreator(schema), this.updateState.bind(this));
         this.actions = this.createActions(dispatch, this.getActions(schema));
     }
 
-    public getReducerCreator(schema: ComponentSchema<TActions>): ReducerCreator<TState, TActions> {
+    private createChildren(store: Dispatch<TState>, schema: IComponentSchemaTree): void {
+        for (let key of Object.keys(schema)) {
+            this[key] = new Component(store, schema[key] as IComponentSchemaTree, false);
+        }
+    }
+
+    private getReducerCreator(schema: ComponentSchema<TState, TActions>): ReducerCreator<TState, TActions> {
 
         // https://stackoverflow.com/questions/1833588/javascript-clone-a-function
         const creatorClone = (schema.constructor as any).actions.bind({});
 
         // ReducerCreators are just plain functions. That's why we decorate them to
         // distinguish them from other functions.
-        (creatorClone as any)[COMPONENT_CREATOR] = true;
+        // (creatorClone as any)[COMPONENT_CREATOR] = true;
         // in addition we store some useful information for later
         (creatorClone as any)[COMPONENT_INITIAL_STATE] = () => Object.create(schema);
 
         return creatorClone;
     }
 
-    private getActions(schema: ComponentSchema<TActions>): TActions {
+    private getActions(schema: ComponentSchema<TState, TActions>): TActions {
         return this.getReducerCreator(schema)(undefined);
     }
 
@@ -63,11 +129,8 @@ export class Component<TState, TActions extends IActionsMap<TState>> {
 
         return (state: TState, action: AnyAction) => {
 
-            if (state === undefined){
-                var initial = (creator as any)[COMPONENT_INITIAL_STATE];
-                console.log(initial);
-                return initial();
-            }
+            if (state === undefined)
+                return (creator as any)[COMPONENT_INITIAL_STATE]();
 
             // check if should use this reducer
             if (typeof reducersMap[action.type] !== 'function')

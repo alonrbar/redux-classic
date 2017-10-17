@@ -7,12 +7,12 @@ import { App } from './viewModel/app';
 // bootstrap redux
 // 
 
-const app = new ReduxApp(new App(), devToolsEnhancer(undefined));
-app.root.children.counter1.component.actions.INCREMENT(1);
-app.root.children.counter1.component.actions.INCREMENT(1);
-app.root.children.counter2.component.actions.INCREMENT(2);
+const app = new ReduxApp<App>(new App(), devToolsEnhancer(undefined));
+app.root.counter1.actions.INCREMENT(1);
+app.root.counter1.actions.INCREMENT(1);
+app.root.counter2.actions.INCREMENT(2);
 
-console.log(app.root.getState());
+console.log(app.root.getStateDeep());
 
 //
 // bootstrap Aurelia
