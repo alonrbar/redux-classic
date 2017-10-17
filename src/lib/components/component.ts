@@ -1,6 +1,6 @@
 import { AnyAction, Dispatch, Reducer, Store } from 'redux';
 import { IActionsMap } from './actions';
-import { COMPONENT_INITIAL_STATE, ComponentSchema, ReducerCreator } from './componentSchema';
+import { COMPONENT_INITIAL_STATE, ComponentSchema, ReducerCreator, COMPONENT_CREATOR } from './componentSchema';
 
 export type IStateListener<TState> = (state: TState) => void;
 
@@ -10,9 +10,27 @@ export class Component<TState, TActions extends IActionsMap<TState>> {
     public actions: IActionsMap<TState>;
     public state: TState;
 
-    constructor(dispatch: Dispatch<TState>, schema: ComponentSchema<TState, TActions>) {
-        this.reducer = this.createReducer(schema.getReducerCreator(), this.updateState.bind(this));
-        this.actions = this.createActions(dispatch, schema.getActions());
+    constructor(dispatch: Dispatch<TState>, schema: ComponentSchema<TActions>) {
+        this.reducer = this.createReducer(this.getReducerCreator(schema), this.updateState.bind(this));
+        this.actions = this.createActions(dispatch, this.getActions(schema));
+    }
+
+    public getReducerCreator(schema: ComponentSchema<TActions>): ReducerCreator<TState, TActions> {
+
+        // https://stackoverflow.com/questions/1833588/javascript-clone-a-function
+        const creatorClone = (schema.constructor as any).actions.bind({});
+
+        // ReducerCreators are just plain functions. That's why we decorate them to
+        // distinguish them from other functions.
+        (creatorClone as any)[COMPONENT_CREATOR] = true;
+        // in addition we store some useful information for later
+        (creatorClone as any)[COMPONENT_INITIAL_STATE] = () => Object.create(schema);
+
+        return creatorClone;
+    }
+
+    private getActions(schema: ComponentSchema<TActions>): TActions {
+        return this.getReducerCreator(schema)(undefined);
     }
 
     private updateState(newState: TState): void {
@@ -45,8 +63,11 @@ export class Component<TState, TActions extends IActionsMap<TState>> {
 
         return (state: TState, action: AnyAction) => {
 
-            if (state === undefined)
-                return (creator as any)[COMPONENT_INITIAL_STATE];
+            if (state === undefined){
+                var initial = (creator as any)[COMPONENT_INITIAL_STATE];
+                console.log(initial);
+                return initial();
+            }
 
             // check if should use this reducer
             if (typeof reducersMap[action.type] !== 'function')

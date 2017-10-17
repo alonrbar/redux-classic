@@ -1,19 +1,27 @@
 import { combineReducers, Reducer, ReducersMapObject, Store } from 'redux';
 import { Component } from './component';
-import { COMPONENT_CREATOR, ComponentSchema, IComponentSchemaTree } from './componentSchema';
+import { COMPONENT_CREATOR, ComponentSchema, isComponentSchema } from './componentSchema';
 
-export type ComponentTreeCreator = IComponentSchemaTree | ComponentSchema<any, any>;
+export interface IComponentSchemaTree {
+    [key: string]: ComponentSchema<any> | IComponentSchemaTree;
+}
+
+function isComponentSchemaTree(obj: any): obj is IComponentSchemaTree {
+    return Object.keys(obj).length !== 0;
+}
+
+export type ComponentTreeCreator = any;
 
 export class ComponentTree {
 
     public component: Component<any, any>;
-    public children: { [key: string]: ComponentTree; } = {}
+    public children: { [key: string]: ComponentTree; };
 
     constructor(store: Store<any>, schema: ComponentTreeCreator) {
 
-        if (schema instanceof ComponentSchema) {
+        if (isComponentSchema(schema)) {
             this.createSelf(store, schema);
-        } else if (typeof schema === 'object') {
+        } else if (isComponentSchemaTree(schema)) {
             this.createChildren(store, schema);
         }
 
@@ -52,11 +60,12 @@ export class ComponentTree {
         };
     }
 
-    private createSelf(store: Store<any>, schema: ComponentSchema<any, any>): void {
+    private createSelf(store: Store<any>, schema: ComponentSchema<any>): void {
         this.component = new Component(store.dispatch, schema);
     }
 
     private createChildren(store: Store<any>, schema: IComponentSchemaTree): void {
+        this.children = {};
         for (let key of Object.keys(schema)) {
             let subTree = new ComponentTree(store, schema[key]);
             if (subTree !== null)
