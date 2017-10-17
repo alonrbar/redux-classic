@@ -1,9 +1,10 @@
 import { AnyAction, combineReducers, Dispatch, Reducer, ReducersMapObject, Store } from 'redux';
-import { IStateListener } from './types';
 import { isComponentSchema, componentSchema } from './componentSchema';
 import { getPrototype, getMethods } from 'lib/utils';
 
 const COMPONENT_INITIAL_STATE = Symbol('COMPONENT_INITIAL_STATE');
+
+export type IStateListener<TState> = (state: TState, action: AnyAction) => void;
 
 export type UnsubscribeFunc = () => void;
 
@@ -50,16 +51,36 @@ export class Component<T> {
         }
     }
 
-    private updateState(newState: T): void {
+    private updateState(newState: T, action: AnyAction): void {
+
+        var self = (this as any);
+        var anyState = (newState as any);
+
+        var deleted = false;
+        var assigned = false;
 
         // delete previous state (delete all non-functions)
         Object.keys(this).forEach(key => {
-            if (typeof (this as any)[key] !== 'function')
-                delete (this as any)[key];
+            if (typeof self[key] !== 'function') {
+                if (self[key] !== anyState[key]) {
+                    delete self[key];
+                    deleted = true;
+                }
+            }
         })
 
         // assign new state
-        Object.assign(this, newState);
+        Object.keys(newState).forEach(key => {
+            if (self[key] !== anyState[key]) {
+                self[key] = anyState;
+                assigned = true;
+            }
+        });
+
+        // console.log('action: ', action)
+        // console.log('this: ', JSON.stringify(this))
+        // console.log('deleted: ', deleted)
+        // console.log('assigned: ', assigned)
     }
 
     private createReducer(schema: any, listener?: IStateListener<T>): Reducer<T> {
@@ -80,11 +101,11 @@ export class Component<T> {
 
             // call the action-reducer with the new state as the 'this' argument
             var newState = Object.assign({}, state);
-            actionReducer.bind(newState)(...action.payload);
+            actionReducer.call(newState, ...action.payload);
 
             // notify listener
             if (listener)
-                listener(newState);
+                listener(newState, action);
 
             // return new state
             return newState;

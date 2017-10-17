@@ -12,7 +12,8 @@ app.root.counter1.increment(1);
 app.root.counter1.increment(1);
 app.root.counter2.increment(2);
 
-console.log(app.root);
+console.log('root: ', app.root);
+console.log('state: ', app.store.getState());
 
 //
 // bootstrap Aurelia
