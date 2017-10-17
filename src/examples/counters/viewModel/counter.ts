@@ -1,26 +1,21 @@
 import { Counter } from "examples/counters/model/counter";
+import { componentSchema } from "lib";
 
+@componentSchema
 export class CounterComponent {
+
     public counter = new Counter();
 
-    constructor() {
-        console.log('CounterComponentState created')
-    }
+    public increment(counterId = this.counter.id): void {
 
-    public static actions = (state = new CounterComponent()) => ({
-        INCREMENT: (counterId: number) => {
-            if (counterId !== state.counter.id){
-                console.log(state.counter.id);
-                return state;
-            }
-    
-            const { value, id } = state.counter;
-            return {
-                counter: {
-                    id,
-                    value: value + 1
-                }
-            }
+        if (counterId !== this.counter.id)
+            return;
+
+        const { value, id } = this.counter;
+
+        this.counter = {
+            id,
+            value: value + 1
         }
-    });
+    }
 }

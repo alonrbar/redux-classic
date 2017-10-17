@@ -8,11 +8,11 @@ import { App } from './viewModel/app';
 // 
 
 const app = new ReduxApp<App>(new App(), devToolsEnhancer(undefined));
-app.root.counter1.actions.INCREMENT(1);
-app.root.counter1.actions.INCREMENT(1);
-app.root.counter2.actions.INCREMENT(2);
+app.root.counter1.increment(1);
+app.root.counter1.increment(1);
+app.root.counter2.increment(2);
 
-console.log(app.root.getStateDeep());
+console.log(app.root);
 
 //
 // bootstrap Aurelia

@@ -1,22 +1,23 @@
 import { Store, createStore, StoreEnhancer } from "redux";
-import { Component, IActionsMap, IComponentSchemaTree, TypedComponent } from "./components";
+import { Component } from "./components";
 
-export class ReduxApp<TState = any, TActions extends IActionsMap<TState> = any> {
+export class ReduxApp<T> {
 
-    public readonly root: TypedComponent<TState, TActions>;
-    public readonly store: Store<TState>;
+    public readonly root: T;
+    public readonly store: Store<T>;
 
-    constructor(treeCreator: IComponentSchemaTree, enhancer?: StoreEnhancer<TState>);
-    constructor(treeCreator: IComponentSchemaTree, preloadedState: TState, enhancer?: StoreEnhancer<TState>);
-    constructor(treeCreator: IComponentSchemaTree, ...params: any[]) {
+    constructor(appSchema: any, enhancer?: StoreEnhancer<T>);
+    constructor(appSchema: any, preloadedState: T, enhancer?: StoreEnhancer<T>);
+    constructor(appSchema: any, ...params: any[]) {
         
         // create the store
         const dummyReducer = () => { };
-        this.store = createStore<TState>(dummyReducer as any, ...params);
+        this.store = createStore<T>(dummyReducer as any, ...params);
         
         // create the app
-        this.root = new Component(this.store.dispatch, treeCreator) as any;
-        const actualReducer = this.root.getReducer();
+        const rootComponent = new Component(this.store.dispatch, appSchema);
+        const actualReducer = rootComponent.getReducer();
+        this.root = (rootComponent as any);
         
         // update the store
         this.store.replaceReducer(actualReducer);

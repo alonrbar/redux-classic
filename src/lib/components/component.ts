@@ -1,157 +1,112 @@
 import { AnyAction, combineReducers, Dispatch, Reducer, ReducersMapObject, Store } from 'redux';
-import { ComponentSchema, IActionsMap, IComponentSchemaTree, isComponentSchema, isComponentSchemaTree, ReducerCreator, IStateListener } from './types';
-
-export type ComponentKeys<TState> = (keyof TState) | 'actions' | 'state';
-
-export type TypedComponent<TState, TActions> = IComponent<TState, TActions> & TState;
-
-export interface IComponent<TState, TActions> {
-    actions: TActions;
-    state: TState;
-    getReducer(): Reducer<any>;
-    getStateDeep(): TState;
-}
+import { IStateListener } from './types';
+import { isComponentSchema, componentSchema } from './componentSchema';
+import { getPrototype, getMethods } from 'lib/utils';
 
 const COMPONENT_INITIAL_STATE = Symbol('COMPONENT_INITIAL_STATE');
 
-export class Component<TState, TActions extends IActionsMap<TState>> implements IComponent<TState, TActions> {
+export type UnsubscribeFunc = () => void;
 
-    public actions: TActions;
-    public state: TState;
-    [subComponentName: string]: Component<any, any> | any;
+export class Component<T> {
 
-    private ownReducer: Reducer<TState>;
+    private ownReducer: Reducer<T>;
 
-    constructor(dispatch: Dispatch<TState>, schema: IComponentSchemaTree, throwOnEmpty = true) {
-
-        if (isComponentSchema(schema)) {
-            this.createSelf(dispatch, schema);
-        } else if (isComponentSchemaTree(schema)) {
-            this.createChildren(dispatch, schema);
-        }
-
-        if (Object.keys(this).every(key => this[key] === 'undefined')) {
-            if (throwOnEmpty) {
-                throw new Error(`Invalid ${nameof(schema)}. Could not c ${nameof(Component)} initialization failed.`)
-            } else {
-                return undefined;
-            }
-        }
+    constructor(dispatch: Dispatch<T>, schema: any, throwOnEmpty = true) {
+        this.createSelf(dispatch, schema);
+        this.createChildren(dispatch, schema);
     }
 
-    public getReducer(): Reducer<any> {
+    public getReducer(): Reducer<T> {
         if (this.ownReducer) {
             return this.ownReducer;
         } else {
             const result: ReducersMapObject = {};
             for (let key of Object.keys(this)) {
-                if (this[key] instanceof Component)
-                    result[key] = this[key].getReducer();
+                if ((this as any)[key] instanceof Component)
+                    result[key] = (this as any)[key].getReducer();
             }
             return combineReducers(result);
         }
     }
 
-    public getStateDeep(): TState {
+    // public subscribe(): UnsubscribeFunc {
 
-        var selfState: any = {};
-        if (this.component)
-            selfState = this.component.state;
+    // }
 
-        var childrenState: any = {};
-        for (let key of Object.keys(this)) {
-            if (this[key] instanceof Component)
-                childrenState[key] = this[key].getStateDeep();
+    private createSelf(dispatch: Dispatch<T>, schema: any): void {
+        if (!isComponentSchema(schema))
+            return;
+
+        this.ownReducer = this.createReducer(schema, this.updateState.bind(this));
+        Object.assign(getPrototype(this), this.createActions(dispatch, schema));
+    }
+
+    private createChildren(store: Dispatch<T>, schema: any): void {
+        for (let key of Object.keys(schema)) {
+            var subSchema = schema[key];
+            if (isComponentSchema(subSchema)) {
+                (this as any)[key] = new Component(store, subSchema, false);
+            }
         }
+    }
 
-        return {
-            ...selfState,
-            ...childrenState
+    private updateState(newState: T): void {
+
+        // delete previous state (delete all non-functions)
+        Object.keys(this).forEach(key => {
+            if (typeof (this as any)[key] !== 'function')
+                delete (this as any)[key];
+        })
+
+        // assign new state
+        Object.assign(this, newState);
+    }
+
+    private createReducer(schema: any, listener?: IStateListener<T>): Reducer<T> {
+
+        var methods = getMethods(schema);
+        if (!methods || !Object.keys(methods).length)
+            return undefined;
+
+        return (state: T, action: AnyAction) => {
+
+            if (state === undefined)
+                return schema;
+
+            // check if should use this reducer            
+            var actionReducer = methods[action.type];
+            if (!actionReducer)
+                return state;
+
+            // call the action-reducer with the new state as the 'this' argument
+            var newState = Object.assign({}, state);
+            actionReducer.bind(newState)(...action.payload);
+
+            // notify listener
+            if (listener)
+                listener(newState);
+
+            // return new state
+            return newState;
         };
     }
 
-    private createSelf(dispatch: Dispatch<TState>, schema: ComponentSchema<TState, TActions>): void {
-        this.ownReducer = this.createReducer(this.getReducerCreator(schema), this.updateState.bind(this));
-        this.actions = this.createActions(dispatch, this.getActions(schema));
-    }
+    private createActions(dispatch: Dispatch<T>, schema: any): any {
 
-    private createChildren(store: Dispatch<TState>, schema: IComponentSchemaTree): void {
-        for (let key of Object.keys(schema)) {
-            this[key] = new Component(store, schema[key] as IComponentSchemaTree, false);
-        }
-    }
+        var methods = getMethods(schema);
+        if (!methods)
+            return undefined;
 
-    private getReducerCreator(schema: ComponentSchema<TState, TActions>): ReducerCreator<TState, TActions> {
-
-        // https://stackoverflow.com/questions/1833588/javascript-clone-a-function
-        const creatorClone = (schema.constructor as any).actions.bind({});
-
-        // ReducerCreators are just plain functions. That's why we decorate them to
-        // distinguish them from other functions.
-        // (creatorClone as any)[COMPONENT_CREATOR] = true;
-        // in addition we store some useful information for later
-        (creatorClone as any)[COMPONENT_INITIAL_STATE] = () => Object.create(schema);
-
-        return creatorClone;
-    }
-
-    private getActions(schema: ComponentSchema<TState, TActions>): TActions {
-        return this.getReducerCreator(schema)(undefined);
-    }
-
-    private updateState(newState: TState): void {
-        this.state = newState;
-    }
-
-    private createActions<TState, TActions extends IActionsMap<TState>>(dispatch: Dispatch<TState>, actions: TActions): TActions {
-
-        if (!Object.keys(actions).length)
-            console.warn("Argument 'actions' expected to have at least one action but have none.");
-
-        var outputActions: TActions;
-        (outputActions as any) = {};
-        Object.keys(actions).forEach(actionName => {
-            outputActions[actionName] = (...payload: any[]) => {
+        var outputActions: any = {};
+        Object.keys(methods).forEach(key => {
+            outputActions[key] = (...payload: any[]): void => {
                 dispatch({
-                    type: actionName,
+                    type: key,
                     payload: payload
                 });
-                return undefined;
             };
         });
 
         return outputActions;
-    }
-
-    private createReducer<TState, TActions extends IActionsMap<TState>>(creator: ReducerCreator<TState, TActions>, listener?: IStateListener<TState>): Reducer<TState> {
-
-        var reducersMap = creator(undefined);
-
-        return (state: TState, action: AnyAction) => {
-
-            if (state === undefined)
-                return (creator as any)[COMPONENT_INITIAL_STATE]();
-
-            // check if should use this reducer
-            if (typeof reducersMap[action.type] !== 'function')
-                return state;
-
-            // create new reducer for the current state
-            reducersMap = creator(state);
-            var actionReducer = reducersMap[action.type];
-            if (typeof actionReducer === 'function') {
-                const newState = actionReducer(...action.payload);
-
-                // notify listener
-                if (listener)
-                    listener(newState);
-
-                // return new state
-                return newState;
-            }
-
-            // no matching action
-            return state;
-        };
     }
 }
