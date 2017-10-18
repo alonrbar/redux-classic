@@ -1,4 +1,4 @@
-import { getArgumentNames } from "../utils";
+import { getArgumentNames } from "./utils";
 
 export const COMPONENT_SCHEMA = Symbol('COMPONENT_SCHEMA');
 

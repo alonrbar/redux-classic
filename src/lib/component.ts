@@ -1,6 +1,6 @@
 import { AnyAction, combineReducers, Dispatch, Reducer, ReducersMapObject, Store } from 'redux';
-import { isComponentSchema, componentSchema } from './componentSchema';
-import { getPrototype, getMethods } from 'lib/utils';
+import { componentSchema, isComponentSchema } from './componentSchema';
+import { getMethods, getPrototype } from './utils';
 
 const COMPONENT_INITIAL_STATE = Symbol('COMPONENT_INITIAL_STATE');
 

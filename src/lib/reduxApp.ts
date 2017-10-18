@@ -1,5 +1,5 @@
-import { Store, createStore, StoreEnhancer } from "redux";
-import { Component } from "./components";
+import { createStore, Store, StoreEnhancer } from 'redux';
+import { Component } from './component';
 
 export class ReduxApp<T> {
 
