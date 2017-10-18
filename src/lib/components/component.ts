@@ -59,26 +59,28 @@ export class Component<T> {
         var deleted = false;
         var assigned = false;
 
-        // delete previous state (delete all non-functions)
-        Object.keys(this).forEach(key => {
-            if (typeof self[key] !== 'function') {
-                if (self[key] !== anyState[key]) {
-                    delete self[key];
-                    deleted = true;
-                }
-            }
-        })
+        // console.log('action: ', action)
+        // console.log('before: ', JSON.stringify(this))
 
         // assign new state
         Object.keys(newState).forEach(key => {
             if (self[key] !== anyState[key]) {
-                self[key] = anyState;
+                self[key] = anyState[key];
                 assigned = true;
             }
         });
 
-        // console.log('action: ', action)
-        // console.log('this: ', JSON.stringify(this))
+        // delete previous state (delete all non-functions)
+        Object.keys(this).forEach(key => {
+            if (typeof self[key] !== 'function') {
+                if (anyState[key] === undefined) {
+                    delete self[key];
+                    deleted = true;
+                }
+            }
+        })        
+        
+        // console.log('after: ', JSON.stringify(this))
         // console.log('deleted: ', deleted)
         // console.log('assigned: ', assigned)
     }
