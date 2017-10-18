@@ -1,3 +1,3 @@
-export * from './component';
-export * from './componentSchema';
-export * from './reduxApp';
+export { IStateListener, UnsubscribeFunc } from './component';
+export { componentSchema } from './componentSchema';
+export { ReduxApp } from './reduxApp';

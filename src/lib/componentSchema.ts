@@ -1,6 +1,6 @@
 import { getArgumentNames } from "./utils";
 
-export const COMPONENT_SCHEMA = Symbol('COMPONENT_SCHEMA');
+const COMPONENT_SCHEMA = Symbol('COMPONENT_SCHEMA');
 
 export const componentSchema: ClassDecorator = (ctor: Function) => {
     if (getArgumentNames(ctor).length)
