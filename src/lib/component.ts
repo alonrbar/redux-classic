@@ -1,6 +1,11 @@
 import { AnyAction, combineReducers, Dispatch, Reducer, ReducersMapObject, Store } from 'redux';
-import { componentSchema, isComponentSchema } from './componentSchema';
+import { componentSchema, getActionName, isComponentSchema } from './componentSchema';
 import { getMethods, getProp, getPrototype } from './utils';
+
+// TODO:
+// 1. "Unexpected key" warning
+// 2. subscribe to substate
+// 3. load state (next version...)
 
 const REDUCER = Symbol('REDUCER')
 
@@ -32,7 +37,7 @@ export class Component<T> {
         if (Object.keys(subReducers).length) {
 
             var combinedSubReducer = combineReducers<any>(subReducers);
-            
+
             return (state: T, action: AnyAction) => {
                 const thisState = thisReducer(state, action);
                 const subStates = combinedSubReducer(state, action);
@@ -89,20 +94,21 @@ export class Component<T> {
 
         var outputActions: any = {};
         Object.keys(methods).forEach(key => {
-            outputActions[key] = (...payload: any[]): void => {
+            outputActions[key] = (...payload: any[]): void => {                
                 dispatch({
-                    type: key,
+                    type: getActionName(key, schema),
                     payload: payload
                 });
             };
         });
 
         return outputActions;
-    }
+    }    
 
     private createReducer(schema: T): Reducer<T> {
 
         var methods = getMethods(schema);
+        var methodNames = Object.keys(methods);
 
         return (state: T, action: AnyAction) => {
 
@@ -110,7 +116,8 @@ export class Component<T> {
                 return schema;
 
             // check if should use this reducer            
-            var actionReducer = methods[action.type];
+            var methodName = methodNames.find(name => getActionName(name, schema) === action.type);
+            var actionReducer = methods[methodName];
             if (!actionReducer)
                 return state;
 
@@ -163,5 +170,5 @@ export class Component<T> {
         // console.log('this after: ', this)
         // console.log('deleted: ', deleted)
         // console.log('assigned: ', assigned)
-    }
+    }    
 }

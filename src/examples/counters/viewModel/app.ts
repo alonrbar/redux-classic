@@ -1,5 +1,5 @@
-import { CounterComponent } from "./counter";
-import { componentSchema } from "lib";
+import { componentSchema } from 'lib';
+import { CounterComponent } from './counter';
 
 @componentSchema
 export class App {
@@ -7,7 +7,7 @@ export class App {
     public counter1 = new CounterComponent();
     public counter2 = new CounterComponent();
 
-    public foo() {
-        
+    public increment() {
+        console.log('increment me too!')
     }
 }
