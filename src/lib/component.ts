@@ -143,7 +143,8 @@ export class Component<T> {
             //    is just a minor optimization.
             // 2. The old value isn't a component. Overwriting a component means
             //    losing it's patched prototype and therefore invoking it's
-            //    methods will not use the store's dispatch function anymore.            
+            //    methods will not use the store's dispatch function anymore
+            //    (and will mutate the component state directly).
             if (self[key] !== newScopedState[key] && !(self[key] instanceof Component)) {
                 self[key] = newScopedState[key];
                 assigned = true;
