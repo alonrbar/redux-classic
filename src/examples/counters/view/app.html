@@ -1,5 +1,5 @@
 <template>  
-    <h1>My New App!.</h1>
-    <div>${message}</div>
-    <input type="text" value.bind="message">
+    <h1>redux-app</h1>
+    <counter counter.bind="vm.root.counter1.counter" increment.bind="vm.root.counter1.increment"></counter>
+    <counter counter.bind="vm.root.counter2.counter" increment.bind="vm.root.counter2.increment"></counter>
 </template>

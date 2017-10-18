@@ -6,7 +6,7 @@ export class CounterComponent {
 
     public counter = new Counter();
 
-    public increment(counterId = this.counter.id): void {
+    public increment(counterId: number): void {
 
         if (counterId !== this.counter.id)
             return;

@@ -38,7 +38,7 @@ export class Component<T> {
         if (!isComponentSchema(schema))
             return;
 
-        this.ownReducer = this.createReducer(schema, this.updateState.bind(this));
+        this.ownReducer = this.createReducer(schema);
         Object.assign(getPrototype(this), this.createActions(dispatch, schema));
     }
 
@@ -51,7 +51,7 @@ export class Component<T> {
         }
     }
 
-    private updateState(newState: T, action: AnyAction): void {
+    private updateState(newState: T, action: AnyAction, notify: boolean): T {
 
         var self = (this as any);
         var anyState = (newState as any);
@@ -78,14 +78,16 @@ export class Component<T> {
                     deleted = true;
                 }
             }
-        })        
-        
+        })
+
         // console.log('after: ', JSON.stringify(this))
         // console.log('deleted: ', deleted)
         // console.log('assigned: ', assigned)
+
+        return newState;
     }
 
-    private createReducer(schema: any, listener?: IStateListener<T>): Reducer<T> {
+    private createReducer(schema: any): Reducer<T> {
 
         var methods = getMethods(schema);
         if (!methods || !Object.keys(methods).length)
@@ -94,23 +96,19 @@ export class Component<T> {
         return (state: T, action: AnyAction) => {
 
             if (state === undefined)
-                return schema;
+                return this.updateState(schema, action, false);
 
             // check if should use this reducer            
             var actionReducer = methods[action.type];
             if (!actionReducer)
-                return state;
+                return this.updateState(state, action, false);
 
             // call the action-reducer with the new state as the 'this' argument
             var newState = Object.assign({}, state);
             actionReducer.call(newState, ...action.payload);
 
-            // notify listener
-            if (listener)
-                listener(newState, action);
-
             // return new state
-            return newState;
+            return this.updateState(newState, action, true);
         };
     }
 
