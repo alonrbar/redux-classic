@@ -4,7 +4,7 @@ export const COMPONENT_SCHEMA = Symbol('COMPONENT_SCHEMA');
 
 export const componentSchema: ClassDecorator = (ctor: Function) => {
     if (getArgumentNames(ctor).length)
-        throw new Error(`${nameof(componentSchema)} class must have a parameter-less constructor`);
+        throw new Error('componentSchema classes must have a parameter-less constructor');
 
     (ctor as any)[COMPONENT_SCHEMA] = true;
 }

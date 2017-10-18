@@ -9,13 +9,6 @@ export class App {
     public vm: ReduxApp<AppViewModel>;
 
     constructor() {
-
-        //
-        // bootstrap redux
-        // 
-
-        const app = new ReduxApp<AppViewModel>(new AppViewModel(), devToolsEnhancer(undefined));
-        app.store.dispatch({type: 'init'})
-        this.vm = app;
+        this.vm = new ReduxApp(new AppViewModel(), devToolsEnhancer(undefined));
     }
 }

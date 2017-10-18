@@ -11,11 +11,11 @@ export class CounterComponent {
         if (counterId !== this.counter.id)
             return;
 
-        const { value, id } = this.counter;
+        const { value, ...rest } = this.counter;
 
         this.counter = {
-            id,
-            value: value + 1
+            value: value + 1,
+            ...rest
         }
     }
 }

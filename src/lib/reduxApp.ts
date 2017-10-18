@@ -6,9 +6,9 @@ export class ReduxApp<T> {
     public readonly root: T;
     public readonly store: Store<T>;
 
-    constructor(appSchema: any, enhancer?: StoreEnhancer<T>);
-    constructor(appSchema: any, preloadedState: T, enhancer?: StoreEnhancer<T>);
-    constructor(appSchema: any, ...params: any[]) {
+    constructor(appSchema: T, enhancer?: StoreEnhancer<T>);
+    constructor(appSchema: T, preloadedState: T, enhancer?: StoreEnhancer<T>);
+    constructor(appSchema: T, ...params: any[]) {
         
         // create the store
         const dummyReducer = () => { };

@@ -4,7 +4,7 @@ import { getPrototype, getMethods } from 'lib/utils';
 
 const COMPONENT_INITIAL_STATE = Symbol('COMPONENT_INITIAL_STATE');
 
-export type IStateListener<TState> = (state: TState, action: AnyAction) => void;
+export type IStateListener<T> = (state: T, action: AnyAction) => void;
 
 export type UnsubscribeFunc = () => void;
 
@@ -12,7 +12,11 @@ export class Component<T> {
 
     private ownReducer: Reducer<T>;
 
-    constructor(dispatch: Dispatch<T>, schema: any, throwOnEmpty = true) {
+    constructor(dispatch: Dispatch<T>, schema: T) {
+        
+        if (!isComponentSchema(schema))
+            throw new Error("Argument schema is not a component schema. Did you forget to use the decorator?");
+
         this.createSelf(dispatch, schema);
         this.createChildren(dispatch, schema);
     }
@@ -34,19 +38,25 @@ export class Component<T> {
 
     // }
 
-    private createSelf(dispatch: Dispatch<T>, schema: any): void {
-        if (!isComponentSchema(schema))
-            return;
+    private createSelf(dispatch: Dispatch<T>, schema: T): void {
 
+        // regular js props
+        for (let key of Object.keys(schema)) {
+            (this as any)[key] = (schema as any)[key];
+        }
+        
+        // reducer
         this.ownReducer = this.createReducer(schema);
+        
+        // actions
         Object.assign(getPrototype(this), this.createActions(dispatch, schema));
     }
 
-    private createChildren(store: Dispatch<T>, schema: any): void {
+    private createChildren(store: Dispatch<T>, schema: T): void {
         for (let key of Object.keys(schema)) {
-            var subSchema = schema[key];
+            var subSchema = (schema as any)[key];
             if (isComponentSchema(subSchema)) {
-                (this as any)[key] = new Component(store, subSchema, false);
+                (this as any)[key] = new Component(store, subSchema);
             }
         }
     }
@@ -87,7 +97,7 @@ export class Component<T> {
         return newState;
     }
 
-    private createReducer(schema: any): Reducer<T> {
+    private createReducer(schema: T): Reducer<T> {
 
         var methods = getMethods(schema);
         if (!methods || !Object.keys(methods).length)
@@ -112,7 +122,7 @@ export class Component<T> {
         };
     }
 
-    private createActions(dispatch: Dispatch<T>, schema: any): any {
+    private createActions(dispatch: Dispatch<T>, schema: T): any {
 
         var methods = getMethods(schema);
         if (!methods)
