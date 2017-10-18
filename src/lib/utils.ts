@@ -37,7 +37,9 @@ export function getPrototype(obj: any) {
         return obj.constructor.prototype;
 }
 
-export function getMethods(obj: any): { [name: string]: Function } {
+export type MethodsMap = { [name: string]: Function };
+
+export function getMethods(obj: any): MethodsMap {
     if (!obj)
         return undefined;
 
@@ -52,4 +54,18 @@ export function getMethods(obj: any): { [name: string]: Function } {
     }
 
     return methods;
-} 
+}
+
+export function getProp<T = any>(obj: any, path: string | (string | number)[]): T {
+    if (typeof path === 'string') {
+        path = path.replace(/\[|\]/g, '.').split('.').filter(token => typeof token === 'string' && token.trim() !== '');
+    }
+
+    return path.reduce<T>((result: any, key: string) => {
+        if (typeof result === 'object' && key) {
+            return result[key.toString()];
+        }
+
+        return undefined;
+    }, obj);
+}

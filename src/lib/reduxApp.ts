@@ -13,13 +13,13 @@ export class ReduxApp<T> {
         // create the store
         const dummyReducer = () => { };
         this.store = createStore<T>(dummyReducer as any, ...params);
-        
+
         // create the app
-        const rootComponent = new Component(this.store.dispatch, appSchema);
-        const actualReducer = rootComponent.getReducer();
+        const rootComponent = new Component(this.store, appSchema, []);
         this.root = (rootComponent as any);
         
         // update the store
+        const actualReducer = rootComponent.getReducer();
         this.store.replaceReducer(actualReducer);
     }
 }
