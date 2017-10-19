@@ -52,7 +52,7 @@ class SchemaOptions {
      */
     public actionNamespace?: boolean;
     /**
-     * Use redux style action names. For instance, if a componentSchema defines a
+     * Use redux style action names. For instance, if a component defines a
      * method called 'incrementCounter' the matching action name will be
      * 'INCREMENT_COUNTER'.
      * Default value: true.
@@ -88,7 +88,8 @@ Available global options:
 class GlobalOptions {
     logLevel: LogLevel;
     /**
-     * Global defaults. Options supplied explicitly via the decorator will override options specified here.
+     * Global defaults.
+     * Options supplied explicitly via the decorator will override options specified here.
      */
     schema: SchemaOptions;
 }
@@ -98,7 +99,7 @@ enum LogLevel {
      * Emit no logs
      */
     None = 0,
-    Verbose = 1,    
+    Verbose = 1,
     Debug = 2,
     /**
      * Emit no logs (same as None)

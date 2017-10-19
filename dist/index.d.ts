@@ -27,12 +27,14 @@ export class SchemaOptions {
     /**
      * Add the class name of the object that holds the action to the action name.
      * Format: <class name>.<action name>
+     * Default value: true.
      */
     public actionNamespace?: boolean;
     /**
-     * Use redux style action names. For instance, if a componentSchema defines a
+     * Use redux style action names. For instance, if a component defines a
      * method called 'incrementCounter' the matching action name will be
      * 'INCREMENT_COUNTER'.
+     * Default value: true.
      */
     public uppercaseActions?: boolean;
     /**
@@ -40,6 +42,7 @@ export class SchemaOptions {
      * relevant sub state on each store change. Set this to false to disable
      * this updating process. The store's state will still be updated as usual
      * and can always be retrieved using store.getState().
+     * Default value: true.
      */
     public updateState?: boolean;
 }
@@ -59,5 +62,9 @@ export enum LogLevel {
 
 export declare class GlobalOptions {
     logLevel: LogLevel;
+    /**
+     * Global defaults.
+     * Options supplied explicitly via the decorator will override options specified here.
+     */
     schema: SchemaOptions;
 }
