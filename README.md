@@ -2,6 +2,12 @@
 
 Type-safe, DRY and OO redux. Implemented with typescript.
 
+## Installation
+
+```
+npm install --save redux-app
+```
+
 ## Example
 ```javascript
 @component

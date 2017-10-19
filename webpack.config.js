@@ -19,6 +19,8 @@ module.exports = {
         modules: [path.resolve("./src"), "node_modules"]
     },
     plugins: [
-        new webpack.optimize.UglifyJsPlugin()
+        new webpack.optimize.UglifyJsPlugin({
+            mangle: false
+        })
     ]
 };
