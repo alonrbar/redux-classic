@@ -10,7 +10,9 @@ module.exports = {
         filename: 'redux-app.min.js',
         library: 'redux-app',
         libraryTarget: 'umd',
-        umdNamedDefine: true
+        umdNamedDefine: true,
+        devtoolModuleFilenameTemplate: '[absolute-resource-path]',
+        devtoolFallbackModuleFilenameTemplate: '[absolute-resource-path]?[hash]'
     },
     externals: [nodeExternals()],
     module: {
@@ -22,7 +24,4 @@ module.exports = {
         extensions: ['.ts', '.js'],
         modules: [path.resolve("./src"), "node_modules"]
     },
-    plugins: [
-        new webpack.optimize.UglifyJsPlugin()
-    ]
 };

@@ -17,7 +17,6 @@
 
         "typeRoots" : ["./../node_modules/@types","./@types"],
         "moduleResolution": "node",
-        "baseUrl": ".",        
 
         // --- validation options --- //
 

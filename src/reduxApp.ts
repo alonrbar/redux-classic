@@ -1,7 +1,8 @@
 import { AnyAction, createStore, Reducer, ReducersMapObject, Store, StoreEnhancer } from 'redux';
-import { Component, REDUCER } from './component';
+import { Component } from './component';
 import { globalOptions, GlobalOptions } from './options';
 import { simpleCombineReducers } from './reducers';
+import { REDUCER } from './symbols';
 
 export class ReduxApp<T> {
 
@@ -28,7 +29,7 @@ export class ReduxApp<T> {
         this.store = createStore<T>(dummyReducer as any, ...params);
 
         // create the app
-        const rootComponent = new Component(this.store, appSchema, []);
+        const rootComponent = new Component(this.store, appSchema, null, []);
         this.root = (rootComponent as any);
         
         // update the store

@@ -1,5 +1,6 @@
 import { assertComponentSchema } from './componentSchema';
 import { getConstructorProp } from './utils';
+import { COMPONENT_SCHEMA_OPTIONS } from './symbols';
 
 declare var require: any;
 var snakecase = require('lodash.snakecase');
@@ -7,8 +8,6 @@ var snakecase = require('lodash.snakecase');
 //
 // schema options
 //
-
-export const COMPONENT_SCHEMA_OPTIONS = Symbol('COMPONENT_SCHEMA_OPTIONS');
 
 export class SchemaOptions {
     /**
