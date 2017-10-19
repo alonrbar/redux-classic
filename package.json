@@ -1,15 +1,24 @@
 {
   "name": "redux-app",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Type-safe, DRY and OO redux. Implemented with typescript.",
+  "author": "Alon Bar",
+  "license": "MIT",  
+  "homepage": "https://github.com/alonrbar/redux-app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alonrbar/redux-app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/alonrbar/redux-app/issues"
+  },
   "main": "dist/redux-app.min.js",
   "typings": "dist/index.d.ts",
   "scripts": {
     "release": "webpack",
+    "dev": "webpack --config webpack.config.dev.js --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "Alon Bar",
-  "license": "MIT",
+  },  
   "dependencies": {
     "lodash.snakecase": "^4.1.1",
     "redux": "^3.7.2"
