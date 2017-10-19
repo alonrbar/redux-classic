@@ -1,9 +1,30 @@
 import { Store, StoreEnhancer } from 'redux';
 
+//
+// Decorators
+//
+
 export declare function component(ctor: Function): any;
 export declare function component(options: SchemaOptions): any;
 
 export declare function withId(id?: any): PropertyDecorator;
+
+/**
+ * Method decorator.
+ * Instruct redux-app to keep this method as is and not to replace it with invocation of store.dispatch.
+ * Alias of 'sequence'.
+ */
+export function noDispatch(target: any, propertyKey: string | symbol): void;
+/**
+ * Method decorator.
+ * Instruct redux-app to keep this method as is and not to replace it with invocation of store.dispatch.
+ * Alias of 'noDispatch'.
+ */
+export function sequence(target: any, propertyKey: string | symbol): void;
+
+//
+// ReduxApp
+//
 
 export declare class ReduxApp<T> {
     
@@ -24,6 +45,10 @@ export declare class ReduxApp<T> {
     constructor(appSchema: T, enhancer?: StoreEnhancer<T>);
     constructor(appSchema: T, preloadedState: T, enhancer?: StoreEnhancer<T>);
 }
+
+//
+// Options
+//
 
 export class SchemaOptions {
     /**

@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 4);
+/******/ 	return __webpack_require__(__webpack_require__.s = 6);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -82,8 +82,10 @@ return /******/ (function(modules) { // webpackBootstrap
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.REDUCER = Symbol('REDUX-APP.COMPONENT.REDUCER');
 exports.DISPOSE = Symbol('REDUX-APP.COMPONENT.DISPOSE');
+exports.COMPONENT_ID = Symbol('REDUX-APP.COMPONENT.ID');
 exports.COMPONENT_SCHEMA = Symbol('REDUX-APP.COMPONENT_SCHEMA');
 exports.COMPONENT_SCHEMA_OPTIONS = Symbol('REDUX-APP.COMPONENT_SCHEMA.OPTIONS');
+exports.NO_DISPATCH = Symbol('REDUX-APP.COMPONENT_SCHEMA.NO_DISPATCH');
 exports.WITH_ID = Symbol('REDUX-APP.COMPONENT_SCHEMA.WITH_ID');
 exports.AUTO_ID = Symbol('REDUX-APP.COMPONENT_SCHEMA.AUTO_ID');
 
@@ -98,7 +100,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var componentSchema_1 = __webpack_require__(2);
 var utils_1 = __webpack_require__(3);
 var symbols_1 = __webpack_require__(0);
-var snakecase = __webpack_require__(6);
+var snakecase = __webpack_require__(8);
 var SchemaOptions = (function () {
     function SchemaOptions() {
         this.actionNamespace = true;
@@ -251,11 +253,97 @@ exports.getConstructorProp = getConstructorProp;
 /* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(5);
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var options_1 = __webpack_require__(1);
+function debugWarn(message) {
+    var optionalParams = [];
+    for (var _i = 1; _i < arguments.length; _i++) {
+        optionalParams[_i - 1] = arguments[_i];
+    }
+    if (!shouldLog(options_1.LogLevel.Debug))
+        return;
+    console.warn.apply(console, ['[ReduxApp] [DEBUG] ' + message].concat(optionalParams));
+}
+exports.debugWarn = debugWarn;
+function debug(message) {
+    var optionalParams = [];
+    for (var _i = 1; _i < arguments.length; _i++) {
+        optionalParams[_i - 1] = arguments[_i];
+    }
+    if (!shouldLog(options_1.LogLevel.Debug))
+        return;
+    console.log.apply(console, ['[ReduxApp] [DEBUG] ' + message].concat(optionalParams));
+}
+exports.debug = debug;
+function verbose(message) {
+    var optionalParams = [];
+    for (var _i = 1; _i < arguments.length; _i++) {
+        optionalParams[_i - 1] = arguments[_i];
+    }
+    if (!shouldLog(options_1.LogLevel.Verbose))
+        return;
+    console.log.apply(console, ['[ReduxApp] [VERBOSE] ' + message].concat(optionalParams));
+}
+exports.verbose = verbose;
+function shouldLog(level) {
+    if (options_1.globalOptions.logLevel === options_1.LogLevel.None)
+        return false;
+    if (options_1.globalOptions.logLevel > level)
+        return false;
+    return true;
+}
 
 
 /***/ }),
 /* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var symbols_1 = __webpack_require__(0);
+var log_1 = __webpack_require__(4);
+function withId(id) {
+    return function (target, propertyKey) {
+        if (!target[symbols_1.WITH_ID])
+            target[symbols_1.WITH_ID] = {};
+        target[symbols_1.WITH_ID][propertyKey] = id || symbols_1.AUTO_ID;
+    };
+}
+exports.withId = withId;
+var autoComponentId = 0;
+function getComponentId(parent, path) {
+    if (!parent || !path.length)
+        return undefined;
+    var idLookup = parent[symbols_1.WITH_ID];
+    if (!idLookup)
+        return undefined;
+    var selfKey = path[path.length - 1];
+    var id = parent[symbols_1.WITH_ID][selfKey];
+    if (!id)
+        return undefined;
+    if (id === symbols_1.AUTO_ID) {
+        var generatedId = --autoComponentId;
+        log_1.verbose('[getComponentId] new component id generated: ' + generatedId);
+        parent[symbols_1.WITH_ID][selfKey] = generatedId;
+        return generatedId;
+    }
+    return id;
+}
+exports.getComponentId = getComponentId;
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(7);
+
+
+/***/ }),
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -267,20 +355,23 @@ var options_1 = __webpack_require__(1);
 exports.SchemaOptions = options_1.SchemaOptions;
 exports.GlobalOptions = options_1.GlobalOptions;
 exports.LogLevel = options_1.LogLevel;
-var reduxApp_1 = __webpack_require__(7);
+var reduxApp_1 = __webpack_require__(9);
 exports.ReduxApp = reduxApp_1.ReduxApp;
-var withId_1 = __webpack_require__(12);
+var noDispatch_1 = __webpack_require__(13);
+exports.noDispatch = noDispatch_1.noDispatch;
+exports.sequence = noDispatch_1.sequence;
+var withId_1 = __webpack_require__(5);
 exports.withId = withId_1.withId;
 
 
 /***/ }),
-/* 6 */
+/* 8 */
 /***/ (function(module, exports) {
 
 module.exports = require("lodash.snakecase");
 
 /***/ }),
-/* 7 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -294,10 +385,10 @@ var __assign = (this && this.__assign) || Object.assign || function(t) {
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var redux_1 = __webpack_require__(8);
-var component_1 = __webpack_require__(9);
+var redux_1 = __webpack_require__(10);
+var component_1 = __webpack_require__(11);
 var options_1 = __webpack_require__(1);
-var reducers_1 = __webpack_require__(11);
+var reducers_1 = __webpack_require__(12);
 var symbols_1 = __webpack_require__(0);
 var ReduxApp = (function () {
     function ReduxApp(appSchema) {
@@ -338,28 +429,28 @@ exports.ReduxApp = ReduxApp;
 
 
 /***/ }),
-/* 8 */
+/* 10 */
 /***/ (function(module, exports) {
 
 module.exports = require("redux");
 
 /***/ }),
-/* 9 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var componentSchema_1 = __webpack_require__(2);
-var log_1 = __webpack_require__(10);
+var log_1 = __webpack_require__(4);
 var options_1 = __webpack_require__(1);
 var utils_1 = __webpack_require__(3);
 var symbols_1 = __webpack_require__(0);
+var withId_1 = __webpack_require__(5);
 var Component = (function () {
     function Component(store, schema, parent, path) {
         if (!componentSchema_1.isComponentSchema(schema))
             throw new Error("Argument '" + "schema" + "' is not a component schema. Did you forget to use the decorator?");
-        this[symbols_1.DISPOSE] = [];
         createSelf(this, store, schema, parent, path);
         createSubComponents(this, store, schema, path);
         log_1.debug("[Component] new " + schema.constructor.name + " component created. path: root." + path.join('.'));
@@ -376,13 +467,19 @@ var Component = (function () {
 }());
 exports.Component = Component;
 function createSelf(component, store, schema, parent, path) {
+    component[symbols_1.DISPOSE] = [];
+    var componentId = withId_1.getComponentId(parent, path);
+    if (componentId !== undefined && componentId !== null) {
+        component[symbols_1.COMPONENT_ID] = componentId;
+    }
     for (var _i = 0, _a = Object.keys(schema); _i < _a.length; _i++) {
         var key = _a[_i];
         component[key] = schema[key];
     }
-    var actionInvokers = createActions(store.dispatch, schema, parent, path);
-    Object.assign(component, actionInvokers);
-    component[symbols_1.REDUCER] = createReducer(schema, parent, path);
+    var proto = utils_1.getPrototype(component);
+    var patchedProto = createActions(store.dispatch, schema);
+    Object.assign(proto, patchedProto);
+    component[symbols_1.REDUCER] = createReducer(component, schema);
     var options = options_1.getSchemaOptions(schema);
     if (options.updateState) {
         var unsubscribe_1 = store.subscribe(function () { return updateState(component, store.getState(), path); });
@@ -398,35 +495,45 @@ function createSubComponents(component, store, schema, path) {
         }
     }
 }
-function createActions(dispatch, schema, parent, path) {
+function createActions(dispatch, schema) {
     var methods = utils_1.getMethods(schema);
     if (!methods)
         return undefined;
-    var componentId = getComponentId(parent, path);
-    var actionInvokers = {};
+    var outputActions = {};
     Object.keys(methods).forEach(function (key) {
-        actionInvokers[key] = function () {
+        outputActions[key] = function () {
             var payload = [];
             for (var _i = 0; _i < arguments.length; _i++) {
                 payload[_i] = arguments[_i];
             }
-            dispatch({
-                type: options_1.getActionName(key, schema),
-                id: componentId,
-                payload: payload
-            });
+            if (!(this instanceof Component)) {
+                var msg = "Component method invoked with non-Component as 'this'. " +
+                    "Some redux-app features such as the withId decorator will not work. Bound 'this' argument: ";
+                log_1.debugWarn(msg, this);
+            }
+            var oldMethod = methods[key];
+            if (oldMethod[symbols_1.NO_DISPATCH]) {
+                oldMethod.call.apply(oldMethod, [this].concat(payload));
+            }
+            else {
+                dispatch({
+                    type: options_1.getActionName(key, schema),
+                    id: this[symbols_1.COMPONENT_ID],
+                    payload: payload
+                });
+            }
         };
     });
-    return actionInvokers;
+    return outputActions;
 }
-function createReducer(schema, parent, path) {
-    var componentId = getComponentId(parent, path);
+function createReducer(component, schema) {
     var methods = utils_1.getMethods(schema);
     var methodNames = {};
     Object.keys(methods).forEach(function (methName) {
         var actionName = options_1.getActionName(methName, schema);
         methodNames[actionName] = methName;
     });
+    var componentId = component[symbols_1.COMPONENT_ID];
     return function (state, action) {
         log_1.verbose("[reducer] reducer of: " + schema.constructor.name + ", action: " + action.type);
         if (state === undefined) {
@@ -450,11 +557,11 @@ function createReducer(schema, parent, path) {
     };
 }
 function updateState(component, newGlobalState, path) {
-    log_1.verbose('[updateState] updating component in path: ', path.join('.'));
     var self = component;
     var newScopedState = utils_1.getProp(newGlobalState, path);
     var propsDeleted = [];
     var propsAssigned = [];
+    log_1.verbose('[updateState] updating component in path: ', path.join('.'));
     log_1.verbose('[updateState] store before: ', newScopedState);
     log_1.verbose('[updateState] component before: ', component);
     Object.keys(newScopedState).forEach(function (key) {
@@ -490,66 +597,10 @@ function updateState(component, newGlobalState, path) {
         log_1.verbose('[updateState] no change');
     }
 }
-var autoComponentId = 0;
-function getComponentId(parent, path) {
-    if (!parent || !path.length)
-        return undefined;
-    var idLookup = parent[symbols_1.WITH_ID];
-    if (!idLookup)
-        return undefined;
-    var selfKey = path[path.length - 1];
-    var id = parent[symbols_1.WITH_ID][selfKey];
-    if (!id)
-        return undefined;
-    if (id === symbols_1.AUTO_ID) {
-        var generatedId = --autoComponentId;
-        log_1.verbose('[getComponentId] new component id generated: ' + generatedId);
-        parent[symbols_1.WITH_ID][selfKey] = generatedId;
-        return generatedId;
-    }
-    return id;
-}
 
 
 /***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var options_1 = __webpack_require__(1);
-function debug(message) {
-    var optionalParams = [];
-    for (var _i = 1; _i < arguments.length; _i++) {
-        optionalParams[_i - 1] = arguments[_i];
-    }
-    if (!shouldLog(options_1.LogLevel.Debug))
-        return;
-    console.log.apply(console, ['[ReduxApp] [DEBUG] ' + message].concat(optionalParams));
-}
-exports.debug = debug;
-function verbose(message) {
-    var optionalParams = [];
-    for (var _i = 1; _i < arguments.length; _i++) {
-        optionalParams[_i - 1] = arguments[_i];
-    }
-    if (!shouldLog(options_1.LogLevel.Verbose))
-        return;
-    console.log.apply(console, ['[ReduxApp] [VERBOSE] ' + message].concat(optionalParams));
-}
-exports.verbose = verbose;
-function shouldLog(level) {
-    if (options_1.globalOptions.logLevel === options_1.LogLevel.None)
-        return false;
-    if (options_1.globalOptions.logLevel > level)
-        return false;
-    return true;
-}
-
-
-/***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -576,21 +627,24 @@ exports.simpleCombineReducers = simpleCombineReducers;
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var symbols_1 = __webpack_require__(0);
-function withId(id) {
-    return function (target, propertyKey) {
-        if (!target[symbols_1.WITH_ID])
-            target[symbols_1.WITH_ID] = {};
-        target[symbols_1.WITH_ID][propertyKey] = id || symbols_1.AUTO_ID;
-    };
+function noDispatch(target, propertyKey) {
+    noDispatchDecorator(target, propertyKey);
 }
-exports.withId = withId;
+exports.noDispatch = noDispatch;
+function sequence(target, propertyKey) {
+    noDispatchDecorator(target, propertyKey);
+}
+exports.sequence = sequence;
+function noDispatchDecorator(target, propertyKey) {
+    target[propertyKey][symbols_1.NO_DISPATCH] = true;
+}
 
 
 /***/ })

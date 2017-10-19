@@ -1,9 +1,10 @@
 import { AnyAction, Dispatch, Reducer, Store } from 'redux';
 import { isComponentSchema } from './componentSchema';
-import { debug, verbose } from './log';
+import { debug, verbose, debugWarn } from './log';
 import { getActionName, getSchemaOptions } from './options';
-import { getMethods, getProp } from './utils';
-import { WITH_ID, DISPOSE, REDUCER, AUTO_ID } from './symbols';
+import { getMethods, getProp, getPrototype } from './utils';
+import { DISPOSE, REDUCER, COMPONENT_ID, NO_DISPATCH } from './symbols';
+import { getComponentId } from './withId';
 
 // TODO: export type IStateListener<T> = (state: T) => void;
 
@@ -13,8 +14,6 @@ export class Component<T> {
 
         if (!isComponentSchema(schema))
             throw new Error(`Argument '${nameof(schema)}' is not a component schema. Did you forget to use the decorator?`);
-
-        (this as any)[DISPOSE] = [];
 
         createSelf(this, store, schema, parent, path);
         createSubComponents(this, store, schema, path);
@@ -39,17 +38,26 @@ export class Component<T> {
 
 function createSelf<T>(component: Component<T>, store: Store<T>, schema: T, parent: any, path: string[]): void {
 
+    (component as any)[DISPOSE] = [];
+
+    // assign ID
+    const componentId = getComponentId(parent, path);
+    if (componentId !== undefined && componentId !== null) {
+        (component as any)[COMPONENT_ID] = componentId;
+    }
+
     // regular js props
     for (let key of Object.keys(schema)) {
         (component as any)[key] = (schema as any)[key];
     }
 
     // actions
-    const actionInvokers = createActions(store.dispatch, schema, parent, path);
-    Object.assign(component, actionInvokers);
+    const proto = getPrototype(component);
+    const patchedProto = createActions(store.dispatch, schema);
+    Object.assign(proto, patchedProto);
 
     // reducer
-    (component as any)[REDUCER] = createReducer(schema, parent, path);
+    (component as any)[REDUCER] = createReducer(component, schema);
 
     // state
     const options = getSchemaOptions(schema);
@@ -68,30 +76,44 @@ function createSubComponents<T>(component: Component<T>, store: Store<T>, schema
     }
 }
 
-function createActions<T>(dispatch: Dispatch<T>, schema: T, parent: any, path: string[]): any {
+function createActions<T>(dispatch: Dispatch<T>, schema: T): any {
 
-    var methods = getMethods(schema);
+    const methods = getMethods(schema);
     if (!methods)
         return undefined;
 
-    var componentId = getComponentId(parent, path);
-    var actionInvokers: any = {};
+    const outputActions: any = {};
     Object.keys(methods).forEach(key => {
-        actionInvokers[key] = (...payload: any[]): void => {
-            dispatch({
-                type: getActionName(key, schema),
-                id: componentId,
-                payload: payload
-            });
+        outputActions[key] = function (this: any, ...payload: any[]): void {
+            
+            // verify this arg
+            if (!(this instanceof Component)) {
+                const msg = "Component method invoked with non-Component as 'this'. " +
+                    "Some redux-app features such as the withId decorator will not work. Bound 'this' argument: ";
+                debugWarn(msg, this);
+            }
+
+            const oldMethod = methods[key];
+            if ((oldMethod as any)[NO_DISPATCH]) {
+
+                // handle non-dispatch methods (just call the function)
+                oldMethod.call(this, ...payload);
+            } else {
+
+                // handle dispatch methods (use store dispatch)
+                dispatch({
+                    type: getActionName(key, schema),
+                    id: this[COMPONENT_ID],
+                    payload: payload
+                });
+            }
         };
     });
 
-    return actionInvokers;
+    return outputActions;
 }
 
-function createReducer<T>(schema: T, parent: any, path: string[]): Reducer<T> {
-
-    var componentId = getComponentId(parent, path);
+function createReducer<T>(component: Component<T>, schema: T): Reducer<T> {    
 
     // method names lookup
     const methods = getMethods(schema);
@@ -101,15 +123,21 @@ function createReducer<T>(schema: T, parent: any, path: string[]): Reducer<T> {
         methodNames[actionName] = methName;
     });
 
+    // component id
+    const componentId = (component as any)[COMPONENT_ID];
+
+    // the reducer
     return (state: T, action: AnyAction) => {
 
         verbose(`[reducer] reducer of: ${schema.constructor.name}, action: ${action.type}`);
 
+        // initial state
         if (state === undefined) {
             verbose('[reducer] state is undefined, returning initial value');
             return schema;
         }
 
+        // check component id
         if (componentId !== action.id) {
             verbose(`[reducer] component id and action.id don't match (${componentId} !== ${action.id})`);
             return state;
@@ -135,14 +163,15 @@ function createReducer<T>(schema: T, parent: any, path: string[]): Reducer<T> {
 
 function updateState<T>(component: Component<T>, newGlobalState: T, path: string[]): void {
 
-    verbose('[updateState] updating component in path: ', path.join('.'));
-
+    // vars
     var self = (component as any);
     var newScopedState = getProp(newGlobalState, path);
 
     var propsDeleted: string[] = [];
     var propsAssigned: string[] = [];
 
+    // log
+    verbose('[updateState] updating component in path: ', path.join('.'));
     verbose('[updateState] store before: ', newScopedState);
     verbose('[updateState] component before: ', component);
 
@@ -187,35 +216,4 @@ function updateState<T>(component: Component<T>, newGlobalState: T, path: string
     } else {
         verbose('[updateState] no change');
     }
-}
-
-var autoComponentId = 0;
-function getComponentId(parent: any, path: string[]): any {
-
-    // no parent
-    if (!parent || !path.length)
-        return undefined;
-
-    // withID not used
-    const idLookup = parent[WITH_ID];
-    if (!idLookup)
-        return undefined;
-
-    const selfKey = path[path.length - 1];
-    const id = parent[WITH_ID][selfKey];
-
-    // the specific component was not assigned an id
-    if (!id)
-        return undefined;
-
-    // auto id
-    if (id === AUTO_ID) {        
-        const generatedId = --autoComponentId;
-        verbose('[getComponentId] new component id generated: ' + generatedId);
-        parent[WITH_ID][selfKey] = generatedId;
-        return generatedId;
-    }
-
-    // manual id
-    return id;
 }

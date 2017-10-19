@@ -8,6 +8,12 @@ export function debug(message: string, ...optionalParams: any[]): void {
     console.log('[ReduxApp] [DEBUG] ' + message, ...optionalParams);
 }
 
+export function debugWarn(message: string, ...optionalParams: any[]): void {
+    if (!shouldLog(LogLevel.Debug))
+        return;    
+    console.warn('[ReduxApp] [DEBUG] ' + message, ...optionalParams);
+}
+
 export function verbose(message: string, ...optionalParams: any[]): void {
     if (!shouldLog(LogLevel.Verbose))
         return;
