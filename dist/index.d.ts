@@ -3,7 +3,7 @@ import { Store, StoreEnhancer } from 'redux';
 export declare function component(ctor: Function): any;
 export declare function component(options: SchemaOptions): any;
 
-export declare function withId(id: any): PropertyDecorator;
+export declare function withId(id?: any): PropertyDecorator;
 
 export declare class ReduxApp<T> {
     

@@ -209,8 +209,12 @@ function getComponentId(parent: any, path: string[]): any {
         return undefined;
 
     // auto id
-    if (id === AUTO_ID)
-        return ++autoComponentId;
+    if (id === AUTO_ID) {        
+        const generatedId = --autoComponentId;
+        verbose('[getComponentId] new component id generated: ' + generatedId);
+        parent[WITH_ID][selfKey] = generatedId;
+        return generatedId;
+    }
 
     // manual id
     return id;
