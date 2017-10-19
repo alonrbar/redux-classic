@@ -37,7 +37,7 @@ That's why we write `this.value = value + 1` and not `this.value++`.
 ## How it works
 
 For each `component` decorated class the library generates an underlying `Component` object that holds the same properties and method. The new Component object has it's prototype patched and all of it's methods replaced with dispatch() calls.
-The generated Component also has a hidden 'REDUCER' property which is assigned to the redux store. The 'REDUCER' property itself is generated from the original object methods, replacing all 'this' values with the current state from the store on each call (using Object.assign and Function.prototype.call).
+The generated Component also has a hidden 'REDUCER' property which is later on used by redux store. The 'REDUCER' property itself is generated from the original object methods, replacing all 'this' values with the current state from the store on each call (using Object.assign and Function.prototype.call).
 
 ## Component Options
 
