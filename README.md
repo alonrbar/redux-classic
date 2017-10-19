@@ -8,7 +8,7 @@ Type-safe, DRY and OO redux. Implemented with typescript.
 npm install --save redux-app
 ```
 
-## Example
+## Short Example
 ```javascript
 @component
 class App {
@@ -39,6 +39,10 @@ console.log(app.store.getState()); // { counter: { value: 1 } }
 
 You should **not mutate** the object properties but rather assign them with new values.
 That's why we write `this.value = value + 1` and not `this.value++`.
+
+## More Examples
+
+More examples can be found here [redux-app-examples](https://github.com/alonrbar/redux-app-examples).
 
 ## How it works
 
