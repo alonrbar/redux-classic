@@ -13,6 +13,8 @@ const COMPONENT_SCHEMA = Symbol('COMPONENT_SCHEMA');
 // public
 //
 
+export function component(ctor: Function): any;
+export function component(options: SchemaOptions): any; // tslint:disable-line:unified-signatures
 export function component(ctorOrOptions: Function | SchemaOptions): any {
     if (typeof ctorOrOptions === 'function') {
         componentSchemaDecorator.call(undefined, ctorOrOptions);

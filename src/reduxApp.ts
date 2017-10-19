@@ -5,6 +5,9 @@ import { simpleCombineReducers } from './reducers';
 
 export class ReduxApp<T> {
 
+    /**
+     * Global redux-app options
+     */
     public static options: GlobalOptions = globalOptions;
 
     /**
