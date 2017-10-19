@@ -17,10 +17,5 @@ module.exports = {
     resolve: {
         extensions: ['.ts', '.js'],
         modules: [path.resolve("./src"), "node_modules"]
-    },
-    plugins: [
-        new webpack.optimize.UglifyJsPlugin({
-            mangle: false
-        })
-    ]
+    }    
 };
