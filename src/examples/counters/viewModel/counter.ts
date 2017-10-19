@@ -16,6 +16,6 @@ export class CounterComponent {
         this.counter = {
             value: value + 1,
             ...rest
-        }
+        };
     }
 }

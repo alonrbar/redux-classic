@@ -1,4 +1,4 @@
-import { COMPONENT_SCHEMA_OPTIONS, SchemaOptions } from './schemaOptions';
+import { COMPONENT_SCHEMA_OPTIONS, SchemaOptions } from './options';
 import { getArgumentNames, getConstructorProp } from './utils';
 
 // tslint:disable:ban-types

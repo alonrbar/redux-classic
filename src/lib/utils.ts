@@ -1,7 +1,6 @@
-
 // tslint:disable:ban-types
+// tslint:disable:interface-over-type-literal
 
-// tslint:disable-next-line:interface-over-type-literal
 export type MethodsMap = { [name: string]: Function };
 
 export function getArgumentNames(func: Function): string[] {

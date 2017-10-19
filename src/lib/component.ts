@@ -1,7 +1,7 @@
 import { AnyAction, Dispatch, Reducer, Store } from 'redux';
 import { isComponentSchema } from './componentSchema';
 import { debug, verbose } from './log';
-import { getActionName, getSchemaOptions } from './schemaOptions';
+import { getActionName, getSchemaOptions } from './options';
 import { getMethods, getProp, getPrototype } from './utils';
 
 export const REDUCER = Symbol('REDUCER');
@@ -162,13 +162,22 @@ function updateState<T>(component: Component<T>, newGlobalState: T, path: string
             propsDeleted.push(key);
         }
     });
-    
+
+    // log
     if (propsDeleted.length || propsAssigned.length) {
         verbose('[updateState] store after: ', newScopedState);
         verbose('[updateState] component after: ', component);
         debug(`[updateState] state of ${path.join('.')} changed`);
-        debug('[updateState] props deleted: ', propsDeleted);
-        debug('[updateState] props assigned: ', propsAssigned);
+        if (propsDeleted.length) {
+            debug('[updateState] props deleted: ', propsDeleted);
+        } else {
+            verbose('[updateState] props deleted: ', propsDeleted);
+        }
+        if (propsAssigned.length) {
+            debug('[updateState] props assigned: ', propsAssigned);
+        } else {
+            verbose('[updateState] props assigned: ', propsAssigned);
+        }
     } else {
         verbose('[updateState] no change');
     }

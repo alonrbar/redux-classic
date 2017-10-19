@@ -1,5 +1,4 @@
-import { ReduxApp } from "./reduxApp";
-import { LogLevel } from "./globalOptions";
+import { globalOptions, LogLevel } from './options';
 
 // tslint:disable:no-console
 
@@ -16,9 +15,9 @@ export function verbose(message: string, ...optionalParams: any[]): void {
 }
 
 function shouldLog(level: LogLevel): boolean {
-    if (ReduxApp.options.logLevel === LogLevel.None)
+    if (globalOptions.logLevel === LogLevel.None)
         return false;
-    if (ReduxApp.options.logLevel > level)
+    if (globalOptions.logLevel > level)
         return false;
 
     return true;

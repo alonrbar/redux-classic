@@ -1,13 +1,19 @@
 import { AnyAction, createStore, Reducer, ReducersMapObject, Store, StoreEnhancer } from 'redux';
 import { Component, REDUCER } from './component';
-import { GlobalOptions } from './globalOptions';
+import { globalOptions, GlobalOptions } from './options';
 import { simpleCombineReducers } from './reducers';
 
 export class ReduxApp<T> {
 
-    public static options = new GlobalOptions();
+    public static options: GlobalOptions = globalOptions;
 
+    /**
+     * The root component of the application.
+     */
     public readonly root: T;
+    /**
+     * The underlying redux store.
+     */
     public readonly store: Store<T>;
 
     constructor(appSchema: T, enhancer?: StoreEnhancer<T>);
