@@ -1,7 +1,7 @@
 {
   "name": "redux-app",
-  "version": "1.0.2",
-  "description": "An attempt at a type-safe, DRY and OO redux",
+  "version": "1.0.3",
+  "description": "Type-safe, DRY and OO redux. Implemented with typescript.",
   "main": "dist/redux-app.min.js",
   "typings": "dist/index.d.ts",
   "scripts": {

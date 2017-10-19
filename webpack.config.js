@@ -4,9 +4,13 @@ var nodeExternals = require('webpack-node-externals');
 
 module.exports = {
     entry: ['./src/index.ts'],
+    devtool: 'source-map',
     output: {
         path: path.resolve('./dist'),
-        filename: 'redux-app.min.js'
+        filename: 'redux-app.min.js',
+        library: 'redux-app',
+        libraryTarget: 'umd',
+        umdNamedDefine: true
     },
     externals: [nodeExternals()],
     module: {
@@ -17,5 +21,8 @@ module.exports = {
     resolve: {
         extensions: ['.ts', '.js'],
         modules: [path.resolve("./src"), "node_modules"]
-    }    
+    },
+    plugins: [
+        new webpack.optimize.UglifyJsPlugin()
+    ]
 };
