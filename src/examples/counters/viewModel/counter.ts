@@ -1,7 +1,7 @@
-import { Counter } from "examples/counters/model/counter";
-import { componentSchema } from "lib";
+import { Counter } from 'examples/counters/model/counter';
+import { component } from 'lib';
 
-@componentSchema
+@component
 export class CounterComponent {
 
     public counter = new Counter();

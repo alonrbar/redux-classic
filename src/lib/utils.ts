@@ -1,3 +1,9 @@
+
+// tslint:disable:ban-types
+
+// tslint:disable-next-line:interface-over-type-literal
+export type MethodsMap = { [name: string]: Function };
+
 export function getArgumentNames(func: Function): string[] {
 
     // original regex from require.js
@@ -31,13 +37,8 @@ export function getArgumentNames(func: Function): string[] {
 export function getPrototype(obj: any) {
     if (!obj)
         return undefined;
-    if (obj.prototype)
-        return obj.prototype;
-    if (obj.constructor.prototype)
-        return obj.constructor.prototype;
+    return obj.prototype || obj.constructor.prototype;
 }
-
-export type MethodsMap = { [name: string]: Function };
 
 export function getMethods(obj: any): MethodsMap {
     if (!obj)
@@ -68,4 +69,8 @@ export function getProp<T = any>(obj: any, path: string | (string | number)[]): 
 
         return undefined;
     }, obj);
+}
+
+export function getConstructorProp(obj: any, key: symbol | string): any {
+    return obj && obj.constructor && obj.constructor[key];
 }

@@ -2,7 +2,7 @@
   "name": "redux-app",
   "version": "0.0.1",
   "description": "An attempt at a type-safe, DRY and OO redux",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "start": "webpack-dev-server --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -23,6 +23,7 @@
     "ts-loader": "^2.3.7",
     "ts-nameof": "^0.10.2",
     "ts-nameof-loader": "^1.0.1",
+    "tslint": "^5.7.0",
     "typescript": "^2.5.3",
     "webpack": "^3.7.1",
     "webpack-dev-server": "^2.9.2",

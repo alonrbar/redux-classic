@@ -1,174 +1,175 @@
-import { AnyAction, combineReducers, Dispatch, Reducer, ReducersMapObject, Store } from 'redux';
-import { componentSchema, getActionName, isComponentSchema } from './componentSchema';
+import { AnyAction, Dispatch, Reducer, Store } from 'redux';
+import { isComponentSchema } from './componentSchema';
+import { debug, verbose } from './log';
+import { getActionName, getSchemaOptions } from './schemaOptions';
 import { getMethods, getProp, getPrototype } from './utils';
 
-// TODO:
-// 1. "Unexpected key" warning
-// 2. subscribe to substate
-// 3. load state (next version...)
+export const REDUCER = Symbol('REDUCER');
+const DISPOSE = Symbol('DISPOSE');
 
-const REDUCER = Symbol('REDUCER')
-
-export type IStateListener<T> = (state: T, action: AnyAction) => void;
-
-export type UnsubscribeFunc = () => void;
+// TODO: export type IStateListener<T> = (state: T) => void;
 
 export class Component<T> {
 
     constructor(store: Store<T>, schema: T, path: string[]) {
 
         if (!isComponentSchema(schema))
-            throw new Error("Argument schema is not a component schema. Did you forget to use the decorator?");
+            throw new Error(`Argument '${nameof(schema)}' is not a component schema. Did you forget to use the decorator?`);
 
-        this.createSelf(store, schema, path);
-        this.createSubComponents(store, schema, path);
+        (this as any)[DISPOSE] = [];
+
+        createSelf(this, store, schema, path);
+        createSubComponents(this, store, schema, path);
+
+        debug(`[Component] new ${schema.constructor.name} component created. path: ${path.join('.')}`);
     }
 
-    public getReducer(): Reducer<T> {
-        var thisReducer = (this as any)[REDUCER];
-
-        const subReducers: ReducersMapObject = {};
-        for (let key of Object.keys(this)) {
-            if ((this as any)[key] instanceof Component)
-                subReducers[key] = (this as any)[key].getReducer();
-        }
-
-        // reducer with sub-reducers
-        if (Object.keys(subReducers).length) {
-
-            var combinedSubReducer = combineReducers<any>(subReducers);
-
-            return (state: T, action: AnyAction) => {
-                const thisState = thisReducer(state, action);
-                const subStates = combinedSubReducer(state, action);
-
-                // merge self and sub states
-                return {
-                    ...thisState,
-                    ...subStates
-                }
-            }
-        }
-
-        // single reducer
-        return thisReducer;
-    }
-
-    // public subscribe(): UnsubscribeFunc {
-
-    // }
-
-    private createSelf(store: Store<T>, schema: T, path: string[]): void {
-
-        // regular js props
-        for (let key of Object.keys(schema)) {
-            (this as any)[key] = (schema as any)[key];
-        }
-
-        // actions
-        var proto = getPrototype(this);
-        var patchedProto = this.createActions(store.dispatch, schema);
-        Object.assign(proto, patchedProto);
-
-        // reducer
-        (this as any)[REDUCER] = this.createReducer(schema);
-
-        // state
-        store.subscribe(() => this.updateState(store.getState(), path))
-    }
-
-    private createSubComponents(store: Store<T>, schema: T, path: string[]): void {
-        for (let key of Object.keys(schema)) {
-            var subSchema = (schema as any)[key];
-            if (isComponentSchema(subSchema)) {
-                (this as any)[key] = new Component(store, subSchema, path.concat([key]));
-            }
+    public disposeComponent(): void {
+        const disposables: any[] = (this as any)[DISPOSE];
+        while (disposables.length) {
+            var disposable = disposables.pop();
+            if (disposable && disposable.dispose)
+                disposable.dispose();
         }
     }
+}
 
-    private createActions(dispatch: Dispatch<T>, schema: T): any {
+// 
+// private methods are held outside of the component class to reduce the chance
+// of method name collision.
+//
 
-        var methods = getMethods(schema);
-        if (!methods)
-            return undefined;
+function createSelf<T>(component: Component<T>, store: Store<T>, schema: T, path: string[]): void {
 
-        var outputActions: any = {};
-        Object.keys(methods).forEach(key => {
-            outputActions[key] = (...payload: any[]): void => {                
-                dispatch({
-                    type: getActionName(key, schema),
-                    payload: payload
-                });
-            };
-        });
+    // regular js props
+    for (let key of Object.keys(schema)) {
+        (component as any)[key] = (schema as any)[key];
+    }
 
-        return outputActions;
-    }    
+    // actions
+    const proto = getPrototype(component);
+    const patchedProto = createActions(store.dispatch, schema);
+    Object.assign(proto, patchedProto);
 
-    private createReducer(schema: T): Reducer<T> {
+    // reducer
+    (component as any)[REDUCER] = createReducer(schema);
 
-        var methods = getMethods(schema);
-        var methodNames = Object.keys(methods);
+    // state
+    const options = getSchemaOptions(schema);
+    if (options.updateState) {
+        const unsubscribe = store.subscribe(() => updateState(component, store.getState(), path));
+        (component as any)[DISPOSE].push({ dispose: () => unsubscribe() });
+    }
+}
 
-        return (state: T, action: AnyAction) => {
+function createSubComponents<T>(component: Component<T>, store: Store<T>, schema: T, path: string[]): void {
+    for (let key of Object.keys(schema)) {
+        var subSchema = (schema as any)[key];
+        if (isComponentSchema(subSchema)) {
+            (component as any)[key] = new Component(store, subSchema, path.concat([key]));
+        }
+    }
+}
 
-            if (state === undefined)
-                return schema;
+function createActions<T>(dispatch: Dispatch<T>, schema: T): any {
 
-            // check if should use this reducer            
-            var methodName = methodNames.find(name => getActionName(name, schema) === action.type);
-            var actionReducer = methods[methodName];
-            if (!actionReducer)
-                return state;
+    var methods = getMethods(schema);
+    if (!methods)
+        return undefined;
 
-            // call the action-reducer with the new state as the 'this' argument
-            var newState = Object.assign({}, state);
-            actionReducer.call(newState, ...action.payload);
-
-            // return new state
-            return newState;
+    var outputActions: any = {};
+    Object.keys(methods).forEach(key => {
+        outputActions[key] = (...payload: any[]): void => {
+            dispatch({
+                type: getActionName(key, schema),
+                payload: payload
+            });
         };
+    });
+
+    return outputActions;
+}
+
+function createReducer<T>(schema: T): Reducer<T> {
+
+    // method names lookup
+    const methods = getMethods(schema);
+    const methodNames: any = {};
+    Object.keys(methods).forEach(methName => {
+        var actionName = getActionName(methName, schema);
+        methodNames[actionName] = methName;
+    });
+
+    return (state: T, action: AnyAction) => {
+
+        verbose(`[reducer] reducer of: ${schema.constructor.name}, action: ${action.type}`);
+
+        if (state === undefined) {
+            verbose('[reducer] state is undefined, returning initial value');
+            return schema;
+        }
+
+        // check if should use this reducer            
+        const methodName = methodNames[action.type];
+        const actionReducer = methods[methodName];
+        if (!actionReducer) {
+            verbose('[reducer] no matching action in this reducer, returning previous state');
+            return state;
+        }
+
+        // call the action-reducer with the new state as the 'this' argument
+        var newState = Object.assign({}, state);
+        actionReducer.call(newState, ...action.payload);
+
+        // return new state
+        verbose('[reducer] reducer invoked returning new state');
+        return newState;
+    };
+}
+
+function updateState<T>(component: Component<T>, newGlobalState: T, path: string[]): void {
+
+    verbose('[updateState] updating component in path: ', path.join('.'));
+
+    var self = (component as any);
+    var newScopedState = getProp(newGlobalState, path);
+
+    var propsDeleted: string[] = [];
+    var propsAssigned: string[] = [];
+
+    verbose('[updateState] store before: ', newScopedState);
+    verbose('[updateState] component before: ', component);
+
+    // assign new state
+    Object.keys(newScopedState).forEach(key => {
+        // We check two things:
+        // 1. The new value is not referencely equal to the previous. This
+        //    is just a minor optimization.
+        // 2. The old value isn't a component. Overwriting a component means
+        //    losing it's patched prototype and therefore invoking it's
+        //    methods will not use the store's dispatch function anymore
+        //    (and will mutate the component state directly).
+        if (self[key] !== newScopedState[key] && !(self[key] instanceof Component)) {
+            self[key] = newScopedState[key];
+            propsAssigned.push(key);
+        }
+    });
+
+    // delete left-overs from previous state
+    Object.keys(component).forEach(key => {
+        if (newScopedState[key] === undefined) {
+            delete self[key];
+            propsDeleted.push(key);
+        }
+    });
+    
+    if (propsDeleted.length || propsAssigned.length) {
+        verbose('[updateState] store after: ', newScopedState);
+        verbose('[updateState] component after: ', component);
+        debug(`[updateState] state of ${path.join('.')} changed`);
+        debug('[updateState] props deleted: ', propsDeleted);
+        debug('[updateState] props assigned: ', propsAssigned);
+    } else {
+        verbose('[updateState] no change');
     }
-
-    private updateState(newGlobalState: T, path: string[]): void {
-
-        // console.log(path)
-
-        var self = (this as any);
-        var newScopedState = getProp(newGlobalState, path);
-
-        var deleted = false;
-        var assigned = false;
-
-        // console.log('store before: ', newScopedState)
-        // console.log('this before: ', this)
-
-        // assign new state
-        Object.keys(newScopedState).forEach(key => {
-            // We check two things:
-            // 1. The new value is not referencely equal to the previous. This
-            //    is just a minor optimization.
-            // 2. The old value isn't a component. Overwriting a component means
-            //    losing it's patched prototype and therefore invoking it's
-            //    methods will not use the store's dispatch function anymore
-            //    (and will mutate the component state directly).
-            if (self[key] !== newScopedState[key] && !(self[key] instanceof Component)) {
-                self[key] = newScopedState[key];
-                assigned = true;
-            }
-        });
-
-        // delete left-overs from previous state
-        Object.keys(this).forEach(key => {
-            if (newScopedState[key] === undefined) {
-                delete self[key];
-                deleted = true;
-            }
-        })
-
-        // console.log('store after: ', newScopedState)
-        // console.log('this after: ', this)
-        // console.log('deleted: ', deleted)
-        // console.log('assigned: ', assigned)
-    }    
 }

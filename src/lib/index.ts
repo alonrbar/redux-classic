@@ -1,3 +1,5 @@
-export { IStateListener, UnsubscribeFunc } from './component';
-export { componentSchema } from './componentSchema';
+
+export { component } from './componentSchema';
+export { GlobalOptions, LogLevel } from './globalOptions';
 export { ReduxApp } from './reduxApp';
+export { SchemaOptions } from './schemaOptions';
