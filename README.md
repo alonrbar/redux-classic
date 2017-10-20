@@ -49,7 +49,92 @@ More examples can be found here [redux-app-examples](https://github.com/alonrbar
 For each `component` decorated class the library generates an underlying `Component` object that holds the same properties and method. The new Component object has it's prototype patched and all of it's methods replaced with dispatch() calls.
 The generated Component also has a hidden 'REDUCER' property which is later on used by redux store. The 'REDUCER' property itself is generated from the original object methods, replacing all 'this' values with the current state from the store on each call (using Object.assign and Function.prototype.call).
 
-## Component Options
+## Documentation
+
+- [Important Notice](#important-notice)
+- [Examples](https://github.com/alonrbar/redux-app-examples)
+- [How it works](#how-it-works)
+- [Async Actions](#async-actions)
+- [The `withId` decorator - "mini ORM" feature](#withId)
+- [Limitations](#limitations)
+- [Options](#options)
+  - [Component Options](#component-options)
+  - [Global Options](global-options)
+
+### Async Actions
+
+Async actions and side effects are handled in redux-app by using either the `sequence` decorator or the `noDispatch`. Both decorators does **exactly the same** and are actually aliases of the same underlying function. What they do is to tell redux-app that the decorated method is a plain old javascript method and that it should not be patched (about the patch process see [How it works](#how-it-works)). So, to conclude, what these decorators actually do is to tell redux-app to _do nothing special_ with the method.
+
+Usage:
+
+_working example can be found on the [redux-app-examples](https://github.com/alonrbar/redux-app-examples) page_
+
+```javascript
+@component
+class MyComponent {
+
+    public setStatus(newStatus: string) { // <--- Not decorated. Will dispatch SET_STATUS action.
+        this.status = newStatus;
+    }
+
+    @sequence
+    public async fetchImage() {
+
+        // dispatch an action
+        this.setStatus('Fetching...');
+
+        // do async stuff
+        var response = await fetch('fetch something from somewhere');
+        var responseBody = await response.json();
+
+        // dispatch another action
+        this.setStatus('Adding unnecessary delay...');
+
+        // more async...
+        setTimeout(() => {
+
+            // more dispatch
+            this.setStatus('I am done.');
+        }, 2000);
+    }
+
+    @noDispatch
+    public doNothing() {
+        console.log('I am a plain old method. Nothing special here.');
+    }
+}
+```
+
+### withId
+
+The rule of the `withId` decorator is double. From one hand, it enables the co-existence of two (or more) instances of the same component, each with it's own separate state. From the other hand, it is used to keep to separate components in sync.
+
+Example:
+
+_working example can be found on the [redux-app-examples](https://github.com/alonrbar/redux-app-examples) page_
+
+```javascript
+@component
+export class App {
+
+    @withId('SyncMe')
+    public counter1 = new CounterComponent();  // <-- this counter is in sync with counter2
+
+    @withId('SyncMe')
+    public counter2 = new CounterComponent();  // <-- this counter is in sync with counter1
+
+    @withId(123)
+    public counter3 = new CounterComponent();  // <-- manual set ID
+                                               // this counter is not synced with the others
+    @withId()
+    public counter4 = new CounterComponent();  // <-- auto generated unique ID (unique within the scope of the application)
+                                               // this counter also has it's own unique state
+}
+```
+
+### Options
+
+#### Component Options
 
 You can supply the following options to the `component` decorator.
 
@@ -91,7 +176,7 @@ class Counter {
 }
 ```
 
-## Global Options
+#### Global Options
 
 Available global options:
 ```javascript
