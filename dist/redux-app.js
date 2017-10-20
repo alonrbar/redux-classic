@@ -175,8 +175,6 @@ function assertComponentSchema(obj, msg) {
 }
 exports.assertComponentSchema = assertComponentSchema;
 function componentSchemaDecorator(ctor, options) {
-    if (utils_1.getArgumentNames(ctor).length)
-        throw new Error('componentSchema classes must have a parameter-less constructor');
     ctor[symbols_1.COMPONENT_SCHEMA] = true;
     ctor[symbols_1.COMPONENT_SCHEMA_OPTIONS] = options;
 }
@@ -257,16 +255,6 @@ exports.getConstructorProp = getConstructorProp;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var options_1 = __webpack_require__(1);
-function debugWarn(message) {
-    var optionalParams = [];
-    for (var _i = 1; _i < arguments.length; _i++) {
-        optionalParams[_i - 1] = arguments[_i];
-    }
-    if (!shouldLog(options_1.LogLevel.Debug))
-        return;
-    console.warn.apply(console, ['[ReduxApp] [DEBUG] ' + message].concat(optionalParams));
-}
-exports.debugWarn = debugWarn;
 function debug(message) {
     var optionalParams = [];
     for (var _i = 1; _i < arguments.length; _i++) {
@@ -277,6 +265,16 @@ function debug(message) {
     console.log.apply(console, ['[ReduxApp] [DEBUG] ' + message].concat(optionalParams));
 }
 exports.debug = debug;
+function debugWarn(message) {
+    var optionalParams = [];
+    for (var _i = 1; _i < arguments.length; _i++) {
+        optionalParams[_i - 1] = arguments[_i];
+    }
+    if (!shouldLog(options_1.LogLevel.Debug))
+        return;
+    console.warn.apply(console, ['[ReduxApp] [DEBUG] ' + message].concat(optionalParams));
+}
+exports.debugWarn = debugWarn;
 function verbose(message) {
     var optionalParams = [];
     for (var _i = 1; _i < arguments.length; _i++) {
@@ -416,7 +414,7 @@ var ReduxApp = (function () {
             var combinedSubReducer = reducers_1.simpleCombineReducers(subReducers);
             return function (state, action) {
                 var thisState = rootReducer(state, action);
-                var subStates = combinedSubReducer(state, action);
+                var subStates = combinedSubReducer(thisState, action);
                 return __assign({}, thisState, subStates);
             };
         }

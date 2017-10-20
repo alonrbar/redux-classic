@@ -54,7 +54,7 @@ export class ReduxApp<T> {
 
             return (state: T, action: AnyAction) => {
                 const thisState = rootReducer(state, action);
-                const subStates = combinedSubReducer(state, action);
+                const subStates = combinedSubReducer(thisState, action);
 
                 // merge self and sub states
                 return {

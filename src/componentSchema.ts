@@ -1,5 +1,5 @@
 import { SchemaOptions } from './options';
-import { getArgumentNames, getConstructorProp } from './utils';
+import { getConstructorProp } from './utils';
 import { COMPONENT_SCHEMA, COMPONENT_SCHEMA_OPTIONS } from './symbols';
 
 // tslint:disable:ban-types
@@ -35,9 +35,6 @@ export function assertComponentSchema(obj: any, msg?: string): void {
 //
 
 function componentSchemaDecorator(ctor: Function, options?: SchemaOptions) {
-    if (getArgumentNames(ctor).length)
-        throw new Error('componentSchema classes must have a parameter-less constructor');
-
     (ctor as any)[COMPONENT_SCHEMA] = true;
     (ctor as any)[COMPONENT_SCHEMA_OPTIONS] = options;
 }

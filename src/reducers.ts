@@ -18,5 +18,5 @@ export function simpleCombineReducers(reducers: ReducersMapObject): any {
             hasChanged = hasChanged || nextStateForKey !== previousStateForKey;
         }
         return hasChanged ? nextState : state;
-    }
+    };
 }

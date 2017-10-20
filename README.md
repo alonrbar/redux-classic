@@ -46,8 +46,11 @@ More examples can be found here [redux-app-examples](https://github.com/alonrbar
 
 ## How it works
 
-For each `component` decorated class the library generates an underlying `Component` object that holds the same properties and method. The new Component object has it's prototype patched and all of it's methods replaced with dispatch() calls.
-The generated Component also has a hidden 'REDUCER' property which is later on used by redux store. The 'REDUCER' property itself is generated from the original object methods, replacing all 'this' values with the current state from the store on each call (using Object.assign and Function.prototype.call).
+For each `component` decorated class the library generates an underlying `Component` object that holds the same properties and method.
+The new Component object has it's prototype patched and all of it's methods replaced with dispatch() calls.
+The generated Component also has a hidden 'REDUCER' property which is later on used by redux store. The 'REDUCER' property itself is
+generated from the original object methods, replacing all 'this' values with the current state from the store on each call (using
+Object.assign and Function.prototype.call).
 
 ## Documentation
 
@@ -56,14 +59,17 @@ The generated Component also has a hidden 'REDUCER' property which is later on u
 - [How it works](#how-it-works)
 - [Async Actions](#async-actions)
 - [The `withId` decorator - "mini ORM" feature](#withId)
-- [Limitations](#limitations)
 - [Options](#options)
   - [Component Options](#component-options)
   - [Global Options](global-options)
 
 ### Async Actions
 
-Async actions and side effects are handled in redux-app by using either the `sequence` decorator or the `noDispatch`. Both decorators does **exactly the same** and are actually aliases of the same underlying function. What they do is to tell redux-app that the decorated method is a plain old javascript method and that it should not be patched (about the patch process see [How it works](#how-it-works)). So, to conclude, what these decorators actually do is to tell redux-app to _do nothing special_ with the method.
+Async actions and side effects are handled in redux-app by using either the `sequence` decorator or the `noDispatch`.
+Both decorators does **exactly the same** and are actually aliases of the same underlying function. What they do is
+to tell redux-app that the decorated method is a plain old javascript method and that it should not be patched (about
+the patch process see [How it works](#how-it-works)). So, to conclude, what these decorators actually do is to tell
+redux-app to _do nothing special_ with the method.
 
 Usage:
 
@@ -107,7 +113,9 @@ class MyComponent {
 
 ### withId
 
-The rule of the `withId` decorator is double. From one hand, it enables the co-existence of two (or more) instances of the same component, each with it's own separate state. From the other hand, it is used to keep to separate components in sync.
+The rule of the `withId` decorator is double. From one hand, it enables the co-existence of two (or more) instances of the same component,
+each with it's own separate state. From the other hand, it is used to keep two separate components in sync. The 'id' argument of the decorator
+can be anything (string, number, object, etc.).
 
 Example:
 
