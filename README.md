@@ -113,7 +113,7 @@ class MyComponent {
 
 ### withId
 
-The rule of the `withId` decorator is double. From one hand, it enables the co-existence of two (or more) instances of the same component,
+The role of the `withId` decorator is double. From one hand, it enables the co-existence of two (or more) instances of the same component,
 each with it's own separate state. From the other hand, it is used to keep two separate components in sync. The 'id' argument of the decorator
 can be anything (string, number, object, etc.).
 
