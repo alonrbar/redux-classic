@@ -1,7 +1,15 @@
 {
   "name": "redux-app",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Type-safe, DRY and OO redux. Implemented with typescript.",
+  "keywords": [
+    "redux",
+    "typescript",
+    "dry",
+    "aurelia",
+    "angular",
+    "plugin"
+  ],
   "author": "Alon Bar",
   "license": "MIT",  
   "homepage": "https://github.com/alonrbar/redux-app",
