@@ -1,4 +1,4 @@
-import { NO_DISPATCH } from "./symbols";
+import { NO_DISPATCH } from "../symbols";
 
 /**
  * Method decorator.

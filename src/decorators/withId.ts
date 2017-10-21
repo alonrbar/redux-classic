@@ -1,5 +1,5 @@
-import { WITH_ID, AUTO_ID } from "./symbols";
-import { verbose } from "./log";
+import { WITH_ID, AUTO_ID } from "../symbols";
+import { verbose } from "../utils";
 
 export function withId(id?: any): PropertyDecorator {
     return (target: any, propertyKey: string | symbol) => {

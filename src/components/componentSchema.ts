@@ -1,6 +1,6 @@
-import { SchemaOptions } from './options';
-import { getConstructorProp } from './utils';
-import { COMPONENT_SCHEMA, COMPONENT_SCHEMA_OPTIONS } from './symbols';
+import { SchemaOptions } from '../options';
+import { getConstructorProp } from '../utils';
+import { COMPONENT_SCHEMA, COMPONENT_SCHEMA_OPTIONS } from '../symbols';
 
 // tslint:disable:ban-types
 

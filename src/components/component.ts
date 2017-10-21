@@ -1,12 +1,12 @@
 import { AnyAction, Dispatch, Reducer, Store } from 'redux';
+import { getComponentId } from '../decorators';
+import { getActionName, getSchemaOptions } from '../options';
+import { COMPONENT_ID, DISPOSE, NO_DISPATCH, REDUCER } from '../symbols';
+import { debug, debugWarn, getMethods, getProp, getPrototype, verbose } from '../utils';
 import { isComponentSchema } from './componentSchema';
-import { debug, verbose, debugWarn } from './log';
-import { getActionName, getSchemaOptions } from './options';
-import { getMethods, getProp, getPrototype } from './utils';
-import { DISPOSE, REDUCER, COMPONENT_ID, NO_DISPATCH } from './symbols';
-import { getComponentId } from './withId';
 
 // TODO: export type IStateListener<T> = (state: T) => void;
+// TODO: add listensTo option
 
 export class Component<T> {
 
@@ -86,10 +86,10 @@ function createActions<T>(dispatch: Dispatch<T>, schema: T): any {
     Object.keys(methods).forEach(key => {
         outputActions[key] = function (this: any, ...payload: any[]): void {
             
-            // verify this arg
+            // verify 'this' arg
             if (!(this instanceof Component)) {
                 const msg = "Component method invoked with non-Component as 'this'. " +
-                    "Some redux-app features such as the withId decorator will not work. Bound 'this' argument: ";
+                    "Some redux-app features such as the withId decorator will not work. Bound 'this' argument is: ";
                 debugWarn(msg, this);
             }
 
@@ -156,7 +156,7 @@ function createReducer<T>(component: Component<T>, schema: T): Reducer<T> {
         actionReducer.call(newState, ...action.payload);
 
         // return new state
-        verbose('[reducer] reducer invoked returning new state');
+        verbose('[reducer] reducer invoked, returning new state');
         return newState;
     };
 }
@@ -165,10 +165,7 @@ function updateState<T>(component: Component<T>, newGlobalState: T, path: string
 
     // vars
     var self = (component as any);
-    var newScopedState = getProp(newGlobalState, path);
-
-    var propsDeleted: string[] = [];
-    var propsAssigned: string[] = [];
+    var newScopedState = getProp(newGlobalState, path);    
 
     // log
     verbose('[updateState] updating component in path: ', path.join('.'));
@@ -176,6 +173,7 @@ function updateState<T>(component: Component<T>, newGlobalState: T, path: string
     verbose('[updateState] component before: ', component);
 
     // assign new state
+    var propsAssigned: string[] = [];
     Object.keys(newScopedState).forEach(key => {
         // We check two things:
         // 1. The new value is not referencely equal to the previous. This
@@ -191,6 +189,7 @@ function updateState<T>(component: Component<T>, newGlobalState: T, path: string
     });
 
     // delete left-overs from previous state
+    var propsDeleted: string[] = [];
     Object.keys(component).forEach(key => {
         if (newScopedState[key] === undefined) {
             delete self[key];

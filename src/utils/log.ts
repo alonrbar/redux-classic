@@ -1,4 +1,4 @@
-import { globalOptions, LogLevel } from './options';
+import { globalOptions, LogLevel } from '../options';
 
 // tslint:disable:no-console
 

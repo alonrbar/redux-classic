@@ -1,5 +1,4 @@
-export { component } from './componentSchema';
+export { component } from './components';
 export { SchemaOptions, GlobalOptions, LogLevel } from './options';
 export { ReduxApp } from './reduxApp';
-export { noDispatch, sequence } from './noDispatch';
-export { withId } from './withId';
+export { noDispatch, sequence, withId } from './decorators';

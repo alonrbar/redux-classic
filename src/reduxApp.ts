@@ -1,7 +1,7 @@
 import { AnyAction, createStore, Reducer, ReducersMapObject, Store, StoreEnhancer } from 'redux';
-import { Component } from './component';
+import { Component } from './components';
 import { globalOptions, GlobalOptions } from './options';
-import { simpleCombineReducers } from './reducers';
+import { simpleCombineReducers } from './utils';
 import { REDUCER } from './symbols';
 
 export class ReduxApp<T> {
