@@ -46,11 +46,13 @@ More examples can be found here [redux-app-examples](https://github.com/alonrbar
 
 ## How it works
 
-For each `component` decorated class the library generates an underlying `Component` object that holds the same properties and method.
+For each `component` decorated class the library generates an underlying `Component` object that holds the same properties and methods.
 The new Component object has it's prototype patched and all of it's methods replaced with dispatch() calls.
 The generated Component also has a hidden 'REDUCER' property which is later on used by redux store. The 'REDUCER' property itself is
 generated from the original object methods, replacing all 'this' values with the current state from the store on each call (using
 Object.assign and Function.prototype.call).
+
+_Reading the source tip #1: There are two main classes in redux-app. The first is ReduxApp (~70 lines) and the second is Component (~220 lines)._
 
 ## Documentation
 
@@ -58,7 +60,7 @@ Object.assign and Function.prototype.call).
 - [Examples](https://github.com/alonrbar/redux-app-examples)
 - [How it works](#how-it-works)
 - [Async Actions](#async-actions)
-- [The `withId` decorator - "mini ORM" feature](#withId)
+- [The `withId` decorator - "mini ORM" feature](#withid)
 - [Options](#options)
   - [Component Options](#component-options)
   - [Global Options](global-options)
