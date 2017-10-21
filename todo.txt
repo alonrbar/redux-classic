@@ -1,0 +1,3 @@
+* add changelog
+* add listensTo
+* add option to subscribe to component state

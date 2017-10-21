@@ -2,13 +2,19 @@
 
 Type-safe, DRY and OO redux. Implemented with typescript.
 
+[![npm version](https://img.shields.io/npm/v/redux-app.svg)](https://www.npmjs.com/package/redux-app)
+[![npm license](https://img.shields.io/npm/l/redux-app.svg)](https://www.npmjs.com/package/redux-app)
+[![dependencies](https://david-dm.org/alonrbar/redux-app.svg)](https://github.com/alonrbar/redux-app)
+[![dependencies](https://david-dm.org/alonrbar/redux-app/dev-status.svg)](https://github.com/alonrbar/redux-app)
+
 ## Installation
 
-```
+```shell
 npm install --save redux-app
 ```
 
 ## Short Example
+
 ```javascript
 @component
 class App {
@@ -175,6 +181,7 @@ class SchemaOptions {
 ```
 
 Usage:
+
 ```javascript
 @component({ uppercaseActions: false })
 class Counter {
@@ -189,6 +196,7 @@ class Counter {
 #### Global Options
 
 Available global options:
+
 ```javascript
 class GlobalOptions {
     logLevel: LogLevel;
@@ -214,6 +222,7 @@ enum LogLevel {
 ```
 
 Usage:
+
 ```javascript
 ReduxApp.options.logLevel = LogLevel.Debug;
 ```
