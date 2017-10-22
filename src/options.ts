@@ -1,8 +1,6 @@
 import { assertComponentSchema } from './components';
 import { getConstructorProp } from './utils';
 import { COMPONENT_SCHEMA_OPTIONS } from './symbols';
-
-declare var require: any;
 var snakecase = require('lodash.snakecase');
 
 //

@@ -12,7 +12,7 @@
     "angular"
   ],
   "author": "Alon Bar",
-  "license": "MIT",  
+  "license": "MIT",
   "homepage": "https://github.com/alonrbar/redux-app",
   "repository": {
     "type": "git",
@@ -25,13 +25,21 @@
   "typings": "dist/index.d.ts",
   "scripts": {
     "release": "webpack && webpack --config webpack.config.dev.js",
-    "dev": "webpack --config webpack.config.dev.js --watch"
-  },  
+    "dev": "webpack --config webpack.config.dev.js --watch",
+    "test": "mocha-webpack --watch --require source-map-support/register --webpack-config tasks/test/webpack.config.js \"test/**/*.tests.ts\""
+  },
   "dependencies": {
     "lodash.snakecase": "^4.1.1",
     "redux": "^3.7.2"
   },
   "devDependencies": {
+    "@types/chai": "^4.0.4",
+    "@types/mocha": "^2.2.43",
+    "@types/node": "^8.0.46",
+    "chai": "^4.1.2",
+    "mocha": "^4.0.1",
+    "mocha-webpack": "^0.7.0",
+    "source-map-support": "^0.5.0",
     "ts-loader": "^3.0.5",
     "ts-nameof": "^0.10.2",
     "ts-nameof-loader": "^1.0.1",

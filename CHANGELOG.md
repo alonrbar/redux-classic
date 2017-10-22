@@ -2,6 +2,10 @@
 
 ## [Unreleased](https://github.com/alonrbar/redux-app/tree/develop)
 
+### Added
+
+- Unit tests.
+
 ## [1.3.0 - 2017-10-21](https://github.com/alonrbar/redux-app)
 
 ### Added
@@ -22,8 +26,7 @@
 
 ### Added
 
-- Packed as UMD package.
-- Available 
+- Packed as a UMD package.
 
 ## [0.0.0 - 2017-10-19](https://github.com/alonrbar/redux-app)
 
