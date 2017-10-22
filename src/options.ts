@@ -31,12 +31,12 @@ export class SchemaOptions {
     public updateState? = true;
 }
 
-export function getSchemaOptions(schema: any): SchemaOptions {
+export function getSchemaOptions(schema: object): SchemaOptions {
     assertComponentSchema(schema);
     return Object.assign({}, new SchemaOptions(), globalOptions.schema,  getConstructorProp(schema, COMPONENT_SCHEMA_OPTIONS));
 }
 
-export function getActionName(key: string, schema: any): string {
+export function getActionName(key: string, schema: object): string {
     var options = getSchemaOptions(schema);
 
     var actionName = key;

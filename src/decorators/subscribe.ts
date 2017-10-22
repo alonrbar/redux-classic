@@ -1,9 +1,5 @@
 import { Component } from '../components';
 
-export interface INewable<T> { 
-    new(...args: any[]): T; 
-}
-
 export interface ISubscribe {
     /**
      * Method decorator.
@@ -14,5 +10,5 @@ export interface ISubscribe {
      * Function.
      * Subscribe to changes of a specific component.
      */
-    <T>(target: Component<T>): void;
+    <T extends object>(target: Component<T>): void;
 }

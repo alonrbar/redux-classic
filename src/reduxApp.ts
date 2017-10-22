@@ -4,7 +4,7 @@ import { globalOptions, GlobalOptions } from './options';
 import { simpleCombineReducers } from './utils';
 import { REDUCER } from './symbols';
 
-export class ReduxApp<T> {
+export class ReduxApp<T extends object> {
 
     /**
      * Global redux-app options

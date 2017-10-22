@@ -8,9 +8,9 @@ import { isComponentSchema } from './componentSchema';
 // TODO: export type IStateListener<T> = (state: T) => void;
 // TODO: add listensTo option
 
-export class Component<T> {
+export class Component<T extends object> {
 
-    constructor(store: Store<T>, schema: T, parent: any, path: string[]) {
+    constructor(store: Store<T>, schema: T, parent: object, path: string[]) {
 
         if (!isComponentSchema(schema))
             throw new Error(`Argument '${nameof(schema)}' is not a component schema. Did you forget to use the decorator?`);
@@ -36,7 +36,7 @@ export class Component<T> {
 // of method name collision.
 //
 
-function createSelf<T>(component: Component<T>, store: Store<T>, schema: T, parent: any, path: string[]): void {
+function createSelf<T extends object>(component: Component<T>, store: Store<T>, schema: T, parent: any, path: string[]): void {
 
     (component as any)[DISPOSE] = [];
 
@@ -67,7 +67,7 @@ function createSelf<T>(component: Component<T>, store: Store<T>, schema: T, pare
     }
 }
 
-function createSubComponents<T>(component: Component<T>, store: Store<T>, schema: T, path: string[]): void {
+function createSubComponents<T extends object>(component: Component<T>, store: Store<T>, schema: T, path: string[]): void {
     for (let key of Object.keys(schema)) {
         var subSchema = (schema as any)[key];
         if (isComponentSchema(subSchema)) {
@@ -76,7 +76,7 @@ function createSubComponents<T>(component: Component<T>, store: Store<T>, schema
     }
 }
 
-function createActions<T>(dispatch: Dispatch<T>, schema: T): any {
+function createActions<T extends object>(dispatch: Dispatch<T>, schema: T): any {
 
     const methods = getMethods(schema);
     if (!methods)
@@ -84,7 +84,7 @@ function createActions<T>(dispatch: Dispatch<T>, schema: T): any {
 
     const outputActions: any = {};
     Object.keys(methods).forEach(key => {
-        outputActions[key] = function (this: any, ...payload: any[]): void {
+        outputActions[key] = function (this: Component<T>, ...payload: any[]): void {
             
             // verify 'this' arg
             if (!(this instanceof Component)) {
@@ -103,7 +103,7 @@ function createActions<T>(dispatch: Dispatch<T>, schema: T): any {
                 // handle dispatch methods (use store dispatch)
                 dispatch({
                     type: getActionName(key, schema),
-                    id: this[COMPONENT_ID],
+                    id: (this as any)[COMPONENT_ID],
                     payload: payload
                 });
             }
@@ -113,7 +113,7 @@ function createActions<T>(dispatch: Dispatch<T>, schema: T): any {
     return outputActions;
 }
 
-function createReducer<T>(component: Component<T>, schema: T): Reducer<T> {    
+function createReducer<T extends object>(component: Component<T>, schema: T): Reducer<T> {    
 
     // method names lookup
     const methods = getMethods(schema);
@@ -161,7 +161,7 @@ function createReducer<T>(component: Component<T>, schema: T): Reducer<T> {
     };
 }
 
-function updateState<T>(component: Component<T>, newGlobalState: T, path: string[]): void {
+function updateState<T extends object>(component: Component<T>, newGlobalState: T, path: string[]): void {
 
     // vars
     var self = (component as any);

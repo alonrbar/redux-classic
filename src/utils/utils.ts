@@ -33,13 +33,13 @@ export function getArgumentNames(func: Function): string[] {
     return args;
 }
 
-export function getPrototype(obj: any) {
+export function getPrototype(obj: object) {
     if (!obj)
         return undefined;
-    return obj.prototype || obj.constructor.prototype;
+    return obj.constructor.prototype;
 }
 
-export function getMethods(obj: any): MethodsMap {
+export function getMethods(obj: object): MethodsMap {
     if (!obj)
         return undefined;
 
@@ -70,6 +70,6 @@ export function getProp<T = any>(obj: any, path: string | (string | number)[]): 
     }, obj);
 }
 
-export function getConstructorProp(obj: any, key: symbol | string): any {
-    return obj && obj.constructor && obj.constructor[key];
+export function getConstructorProp(obj: object, key: symbol | string): any {
+    return obj && obj.constructor && (obj.constructor as any)[key];
 }

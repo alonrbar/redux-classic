@@ -5,7 +5,7 @@ import { NO_DISPATCH } from "../symbols";
  * Instruct redux-app to keep this method as is and not to replace it with invocation of store.dispatch.
  * Alias of 'sequence'.
  */
-export function noDispatch(target: any, propertyKey: string | symbol): void {
+export function noDispatch(target: object, propertyKey: string | symbol): void {
     noDispatchDecorator(target, propertyKey);
 }
 
@@ -14,10 +14,10 @@ export function noDispatch(target: any, propertyKey: string | symbol): void {
  * Instruct redux-app to keep this method as is and not to replace it with invocation of store.dispatch.
  * Alias of 'noDispatch'.
  */
-export function sequence(target: any, propertyKey: string | symbol): void {
+export function sequence(target: object, propertyKey: string | symbol): void {
     noDispatchDecorator(target, propertyKey);
 }
 
-function noDispatchDecorator(target: any, propertyKey: string | symbol): void {
-    target[propertyKey][NO_DISPATCH] = true;
+function noDispatchDecorator(target: object, propertyKey: string | symbol): void {
+    (target as any)[propertyKey][NO_DISPATCH] = true;
 }
