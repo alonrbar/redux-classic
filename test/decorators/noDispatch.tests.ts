@@ -3,7 +3,7 @@ import { component, noDispatch, ReduxApp } from 'src';
 
 describe(nameof(noDispatch), () => {
 
-    it("non-decorated method mutates the store state", () => {
+    it("non-decorated method affects the store state", () => {
 
         @component
         class App {
@@ -20,7 +20,7 @@ describe(nameof(noDispatch), () => {
         expect(app.store.getState().value).to.eql(1);
     });
 
-    it("decorated method does not mutate the store state", () => {
+    it("decorated method does not affect the store state", () => {
 
         @component
         class App {
