@@ -1,5 +1,4 @@
 var path = require('path');
-var utils = require('./../utils');
 var webpack = require('webpack');
 var nodeExternals = require('webpack-node-externals');
 
@@ -14,6 +13,15 @@ module.exports = {
         devtoolFallbackModuleFilenameTemplate: '[absolute-resource-path]?[hash]'
     },
     externals: [nodeExternals()],
+    module: {
+        rules: [
+            { test: /.ts$/, use: ['ts-loader', 'ts-nameof-loader'] }
+        ]
+    },
+    resolve: {
+        extensions: ['.ts', '.js'],
+        modules: [path.resolve("."), path.resolve("./src"), path.resolve("./test"), "node_modules"]
+    },
     plugins: [
         new webpack.LoaderOptionsPlugin({ debug: true })
     ]

@@ -4,7 +4,6 @@ var nodeExternals = require('webpack-node-externals');
 
 module.exports = {
     entry: ['./src/index.ts'],
-    devtool: 'sourcemap',
     output: {
         path: path.resolve('./dist'),
         filename: 'redux-app.min.js',

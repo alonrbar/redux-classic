@@ -26,7 +26,7 @@
   "scripts": {
     "release": "webpack && webpack --config webpack.config.dev.js",
     "dev": "webpack --config webpack.config.dev.js --watch",
-    "test": "mocha-webpack --watch --require source-map-support/register --webpack-config tasks/test/webpack.config.js \"test/**/*.tests.ts\""
+    "test": "mocha-webpack --watch --require source-map-support/register --webpack-config webpack.config.test.js \"test/**/*.tests.ts\""
   },
   "dependencies": {
     "lodash.snakecase": "^4.1.1",
