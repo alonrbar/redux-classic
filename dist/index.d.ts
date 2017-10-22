@@ -26,7 +26,7 @@ export function sequence(target: any, propertyKey: string | symbol): void;
 // ReduxApp
 //
 
-export declare class ReduxApp<T> {
+export declare class ReduxApp<T extends object> {
     
     /**
      * Global redux-app options.

@@ -11,7 +11,7 @@
 
 ### Added
 
-- No limitations on component constructor (required paramter-less constructor before).
+- No limitations on component constructor (required parameter-less constructor before).
 
 ### Fixed
 
