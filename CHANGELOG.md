@@ -2,14 +2,14 @@
 
 ## [Unreleased](https://github.com/alonrbar/redux-app/tree/develop)
 
-## [1.4.0 - 2017-10-22](https://github.com/alonrbar/redux-app)
+## [1.4.0 - 2017-10-22](https://github.com/alonrbar/redux-app/tree/v1.4.0)
 
 ### Added
 
 - Components are connected to the store even if nested inside non-component objects.
 - Unit tests.
 
-## [1.3.0 - 2017-10-21](https://github.com/alonrbar/redux-app)
+## [1.3.0 - 2017-10-21](https://github.com/alonrbar/redux-app/tree/v1.3.0)
 
 ### Added
 
@@ -19,13 +19,13 @@
 
 - Fix bug in getReducer and nested components.
 
-## [1.2.0 - 2017-10-19](https://github.com/alonrbar/redux-app)
+## [1.2.0 - 2017-10-19](https://github.com/alonrbar/redux-app/tree/v1.2.0)
 
 ### Added
 
 - New decorators: withId, noDispatch and sequence.
 
-## [1.0.3 - 2017-10-19](https://github.com/alonrbar/redux-app)
+## [1.0.3 - 2017-10-19](https://github.com/alonrbar/redux-app/tree/v1.0.3)
 
 ### Added
 
