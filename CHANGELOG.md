@@ -2,6 +2,10 @@
 
 ## [Unreleased](https://github.com/alonrbar/redux-app/tree/develop)
 
+### Changed
+
+- When updating state do not remove component properties that exists on the state but are undefined.
+
 ## [1.4.0 - 2017-10-22](https://github.com/alonrbar/redux-app/tree/v1.4.0)
 
 ### Added

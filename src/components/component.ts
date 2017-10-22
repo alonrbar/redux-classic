@@ -211,7 +211,7 @@ function updateState<T extends object>(component: Component<T>, newGlobalState: 
     // delete left-overs from previous state
     var propsDeleted: string[] = [];
     Object.keys(component).forEach(key => {
-        if (newScopedState[key] === undefined) {
+        if (!newScopedState.hasOwnProperty(key)) {
             delete self[key];
             propsDeleted.push(key);
         }
