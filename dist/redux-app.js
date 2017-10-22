@@ -265,6 +265,8 @@ var utils_1 = __webpack_require__(1);
 var componentSchema_1 = __webpack_require__(5);
 var Component = (function () {
     function Component(store, schema, parent, path, visited) {
+        if (path === void 0) { path = []; }
+        if (visited === void 0) { visited = new Set(); }
         if (!componentSchema_1.isComponentSchema(schema))
             throw new Error("Argument '" + "schema" + "' is not a component schema. Did you forget to use the decorator?");
         createSelf(this, store, schema, parent, path);
@@ -309,14 +311,17 @@ function createSubComponents(obj, store, schema, path, visited) {
     var searchIn = schema || obj;
     if (typeof searchIn !== 'object' && typeof searchIn !== 'function')
         return;
+    if (!searchIn)
+        return;
     for (var _i = 0, _a = Object.keys(searchIn); _i < _a.length; _i++) {
         var key = _a[_i];
         var subSchema = searchIn[key];
+        var subPath = path.concat([key]);
         if (componentSchema_1.isComponentSchema(subSchema)) {
-            obj[key] = new Component(store, subSchema, schema, path.concat([key]), visited);
+            obj[key] = new Component(store, subSchema, schema, subPath, visited);
         }
         else {
-            createSubComponents(obj[key], store, null, path.concat([key]), visited);
+            createSubComponents(obj[key], store, null, subPath, visited);
         }
     }
 }
@@ -660,7 +665,7 @@ var ReduxApp = (function () {
         }
         var dummyReducer = function () { };
         this.store = redux_1.createStore.apply(void 0, [dummyReducer].concat(params));
-        var rootComponent = new components_1.Component(this.store, appSchema, null, [], new Set());
+        var rootComponent = new components_1.Component(this.store, appSchema);
         this.root = rootComponent;
         var actualReducer = this.getReducer(rootComponent);
         this.store.replaceReducer(actualReducer);

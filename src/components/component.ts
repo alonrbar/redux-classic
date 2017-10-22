@@ -10,14 +10,14 @@ import { isComponentSchema } from './componentSchema';
 
 export class Component<T extends object> {
 
-    constructor(store: Store<T>, schema: T, parent?: object, path: string[] = [], visited =  new Set()) {
+    constructor(store: Store<T>, schema: T, parent?: object, path: string[] = [], visited = new Set()) {
 
         if (!isComponentSchema(schema))
             throw new Error(`Argument '${nameof(schema)}' is not a component schema. Did you forget to use the decorator?`);
 
         createSelf(this, store, schema, parent, path);
         createSubComponents(this, store, schema, path, visited);
-        
+
         debug(`[Component] new ${schema.constructor.name} component created. path: root.${path.join('.')}`);
     }
 
@@ -73,11 +73,15 @@ function createSubComponents<T extends object>(obj: any, store: Store<T>, schema
     if (visited.has(obj))
         return;
     visited.add(obj);
-    
+
     const searchIn = schema || obj;
 
     // no need to search for components inside primitives
     if (typeof searchIn !== 'object' && typeof searchIn !== 'function')
+        return;
+
+    // must check since typeof null === 'object' ...
+    if (!searchIn)
         return;
 
     // search for sub-components
