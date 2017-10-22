@@ -29,7 +29,7 @@ export class ReduxApp<T extends object> {
         this.store = createStore<T>(dummyReducer as any, ...params);
 
         // create the app
-        const rootComponent = new Component(this.store, appSchema, null, []);
+        const rootComponent = new Component(this.store, appSchema);
         this.root = (rootComponent as any);
         
         // update the store

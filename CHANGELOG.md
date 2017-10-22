@@ -4,6 +4,7 @@
 
 ### Added
 
+- Components are connected to the store even if nested inside non-component objects.
 - Unit tests.
 
 ## [1.3.0 - 2017-10-21](https://github.com/alonrbar/redux-app)

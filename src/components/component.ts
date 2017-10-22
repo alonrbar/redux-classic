@@ -10,14 +10,14 @@ import { isComponentSchema } from './componentSchema';
 
 export class Component<T extends object> {
 
-    constructor(store: Store<T>, schema: T, parent: object, path: string[]) {
+    constructor(store: Store<T>, schema: T, parent?: object, path: string[] = [], visited =  new Set()) {
 
         if (!isComponentSchema(schema))
             throw new Error(`Argument '${nameof(schema)}' is not a component schema. Did you forget to use the decorator?`);
 
         createSelf(this, store, schema, parent, path);
-        createSubComponents(this, store, schema, path);
-
+        createSubComponents(this, store, schema, path, visited);
+        
         debug(`[Component] new ${schema.constructor.name} component created. path: root.${path.join('.')}`);
     }
 
@@ -67,11 +67,27 @@ function createSelf<T extends object>(component: Component<T>, store: Store<T>, 
     }
 }
 
-function createSubComponents<T extends object>(component: Component<T>, store: Store<T>, schema: T, path: string[]): void {
-    for (let key of Object.keys(schema)) {
-        var subSchema = (schema as any)[key];
+function createSubComponents<T extends object>(obj: any, store: Store<T>, schema: T, path: string[], visited: Set<any>): void {
+
+    // prevent endless loops on circular references
+    if (visited.has(obj))
+        return;
+    visited.add(obj);
+    
+    const searchIn = schema || obj;
+
+    // no need to search for components inside primitives
+    if (typeof searchIn !== 'object' && typeof searchIn !== 'function')
+        return;
+
+    // search for sub-components
+    for (let key of Object.keys(searchIn)) {
+        var subSchema = (searchIn as any)[key];
+        var subPath = path.concat([key]);
         if (isComponentSchema(subSchema)) {
-            (component as any)[key] = new Component(store, subSchema, schema, path.concat([key]));
+            obj[key] = new Component(store, subSchema, schema, subPath, visited);
+        } else {
+            createSubComponents(obj[key], store, null, subPath, visited);
         }
     }
 }
@@ -85,7 +101,7 @@ function createActions<T extends object>(dispatch: Dispatch<T>, schema: T): any 
     const outputActions: any = {};
     Object.keys(methods).forEach(key => {
         outputActions[key] = function (this: Component<T>, ...payload: any[]): void {
-            
+
             // verify 'this' arg
             if (!(this instanceof Component)) {
                 const msg = "Component method invoked with non-Component as 'this'. " +
@@ -113,7 +129,7 @@ function createActions<T extends object>(dispatch: Dispatch<T>, schema: T): any 
     return outputActions;
 }
 
-function createReducer<T extends object>(component: Component<T>, schema: T): Reducer<T> {    
+function createReducer<T extends object>(component: Component<T>, schema: T): Reducer<T> {
 
     // method names lookup
     const methods = getMethods(schema);
@@ -165,7 +181,7 @@ function updateState<T extends object>(component: Component<T>, newGlobalState: 
 
     // vars
     var self = (component as any);
-    var newScopedState = getProp(newGlobalState, path);    
+    var newScopedState = getProp(newGlobalState, path);
 
     // log
     verbose('[updateState] updating component in path: ', path.join('.'));

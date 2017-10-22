@@ -1,7 +1,8 @@
 import { SchemaOptions } from '../options';
 import { getConstructorProp } from '../utils';
 import { COMPONENT_SCHEMA, COMPONENT_SCHEMA_OPTIONS } from '../symbols';
-import { INewable } from '../types';
+
+// tslint:disable:ban-types
 
 //
 // public
@@ -10,13 +11,13 @@ import { INewable } from '../types';
 /**
  * Class decorator.
  */
-export function component<T>(ctor: INewable<T>): T;
+export function component(ctor: Function): any;
 export function component(options: SchemaOptions): any; // tslint:disable-line:unified-signatures
-export function component(ctorOrOptions: INewable<any> | SchemaOptions): any {
+export function component(ctorOrOptions: Function | SchemaOptions): any {
     if (typeof ctorOrOptions === 'function') {
         componentSchemaDecorator.call(undefined, ctorOrOptions);
     } else {        
-        return (ctor: INewable<any>) => componentSchemaDecorator(ctor, ctorOrOptions);
+        return (ctor: Function) => componentSchemaDecorator(ctor, ctorOrOptions);
     }
 }
 
@@ -36,7 +37,7 @@ export function assertComponentSchema(obj: object, msg?: string): void {
 // private
 //
 
-function componentSchemaDecorator(ctor: INewable<any>, options?: SchemaOptions) {
+function componentSchemaDecorator(ctor: Function, options?: SchemaOptions) {
     (ctor as any)[COMPONENT_SCHEMA] = true;
     (ctor as any)[COMPONENT_SCHEMA_OPTIONS] = options;
 }

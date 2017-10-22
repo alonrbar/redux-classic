@@ -264,11 +264,11 @@ var symbols_1 = __webpack_require__(0);
 var utils_1 = __webpack_require__(1);
 var componentSchema_1 = __webpack_require__(5);
 var Component = (function () {
-    function Component(store, schema, parent, path) {
+    function Component(store, schema, parent, path, visited) {
         if (!componentSchema_1.isComponentSchema(schema))
             throw new Error("Argument '" + "schema" + "' is not a component schema. Did you forget to use the decorator?");
         createSelf(this, store, schema, parent, path);
-        createSubComponents(this, store, schema, path);
+        createSubComponents(this, store, schema, path, visited);
         utils_1.debug("[Component] new " + schema.constructor.name + " component created. path: root." + path.join('.'));
     }
     Component.prototype.disposeComponent = function () {
@@ -302,12 +302,21 @@ function createSelf(component, store, schema, parent, path) {
         component[symbols_1.DISPOSE].push({ dispose: function () { return unsubscribe_1(); } });
     }
 }
-function createSubComponents(component, store, schema, path) {
-    for (var _i = 0, _a = Object.keys(schema); _i < _a.length; _i++) {
+function createSubComponents(obj, store, schema, path, visited) {
+    if (visited.has(obj))
+        return;
+    visited.add(obj);
+    var searchIn = schema || obj;
+    if (typeof searchIn !== 'object' && typeof searchIn !== 'function')
+        return;
+    for (var _i = 0, _a = Object.keys(searchIn); _i < _a.length; _i++) {
         var key = _a[_i];
-        var subSchema = schema[key];
+        var subSchema = searchIn[key];
         if (componentSchema_1.isComponentSchema(subSchema)) {
-            component[key] = new Component(store, subSchema, schema, path.concat([key]));
+            obj[key] = new Component(store, subSchema, schema, path.concat([key]), visited);
+        }
+        else {
+            createSubComponents(obj[key], store, null, path.concat([key]), visited);
         }
     }
 }
@@ -455,19 +464,20 @@ function withId(id) {
 exports.withId = withId;
 var autoComponentId = 0;
 function getComponentId(parent, path) {
+    var anyParent = parent;
     if (!parent || !path.length)
         return undefined;
-    var idLookup = parent[symbols_1.WITH_ID];
+    var idLookup = anyParent[symbols_1.WITH_ID];
     if (!idLookup)
         return undefined;
     var selfKey = path[path.length - 1];
-    var id = parent[symbols_1.WITH_ID][selfKey];
+    var id = anyParent[symbols_1.WITH_ID][selfKey];
     if (!id)
         return undefined;
     if (id === symbols_1.AUTO_ID) {
         var generatedId = --autoComponentId;
         utils_1.verbose('[getComponentId] new component id generated: ' + generatedId);
-        parent[symbols_1.WITH_ID][selfKey] = generatedId;
+        anyParent[symbols_1.WITH_ID][selfKey] = generatedId;
         return generatedId;
     }
     return id;
@@ -586,7 +596,7 @@ exports.getArgumentNames = getArgumentNames;
 function getPrototype(obj) {
     if (!obj)
         return undefined;
-    return obj.prototype || obj.constructor.prototype;
+    return obj.constructor.prototype;
 }
 exports.getPrototype = getPrototype;
 function getMethods(obj) {
@@ -650,7 +660,7 @@ var ReduxApp = (function () {
         }
         var dummyReducer = function () { };
         this.store = redux_1.createStore.apply(void 0, [dummyReducer].concat(params));
-        var rootComponent = new components_1.Component(this.store, appSchema, null, []);
+        var rootComponent = new components_1.Component(this.store, appSchema, null, [], new Set());
         this.root = rootComponent;
         var actualReducer = this.getReducer(rootComponent);
         this.store.replaceReducer(actualReducer);

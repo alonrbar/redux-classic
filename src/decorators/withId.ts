@@ -2,6 +2,15 @@ import { WITH_ID, AUTO_ID } from "../symbols";
 import { verbose } from "../utils";
 import { Component } from '../components';
 
+//
+// Note:
+//
+// The component id is stored on it's parent. This resolves situations when the
+// component is created inside it's parent constructor or injected via DI. For
+// some reason, getter and setter did not solve this problem so this solution
+// was chosen.
+//
+
 export function withId(id?: any): PropertyDecorator {
     return (target: any, propertyKey: string | symbol) => {
         if (!target[WITH_ID])
