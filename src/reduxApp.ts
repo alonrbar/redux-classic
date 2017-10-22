@@ -1,8 +1,8 @@
 import { AnyAction, createStore, Reducer, ReducersMapObject, Store, StoreEnhancer } from 'redux';
 import { Component } from './components';
 import { globalOptions, GlobalOptions } from './options';
+import { getSymbol, REDUCER } from './symbols';
 import { simpleCombineReducers } from './utils';
-import { REDUCER } from './symbols';
 
 export class ReduxApp<T extends object> {
 
@@ -38,7 +38,7 @@ export class ReduxApp<T extends object> {
     }
 
     private getReducer(component: Component<T>): Reducer<T> {
-        const rootReducer = (component as any)[REDUCER];
+        const rootReducer = getSymbol(component, REDUCER);
 
         const subReducers: ReducersMapObject = {};
         for (let key of Object.keys(component)) {

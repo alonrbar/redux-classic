@@ -1,4 +1,16 @@
 //
+// utils
+//
+
+export function setSymbol(obj: any, symbol: symbol, value: any) {
+    return obj[symbol] = value;
+}
+
+export function getSymbol(obj: any, symbol: symbol): any {
+    return obj[symbol];
+}
+
+//
 // component symbols
 //
 

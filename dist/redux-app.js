@@ -80,6 +80,14 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+function setSymbol(obj, symbol, value) {
+    return obj[symbol] = value;
+}
+exports.setSymbol = setSymbol;
+function getSymbol(obj, symbol) {
+    return obj[symbol];
+}
+exports.getSymbol = getSymbol;
 exports.REDUCER = Symbol('REDUX-APP.COMPONENT.REDUCER');
 exports.DISPOSE = Symbol('REDUX-APP.COMPONENT.DISPOSE');
 exports.COMPONENT_ID = Symbol('REDUX-APP.COMPONENT.ID');
@@ -197,8 +205,8 @@ __export(__webpack_require__(10));
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var utils_1 = __webpack_require__(1);
 var symbols_1 = __webpack_require__(0);
+var utils_1 = __webpack_require__(1);
 function component(ctorOrOptions) {
     if (typeof ctorOrOptions === 'function') {
         componentSchemaDecorator.call(undefined, ctorOrOptions);
@@ -218,8 +226,8 @@ function assertComponentSchema(obj, msg) {
 }
 exports.assertComponentSchema = assertComponentSchema;
 function componentSchemaDecorator(ctor, options) {
-    ctor[symbols_1.COMPONENT_SCHEMA] = true;
-    ctor[symbols_1.COMPONENT_SCHEMA_OPTIONS] = options;
+    symbols_1.setSymbol(ctor, symbols_1.COMPONENT_SCHEMA, true);
+    symbols_1.setSymbol(ctor, symbols_1.COMPONENT_SCHEMA_OPTIONS, options);
 }
 
 
@@ -274,7 +282,7 @@ var Component = (function () {
         utils_1.debug("[Component] new " + schema.constructor.name + " component created. path: root." + path.join('.'));
     }
     Component.prototype.disposeComponent = function () {
-        var disposables = this[symbols_1.DISPOSE];
+        var disposables = symbols_1.getSymbol(this, symbols_1.DISPOSE);
         while (disposables.length) {
             var disposable = disposables.pop();
             if (disposable && disposable.dispose)
@@ -285,10 +293,10 @@ var Component = (function () {
 }());
 exports.Component = Component;
 function createSelf(component, store, schema, parent, path) {
-    component[symbols_1.DISPOSE] = [];
+    symbols_1.setSymbol(component, symbols_1.DISPOSE, []);
     var componentId = decorators_1.getComponentId(parent, path);
     if (componentId !== undefined && componentId !== null) {
-        component[symbols_1.COMPONENT_ID] = componentId;
+        symbols_1.setSymbol(component, symbols_1.COMPONENT_ID, componentId);
     }
     for (var _i = 0, _a = Object.keys(schema); _i < _a.length; _i++) {
         var key = _a[_i];
@@ -297,11 +305,11 @@ function createSelf(component, store, schema, parent, path) {
     var proto = utils_1.getPrototype(component);
     var patchedProto = createActions(store.dispatch, schema);
     Object.assign(proto, patchedProto);
-    component[symbols_1.REDUCER] = createReducer(component, schema);
+    symbols_1.setSymbol(component, symbols_1.REDUCER, createReducer(component, schema));
     var options = options_1.getSchemaOptions(schema);
     if (options.updateState) {
         var unsubscribe_1 = store.subscribe(function () { return updateState(component, store.getState(), path); });
-        component[symbols_1.DISPOSE].push({ dispose: function () { return unsubscribe_1(); } });
+        symbols_1.getSymbol(component, symbols_1.DISPOSE).push({ dispose: function () { return unsubscribe_1(); } });
     }
 }
 function createSubComponents(obj, store, schema, path, visited) {
@@ -342,13 +350,13 @@ function createActions(dispatch, schema) {
                 utils_1.debugWarn(msg, this);
             }
             var oldMethod = methods[key];
-            if (oldMethod[symbols_1.NO_DISPATCH]) {
+            if (symbols_1.getSymbol(oldMethod, symbols_1.NO_DISPATCH)) {
                 oldMethod.call.apply(oldMethod, [this].concat(payload));
             }
             else {
                 dispatch({
                     type: options_1.getActionName(key, schema),
-                    id: this[symbols_1.COMPONENT_ID],
+                    id: symbols_1.getSymbol(this, symbols_1.COMPONENT_ID),
                     payload: payload
                 });
             }
@@ -363,7 +371,7 @@ function createReducer(component, schema) {
         var actionName = options_1.getActionName(methName, schema);
         methodNames[actionName] = methName;
     });
-    var componentId = component[symbols_1.COMPONENT_ID];
+    var componentId = symbols_1.getSymbol(component, symbols_1.COMPONENT_ID);
     return function (state, action) {
         utils_1.verbose("[reducer] reducer of: " + schema.constructor.name + ", action: " + action.type);
         if (state === undefined) {
@@ -401,7 +409,7 @@ function updateState(component, newGlobalState, path) {
     });
     var propsDeleted = [];
     Object.keys(component).forEach(function (key) {
-        if (newScopedState[key] === undefined) {
+        if (!newScopedState.hasOwnProperty(key)) {
             delete self[key];
             propsDeleted.push(key);
         }
@@ -577,27 +585,6 @@ exports.simpleCombineReducers = simpleCombineReducers;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-function getArgumentNames(func) {
-    var FN_ARGS = /^function\s*?[^\(]*?\(\s*?([^\)]*?)\)/m;
-    var CLASS_CTOR_ARGS = /^class[\s\S]*?constructor\s*?[^\(]*?\(\s*?([^\)]*?)\)/m;
-    var functionArgsRegex = func.toString().match(FN_ARGS);
-    var classArgsRegex = func.toString().match(CLASS_CTOR_ARGS);
-    var args;
-    if (classArgsRegex && classArgsRegex.length) {
-        args = classArgsRegex[1];
-    }
-    else if (functionArgsRegex && functionArgsRegex.length) {
-        args = functionArgsRegex[1];
-    }
-    else {
-        return [];
-    }
-    args = args.split(',')
-        .map(function (str) { return str.trim(); })
-        .filter(function (arg) { return arg !== ""; });
-    return args;
-}
-exports.getArgumentNames = getArgumentNames;
 function getPrototype(obj) {
     if (!obj)
         return undefined;
@@ -655,8 +642,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var redux_1 = __webpack_require__(16);
 var components_1 = __webpack_require__(3);
 var options_1 = __webpack_require__(2);
-var utils_1 = __webpack_require__(1);
 var symbols_1 = __webpack_require__(0);
+var utils_1 = __webpack_require__(1);
 var ReduxApp = (function () {
     function ReduxApp(appSchema) {
         var params = [];
@@ -671,7 +658,7 @@ var ReduxApp = (function () {
         this.store.replaceReducer(actualReducer);
     }
     ReduxApp.prototype.getReducer = function (component) {
-        var rootReducer = component[symbols_1.REDUCER];
+        var rootReducer = symbols_1.getSymbol(component, symbols_1.REDUCER);
         var subReducers = {};
         for (var _i = 0, _a = Object.keys(component); _i < _a.length; _i++) {
             var key = _a[_i];

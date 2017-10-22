@@ -1,7 +1,7 @@
 import { AnyAction, Dispatch, Reducer, Store } from 'redux';
 import { getComponentId } from '../decorators';
 import { getActionName, getSchemaOptions } from '../options';
-import { COMPONENT_ID, DISPOSE, NO_DISPATCH, REDUCER } from '../symbols';
+import { COMPONENT_ID, DISPOSE, getSymbol, NO_DISPATCH, REDUCER, setSymbol } from '../symbols';
 import { debug, debugWarn, getMethods, getProp, getPrototype, verbose } from '../utils';
 import { isComponentSchema } from './componentSchema';
 
@@ -22,7 +22,7 @@ export class Component<T extends object> {
     }
 
     public disposeComponent(): void {
-        const disposables: any[] = (this as any)[DISPOSE];
+        const disposables: any[] = getSymbol(this, DISPOSE);
         while (disposables.length) {
             var disposable = disposables.pop();
             if (disposable && disposable.dispose)
@@ -38,12 +38,12 @@ export class Component<T extends object> {
 
 function createSelf<T extends object>(component: Component<T>, store: Store<T>, schema: T, parent: any, path: string[]): void {
 
-    (component as any)[DISPOSE] = [];
+    setSymbol(component, DISPOSE, []);
 
     // assign ID
     const componentId = getComponentId(parent, path);
     if (componentId !== undefined && componentId !== null) {
-        (component as any)[COMPONENT_ID] = componentId;
+        setSymbol(component, COMPONENT_ID, componentId);
     }
 
     // regular js props
@@ -57,13 +57,13 @@ function createSelf<T extends object>(component: Component<T>, store: Store<T>, 
     Object.assign(proto, patchedProto);
 
     // reducer
-    (component as any)[REDUCER] = createReducer(component, schema);
+    setSymbol(component, REDUCER, createReducer(component, schema));
 
     // state
     const options = getSchemaOptions(schema);
     if (options.updateState) {
         const unsubscribe = store.subscribe(() => updateState(component, store.getState(), path));
-        (component as any)[DISPOSE].push({ dispose: () => unsubscribe() });
+        getSymbol(component, DISPOSE).push({ dispose: () => unsubscribe() });
     }
 }
 
@@ -114,7 +114,7 @@ function createActions<T extends object>(dispatch: Dispatch<T>, schema: T): any 
             }
 
             const oldMethod = methods[key];
-            if ((oldMethod as any)[NO_DISPATCH]) {
+            if (getSymbol(oldMethod, NO_DISPATCH)) {
 
                 // handle non-dispatch methods (just call the function)
                 oldMethod.call(this, ...payload);
@@ -123,7 +123,7 @@ function createActions<T extends object>(dispatch: Dispatch<T>, schema: T): any 
                 // handle dispatch methods (use store dispatch)
                 dispatch({
                     type: getActionName(key, schema),
-                    id: (this as any)[COMPONENT_ID],
+                    id: getSymbol(this, COMPONENT_ID),
                     payload: payload
                 });
             }
@@ -144,7 +144,7 @@ function createReducer<T extends object>(component: Component<T>, schema: T): Re
     });
 
     // component id
-    const componentId = (component as any)[COMPONENT_ID];
+    const componentId = getSymbol(component, COMPONENT_ID);
 
     // the reducer
     return (state: T, action: AnyAction) => {
@@ -171,7 +171,7 @@ function createReducer<T extends object>(component: Component<T>, schema: T): Re
             return state;
         }
 
-        // call the action-reducer with the new state as the 'this' argument
+        // call the action-reducer with the new state as the 'this' argument        
         var newState = Object.assign({}, state);
         actionReducer.call(newState, ...action.payload);
 

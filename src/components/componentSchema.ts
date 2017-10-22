@@ -1,6 +1,6 @@
 import { SchemaOptions } from '../options';
+import { COMPONENT_SCHEMA, COMPONENT_SCHEMA_OPTIONS, setSymbol } from '../symbols';
 import { getConstructorProp } from '../utils';
-import { COMPONENT_SCHEMA, COMPONENT_SCHEMA_OPTIONS } from '../symbols';
 
 // tslint:disable:ban-types
 
@@ -16,7 +16,7 @@ export function component(options: SchemaOptions): any; // tslint:disable-line:u
 export function component(ctorOrOptions: Function | SchemaOptions): any {
     if (typeof ctorOrOptions === 'function') {
         componentSchemaDecorator.call(undefined, ctorOrOptions);
-    } else {        
+    } else {
         return (ctor: Function) => componentSchemaDecorator(ctor, ctorOrOptions);
     }
 }
@@ -38,6 +38,6 @@ export function assertComponentSchema(obj: object, msg?: string): void {
 //
 
 function componentSchemaDecorator(ctor: Function, options?: SchemaOptions) {
-    (ctor as any)[COMPONENT_SCHEMA] = true;
-    (ctor as any)[COMPONENT_SCHEMA_OPTIONS] = options;
+    setSymbol(ctor, COMPONENT_SCHEMA, true);
+    setSymbol(ctor, COMPONENT_SCHEMA_OPTIONS, options);
 }
