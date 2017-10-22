@@ -2,6 +2,8 @@
 
 ## [Unreleased](https://github.com/alonrbar/redux-app/tree/develop)
 
+## [1.4.0 - 2017-10-22](https://github.com/alonrbar/redux-app)
+
 ### Added
 
 - Components are connected to the store even if nested inside non-component objects.
