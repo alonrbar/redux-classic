@@ -36,7 +36,6 @@ describe('withId', () => {
             public nested = new Level2First();
         }
 
-        @component
         class Level2First {
             public nested = new Level3First();
         }
@@ -47,7 +46,6 @@ describe('withId', () => {
             public counter = new Counter();
         }
 
-        @component
         class Level1Second {
             public nested = new Level2Second();
         }        

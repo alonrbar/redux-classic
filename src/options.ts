@@ -65,6 +65,7 @@ export enum LogLevel {
     None = 0,
     Verbose = 1,    
     Debug = 2,
+    Warn = 5,
     /**
      * Emit no logs (same as None)
      */

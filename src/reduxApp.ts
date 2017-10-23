@@ -1,8 +1,6 @@
-import { AnyAction, createStore, Reducer, ReducersMapObject, Store, StoreEnhancer } from 'redux';
-import { Component } from './components';
+import { createStore, Store, StoreEnhancer } from 'redux';
+import { Component, getReducerFromTree } from './components';
 import { globalOptions, GlobalOptions } from './options';
-import { getSymbol, REDUCER } from './symbols';
-import { simpleCombineReducers } from './utils';
 
 export class ReduxApp<T extends object> {
 
@@ -33,38 +31,7 @@ export class ReduxApp<T extends object> {
         this.root = (rootComponent as any);
         
         // update the store
-        const actualReducer = this.getReducer(rootComponent);
+        const actualReducer = getReducerFromTree(rootComponent);
         this.store.replaceReducer(actualReducer);
-    }
-
-    private getReducer(component: Component<T>): Reducer<T> {
-        const rootReducer = getSymbol(component, REDUCER);
-
-        const subReducers: ReducersMapObject = {};
-        for (let key of Object.keys(component)) {
-            if ((component as any)[key] instanceof Component) {
-                subReducers[key] = this.getReducer((component as any)[key]);
-            }
-        }
-
-        // reducer with sub-reducers
-        if (Object.keys(subReducers).length) {
-
-            var combinedSubReducer = simpleCombineReducers(subReducers);
-
-            return (state: T, action: AnyAction) => {
-                const thisState = rootReducer(state, action);
-                const subStates = combinedSubReducer(thisState, action);
-
-                // merge self and sub states
-                return {
-                    ...thisState,
-                    ...subStates
-                };
-            };
-        }
-
-        // single reducer
-        return rootReducer;
-    }
+    }    
 }

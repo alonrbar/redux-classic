@@ -3,6 +3,18 @@
 
 export type MethodsMap = { [name: string]: Function };
 
+/**
+ * Return true if 'val' is primitive. For the sake of this test 'null' and
+ * 'undefined' are considered primitives.
+ */
+export function isPrimitive(val: any): boolean {
+    if (!val)
+        return true;
+    
+    const type = typeof val;
+    return type !== 'object' && type !== 'function';
+}
+
 export function getPrototype(obj: object) {
     if (!obj)
         return undefined;

@@ -1,5 +1,5 @@
 import { WITH_ID, AUTO_ID } from "../symbols";
-import { verbose } from "../utils";
+import { log } from "../utils";
 import { Component } from '../components';
 
 //
@@ -44,7 +44,7 @@ export function getComponentId(parent: Component<any>, path: string[]): any {
     // auto id
     if (id === AUTO_ID) {        
         const generatedId = --autoComponentId;  // using negative ids to decrease chance of collision with user assigned ids
-        verbose('[getComponentId] new component id generated: ' + generatedId);
+        log.verbose('[getComponentId] new component id generated: ' + generatedId);
         anyParent[WITH_ID][selfKey] = generatedId;
         return generatedId;
     }

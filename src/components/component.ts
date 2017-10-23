@@ -1,8 +1,8 @@
-import { AnyAction, Dispatch, Reducer, Store } from 'redux';
+import { AnyAction, Dispatch, Reducer, ReducersMapObject, Store } from 'redux';
 import { getComponentId } from '../decorators';
 import { getActionName, getSchemaOptions } from '../options';
 import { COMPONENT_ID, DISPOSE, getSymbol, NO_DISPATCH, REDUCER, setSymbol } from '../symbols';
-import { debug, debugWarn, getMethods, getProp, getPrototype, verbose } from '../utils';
+import { getMethods, getProp, getPrototype, isPrimitive, log, simpleCombineReducers } from '../utils';
 import { isComponentSchema } from './componentSchema';
 
 // TODO: export type IStateListener<T> = (state: T) => void;
@@ -18,7 +18,7 @@ export class Component<T extends object> {
         createSelf(this, store, schema, parent, path);
         createSubComponents(this, store, schema, path, visited);
 
-        debug(`[Component] new ${schema.constructor.name} component created. path: root.${path.join('.')}`);
+        log.debug(`[Component] new ${schema.constructor.name} component created. path: root.${path.join('.')}`);
     }
 
     public disposeComponent(): void {
@@ -77,11 +77,7 @@ function createSubComponents(obj: any, store: Store<object>, schema: object, pat
     const searchIn = schema || obj;
 
     // no need to search for components inside primitives
-    if (typeof searchIn !== 'object' && typeof searchIn !== 'function')
-        return;
-
-    // must check since typeof null === 'object' ...
-    if (!searchIn)
+    if (isPrimitive(obj))
         return;
 
     // search for sub-components
@@ -110,7 +106,7 @@ function createActions(dispatch: Dispatch<object>, schema: object): any {
             if (!(this instanceof Component)) {
                 const msg = "Component method invoked with non-Component as 'this'. " +
                     "Some redux-app features such as the withId decorator will not work. Bound 'this' argument is: ";
-                debugWarn(msg, this);
+                log.warn(msg, this);
             }
 
             const oldMethod = methods[key];
@@ -149,17 +145,17 @@ function createReducer(component: Component<object>, schema: object): Reducer<ob
     // the reducer
     return (state: object, action: AnyAction) => {
 
-        verbose(`[reducer] reducer of: ${schema.constructor.name}, action: ${action.type}`);
+        log.verbose(`[reducer] reducer of: ${schema.constructor.name}, action: ${action.type}`);
 
         // initial state
         if (state === undefined) {
-            verbose('[reducer] state is undefined, returning initial value');
+            log.verbose('[reducer] state is undefined, returning initial value');
             return schema;
         }
 
         // check component id
         if (componentId !== action.id) {
-            verbose(`[reducer] component id and action.id don't match (${componentId} !== ${action.id})`);
+            log.verbose(`[reducer] component id and action.id don't match (${componentId} !== ${action.id})`);
             return state;
         }
 
@@ -167,7 +163,7 @@ function createReducer(component: Component<object>, schema: object): Reducer<ob
         const methodName = methodNames[action.type];
         const actionReducer = methods[methodName];
         if (!actionReducer) {
-            verbose('[reducer] no matching action in this reducer, returning previous state');
+            log.verbose('[reducer] no matching action in this reducer, returning previous state');
             return state;
         }
 
@@ -176,9 +172,56 @@ function createReducer(component: Component<object>, schema: object): Reducer<ob
         actionReducer.call(newState, ...action.payload);
 
         // return new state
-        verbose('[reducer] reducer invoked, returning new state');
+        log.verbose('[reducer] reducer invoked, returning new state');
         return newState;
     };
+}
+
+const identityReducer = (state: any) => state;
+
+export function getReducerFromTree(obj: object, path: string[] = [], visited: Set<any> = new Set()): Reducer<any> {
+
+    // prevent endless loops on circular references
+    if (visited.has(obj))
+        return undefined;
+    visited.add(obj);
+
+    // no need to search inside primitives
+    if (isPrimitive(obj))
+        return undefined;
+        
+    // get the root reducer
+    const rootReducer = getSymbol(obj, REDUCER) || identityReducer;
+
+    // gather the sub-reducers
+    const subReducers: ReducersMapObject = {};
+    for (let key of Object.keys(obj)) {
+        var newSubReducer = getReducerFromTree((obj as any)[key], path.concat(key), visited);
+        if (typeof newSubReducer === 'function')
+            subReducers[key] = newSubReducer;
+    }
+
+    // with sub-reducers
+    if (Object.keys(subReducers).length) {
+
+        var combinedSubReducer = simpleCombineReducers(subReducers);
+
+        return (state: object, action: AnyAction) => {
+            const thisState = rootReducer(state, action);
+            const subStates = combinedSubReducer(thisState, action);
+
+            // merge self and sub states
+            var combinedState = {
+                ...thisState,
+                ...subStates
+            };
+
+            return combinedState;
+        };
+    }
+
+    // without sub-reducers
+    return rootReducer;
 }
 
 function updateState(component: Component<object>, newGlobalState: object, path: string[]): void {
@@ -188,9 +231,9 @@ function updateState(component: Component<object>, newGlobalState: object, path:
     var newScopedState = getProp(newGlobalState, path);
 
     // log
-    verbose('[updateState] updating component in path: ', path.join('.'));
-    verbose('[updateState] store before: ', newScopedState);
-    verbose('[updateState] component before: ', component);
+    log.verbose('[updateState] updating component in path: ', path.join('.'));
+    log.verbose('[updateState] store before: ', newScopedState);
+    log.verbose('[updateState] component before: ', component);
 
     // assign new state
     var propsAssigned: string[] = [];
@@ -219,20 +262,20 @@ function updateState(component: Component<object>, newGlobalState: object, path:
 
     // log
     if (propsDeleted.length || propsAssigned.length) {
-        verbose('[updateState] store after: ', newScopedState);
-        verbose('[updateState] component after: ', component);
-        debug(`[updateState] state of ${path.join('.')} changed`);
+        log.verbose('[updateState] store after: ', newScopedState);
+        log.verbose('[updateState] component after: ', component);
+        log.debug(`[updateState] state of ${path.join('.')} changed`);
         if (propsDeleted.length) {
-            debug('[updateState] props deleted: ', propsDeleted);
+            log.debug('[updateState] props deleted: ', propsDeleted);
         } else {
-            verbose('[updateState] props deleted: ', propsDeleted);
+            log.verbose('[updateState] props deleted: ', propsDeleted);
         }
         if (propsAssigned.length) {
-            debug('[updateState] props assigned: ', propsAssigned);
+            log.debug('[updateState] props assigned: ', propsAssigned);
         } else {
-            verbose('[updateState] props assigned: ', propsAssigned);
+            log.verbose('[updateState] props assigned: ', propsAssigned);
         }
     } else {
-        verbose('[updateState] no change');
+        log.verbose('[updateState] no change');
     }
 }
