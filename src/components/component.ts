@@ -67,7 +67,7 @@ function createSelf<T extends object>(component: Component<T>, store: Store<T>, 
     }
 }
 
-function createSubComponents<T extends object>(obj: any, store: Store<T>, schema: T, path: string[], visited: Set<any>): void {
+function createSubComponents(obj: any, store: Store<object>, schema: object, path: string[], visited: Set<any>): void {
 
     // prevent endless loops on circular references
     if (visited.has(obj))
@@ -86,7 +86,7 @@ function createSubComponents<T extends object>(obj: any, store: Store<T>, schema
 
     // search for sub-components
     for (let key of Object.keys(searchIn)) {
-        var subSchema = (searchIn as any)[key];
+        var subSchema = searchIn[key];
         var subPath = path.concat([key]);
         if (isComponentSchema(subSchema)) {
             obj[key] = new Component(store, subSchema, schema, subPath, visited);
@@ -96,7 +96,7 @@ function createSubComponents<T extends object>(obj: any, store: Store<T>, schema
     }
 }
 
-function createActions<T extends object>(dispatch: Dispatch<T>, schema: T): any {
+function createActions(dispatch: Dispatch<object>, schema: object): any {
 
     const methods = getMethods(schema);
     if (!methods)
@@ -104,7 +104,7 @@ function createActions<T extends object>(dispatch: Dispatch<T>, schema: T): any 
 
     const outputActions: any = {};
     Object.keys(methods).forEach(key => {
-        outputActions[key] = function (this: Component<T>, ...payload: any[]): void {
+        outputActions[key] = function (this: Component<object>, ...payload: any[]): void {
 
             // verify 'this' arg
             if (!(this instanceof Component)) {
@@ -133,7 +133,7 @@ function createActions<T extends object>(dispatch: Dispatch<T>, schema: T): any 
     return outputActions;
 }
 
-function createReducer<T extends object>(component: Component<T>, schema: T): Reducer<T> {
+function createReducer(component: Component<object>, schema: object): Reducer<object> {
 
     // method names lookup
     const methods = getMethods(schema);
@@ -147,7 +147,7 @@ function createReducer<T extends object>(component: Component<T>, schema: T): Re
     const componentId = getSymbol(component, COMPONENT_ID);
 
     // the reducer
-    return (state: T, action: AnyAction) => {
+    return (state: object, action: AnyAction) => {
 
         verbose(`[reducer] reducer of: ${schema.constructor.name}, action: ${action.type}`);
 
@@ -163,7 +163,7 @@ function createReducer<T extends object>(component: Component<T>, schema: T): Re
             return state;
         }
 
-        // check if should use this reducer            
+        // check if should use this reducer
         const methodName = methodNames[action.type];
         const actionReducer = methods[methodName];
         if (!actionReducer) {
@@ -181,7 +181,7 @@ function createReducer<T extends object>(component: Component<T>, schema: T): Re
     };
 }
 
-function updateState<T extends object>(component: Component<T>, newGlobalState: T, path: string[]): void {
+function updateState(component: Component<object>, newGlobalState: object, path: string[]): void {
 
     // vars
     var self = (component as any);
