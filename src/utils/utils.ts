@@ -15,17 +15,11 @@ export function isPrimitive(val: any): boolean {
     return type !== 'object' && type !== 'function';
 }
 
-export function getPrototype(obj: object) {
-    if (!obj)
-        return undefined;
-    return obj.constructor.prototype;
-}
-
 export function getMethods(obj: object): MethodsMap {
     if (!obj)
         return undefined;
 
-    var proto = getPrototype(obj);
+    var proto = Object.getPrototypeOf(obj);
     if (!proto)
         return undefined;
 

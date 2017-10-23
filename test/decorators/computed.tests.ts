@@ -46,26 +46,14 @@ describe(nameof(computed), () => {
 
     it("persists the computed value on the store", () => {
 
-        @component
-        class Root {
-            public first = {
-                second: new Second()
-            };
-        }
-
-        class Second {
-            public third = new ComputedGreeter();
-        }
-
-        const app = new ReduxApp(new Root());
+        const app = new ReduxApp(new ComputedGreeter());
 
         // assert before
-        expect(app.store.getState().first.second.third.welcomeString).to.equal('hello undefined');
+        expect(app.store.getState().welcomeString).to.equal('hello undefined');
 
         // assert after
-        app.root.first.second.third.setName('Alon');
-        app.root.first.second.third.setName('Alon');
-        expect(app.store.getState().first.second.third.welcomeString).to.equal('hello Alon');
+        app.root.setName('Alon');
+        expect(app.store.getState().welcomeString).to.equal('hello Alon');
     });
 
     it("persists the computed value on the store (nested)", () => {

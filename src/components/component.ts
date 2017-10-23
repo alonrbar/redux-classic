@@ -1,15 +1,32 @@
-import { AnyAction, Dispatch, Reducer, ReducersMapObject, Store } from 'redux';
+import { AnyAction, Reducer, ReducersMapObject, Store } from 'redux';
 import { addComputed, reducerWithComputed, setComponentId } from '../decorators';
 import { getActionName, getSchemaOptions } from '../options';
-import { COMPONENT_ID, DISPOSE, getSymbol, NO_DISPATCH, REDUCER, setSymbol } from '../symbols';
-import { getMethods, getProp, getPrototype, isPrimitive, log, simpleCombineReducers } from '../utils';
-import { isComponentSchema } from './componentSchema';
+import { COMPONENT_ID, DISPOSE, getSymbol, REDUCER, setSymbol } from '../symbols';
+import { getMethods, getProp, isPrimitive, log, simpleCombineReducers } from '../utils';
+import { getComponentClass, isComponentSchema } from './componentSchema';
 
 // TODO: export type IStateListener<T> = (state: T) => void;
 // TODO: add listensTo option
 
 export class Component<T extends object> {
 
+    public static create<T extends object>(store: Store<T>, schema: T, parent?: object, path: string[] = [], visited = new Set()): Component<T> {
+        // tslint:disable-next-line:variable-name
+        var ComponentClass = getComponentClass(schema, store.dispatch);
+        return new ComponentClass(store, schema, parent, path, visited);
+    }
+
+    //
+    // IMPORTANT: 
+    //
+    // The constructor should not be accessed directly. Call Component.create()
+    // instead. It is only public to allow the createComponentClass() function to
+    // compile.
+    //
+
+    /**
+     * IMPORTANT: Don't use the constructor. Call Component.create instead.
+     */
     constructor(store: Store<T>, schema: T, parent?: object, path: string[] = [], visited = new Set()) {
 
         if (!isComponentSchema(schema))
@@ -36,7 +53,7 @@ export class Component<T extends object> {
 // of method name collision.
 //
 
-function createSelf<T extends object>(component: Component<T>, store: Store<T>, schema: T, parent: any, path: string[]): void {
+function createSelf(component: Component<object>, store: Store<object>, schema: object, parent: any, path: string[]): void {
 
     setSymbol(component, DISPOSE, []);
 
@@ -50,11 +67,6 @@ function createSelf<T extends object>(component: Component<T>, store: Store<T>, 
     for (let key of Object.keys(schema)) {
         (component as any)[key] = (schema as any)[key];
     }
-
-    // actions
-    const proto = getPrototype(component);
-    const patchedProto = createActions(store.dispatch, schema);
-    Object.assign(proto, patchedProto);
 
     // reducer
     setSymbol(component, REDUCER, createReducer(component, schema));
@@ -85,48 +97,11 @@ function createSubComponents(obj: any, store: Store<object>, schema: object, pat
         var subSchema = searchIn[key];
         var subPath = path.concat([key]);
         if (isComponentSchema(subSchema)) {
-            obj[key] = new Component(store, subSchema, schema, subPath, visited);
+            obj[key] = Component.create(store, subSchema, schema, subPath, visited);
         } else {
             createSubComponents(obj[key], store, null, subPath, visited);
         }
     }
-}
-
-function createActions(dispatch: Dispatch<object>, schema: object): any {
-
-    const methods = getMethods(schema);
-    if (!methods)
-        return undefined;
-
-    const outputActions: any = {};
-    Object.keys(methods).forEach(key => {
-        outputActions[key] = function (this: Component<object>, ...payload: any[]): void {
-
-            // verify 'this' arg
-            if (!(this instanceof Component)) {
-                const msg = "Component method invoked with non-Component as 'this'. " +
-                    "Some redux-app features such as the withId decorator will not work. Bound 'this' argument is: ";
-                log.warn(msg, this);
-            }
-
-            const oldMethod = methods[key];
-            if (getSymbol(oldMethod, NO_DISPATCH)) {
-
-                // handle non-dispatch methods (just call the function)
-                oldMethod.call(this, ...payload);
-            } else {
-
-                // handle dispatch methods (use store dispatch)
-                dispatch({
-                    type: getActionName(key, schema),
-                    id: getSymbol(this, COMPONENT_ID),
-                    payload: payload
-                });
-            }
-        };
-    });
-
-    return outputActions;
 }
 
 function createReducer(component: Component<object>, schema: object): Reducer<object> {

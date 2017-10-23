@@ -35,7 +35,7 @@ describe(nameof(Component), () => {
 
             // create component tree
             const store = new FakeStore();
-            const root: any = new Component(store, new Root());
+            const root: any = Component.create(store, new Root());
 
             expect(root.first.second.third.some).to.be.an.instanceOf(Component);
         });
@@ -70,7 +70,7 @@ describe(nameof(Component), () => {
             (store.dispatch as any) = () => { isConnected = true; };
 
             // create component tree
-            const root: any = new Component(store, new Root());
+            const root: any = Component.create(store, new Root());
 
             // before dispatching
             expect(isConnected).to.be.false;
@@ -109,7 +109,7 @@ describe(nameof(Component), () => {
             (store.dispatch as any) = () => { isConnected = true; };
 
             // create component tree
-            const root: any = new Component(store, new Root(), null, [], new Set());
+            const root: any = Component.create(store, new Root(), null, [], new Set());
 
             // assert
             root.first.second.third.some.dispatchMe();
@@ -154,6 +154,48 @@ describe(nameof(Component), () => {
             expect(app.root.first.second.third.some.value).to.eql(1);
         });
 
+        it("Two different component classes with the same method name has separate methods", () => {
+
+            @component
+            class Root {
+                public first = new First();
+                public second = new Second();
+            }
+
+            @component
+            class First {
+                public foo() {
+                    return 'First foo';
+                }
+            }
+
+            @component
+            class Second {
+                public foo() {
+                    return 'Second foo';
+                }
+            }
+
+            var root: Root = Component.create(new FakeStore(), new Root()) as any;
+
+            expect(root.first.foo.toString).to.not.equal(root.second.foo);
+        });
+
+        it("Two component instances of the same class has the same methods", () => {
+
+            @component
+            class TheComponent {
+                public foo() {
+                    return 5;
+                }
+            }
+
+            var comp1: TheComponent = Component.create(new FakeStore(), new TheComponent()) as any;
+            var comp2: TheComponent = Component.create(new FakeStore(), new TheComponent()) as any;
+
+            expect(comp1.foo).to.equal(comp2.foo);
+        });
+
         it("handles null values", () => {
 
             @component
@@ -188,7 +230,7 @@ describe(nameof(Component), () => {
                 public prop1: string = undefined;
                 public prop2: string = undefined;
             }
-            const comp = new Component(store, new MyComponent());
+            const comp = Component.create(store, new MyComponent());
 
             // test before
             expect(comp).to.haveOwnProperty('prop1');
@@ -219,7 +261,7 @@ describe(nameof(Component), () => {
             class MyComponent {
                 public prop: string = undefined;
             }
-            const comp = new Component(store, new MyComponent());
+            const comp = Component.create(store, new MyComponent());
 
             // test before
             expect(comp).to.haveOwnProperty('prop');

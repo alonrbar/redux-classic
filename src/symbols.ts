@@ -2,7 +2,7 @@
 // utils
 //
 
-export function setSymbol(obj: any, symbol: symbol, value: any) {
+export function setSymbol<T>(obj: any, symbol: symbol, value: T): T {
     return obj[symbol] = value;
 }
 
@@ -24,6 +24,7 @@ export const COMPONENT_ID = Symbol('REDUX-APP.COMPONENT.ID');
 
 export const COMPONENT_SCHEMA = Symbol('REDUX-APP.COMPONENT_SCHEMA');
 export const COMPONENT_SCHEMA_OPTIONS = Symbol('REDUX-APP.COMPONENT_SCHEMA.OPTIONS');
+export const COMPONENT_SCHEMA_CLASS = Symbol('REDUX-APP.COMPONENT_SCHEMA.CLASS');
 export const NO_DISPATCH = Symbol('REDUX-APP.COMPONENT_SCHEMA.NO_DISPATCH');
 export const COMPUTED = Symbol('REDUX-APP.COMPONENT_SCHEMA.COMPUTED');
 
