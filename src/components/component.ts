@@ -1,5 +1,5 @@
 import { AnyAction, Dispatch, Reducer, ReducersMapObject, Store } from 'redux';
-import { getComponentId } from '../decorators';
+import { addComputed, reducerWithComputed, setComponentId } from '../decorators';
 import { getActionName, getSchemaOptions } from '../options';
 import { COMPONENT_ID, DISPOSE, getSymbol, NO_DISPATCH, REDUCER, setSymbol } from '../symbols';
 import { getMethods, getProp, getPrototype, isPrimitive, log, simpleCombineReducers } from '../utils';
@@ -40,11 +40,11 @@ function createSelf<T extends object>(component: Component<T>, store: Store<T>, 
 
     setSymbol(component, DISPOSE, []);
 
-    // assign ID
-    const componentId = getComponentId(parent, path);
-    if (componentId !== undefined && componentId !== null) {
-        setSymbol(component, COMPONENT_ID, componentId);
-    }
+    // decorator - withId
+    setComponentId(component, parent, path);
+
+    // decorator - computed
+    addComputed(component, schema);
 
     // regular js props
     for (let key of Object.keys(schema)) {
@@ -189,7 +189,7 @@ export function getReducerFromTree(obj: object, path: string[] = [], visited: Se
     // no need to search inside primitives
     if (isPrimitive(obj))
         return undefined;
-        
+
     // get the root reducer
     const rootReducer = getSymbol(obj, REDUCER) || identityReducer;
 
@@ -201,12 +201,14 @@ export function getReducerFromTree(obj: object, path: string[] = [], visited: Se
             subReducers[key] = newSubReducer;
     }
 
-    // with sub-reducers
-    if (Object.keys(subReducers).length) {
+    var resultReducer = rootReducer;
 
+    // combine with sub-reducers
+    if (Object.keys(subReducers).length) {
         var combinedSubReducer = simpleCombineReducers(subReducers);
 
-        return (state: object, action: AnyAction) => {
+        resultReducer = (state: object, action: AnyAction) => {
+
             const thisState = rootReducer(state, action);
             const subStates = combinedSubReducer(thisState, action);
 
@@ -220,8 +222,7 @@ export function getReducerFromTree(obj: object, path: string[] = [], visited: Se
         };
     }
 
-    // without sub-reducers
-    return rootReducer;
+    return reducerWithComputed(resultReducer, obj);
 }
 
 function updateState(component: Component<object>, newGlobalState: object, path: string[]): void {

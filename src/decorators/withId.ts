@@ -1,6 +1,6 @@
-import { WITH_ID, AUTO_ID } from "../symbols";
-import { log } from "../utils";
 import { Component } from '../components';
+import { AUTO_ID, COMPONENT_ID, setSymbol, WITH_ID } from '../symbols';
+import { log } from '../utils';
 
 //
 // Note:
@@ -20,8 +20,15 @@ export function withId(id?: any): PropertyDecorator {
     };
 }
 
+export function setComponentId(component: Component<any>, parent: Component<any>, path: string[]): void {
+    const componentId = getComponentId(parent, path);
+    if (componentId !== undefined && componentId !== null) {
+        setSymbol(component, COMPONENT_ID, componentId);
+    }
+}
+
 var autoComponentId = 0;
-export function getComponentId(parent: Component<any>, path: string[]): any {
+function getComponentId(parent: Component<any>, path: string[]): any {
 
     const anyParent = (parent as any);
 

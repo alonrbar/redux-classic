@@ -19,7 +19,7 @@ class Log {
     public warn(message: string, ...optionalParams: any[]): void {
         if (!this.shouldLog(LogLevel.Warn))
             return;
-        console.warn('[ReduxApp] [DEBUG] ' + message, ...optionalParams);
+        console.warn('[ReduxApp] [WARN] ' + message, ...optionalParams);
     }    
 
     private shouldLog(level: LogLevel): boolean {
