@@ -127,9 +127,10 @@ export class Component<T extends object = object> {
                 } else {
 
                     // handle dispatch methods (use store dispatch)
+                    const meta = Metadata.getMeta(this);
                     dispatch({
-                        type: getActionName(key, creator),
-                        id: Metadata.getMeta(this).id,
+                        type: getActionName(creator, key, schema.options),
+                        id: (meta ? meta.id : undefined),
                         payload: payload
                     });
                 }
@@ -201,7 +202,7 @@ export class Component<T extends object = object> {
         const options = Schema.getSchema(creator).options;
         const methodNames: any = {};
         Object.keys(methods).forEach(methName => {
-            var actionName = getActionName(methName, options);
+            var actionName = getActionName(creator, methName, options);
             methodNames[actionName] = methName;
         });
 

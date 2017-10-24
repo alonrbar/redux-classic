@@ -58,14 +58,14 @@ export class Computed {
     private static computeProps(obj: object, state: any): void {
 
         // obj may be a component or any other object
-        const schema = Schema.getSchema(obj);
-        if (!schema)
+        const meta = Metadata.getMeta(obj as any);
+        if (!meta)
             return;
 
-        for (let propKey of Object.keys(schema.computedGetters)) {
+        for (let propKey of Object.keys(meta.computedGetters)) {
 
             // get old value
-            var getter = schema.computedGetters[propKey];
+            var getter = meta.computedGetters[propKey];
             log.verbose(`[computeProps] computing new value of '${propKey}'`);
             var newValue = getter.call(state);
 
