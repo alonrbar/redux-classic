@@ -1,4 +1,4 @@
-# Acknowledgment
+# Acknowledgment - Painful Issues
 
 #### I've found some painful **bugs** in redux-app core. The examples still work but some more real-life use cases may fail. I'm working on fixing the issues and hoping to release a fixed version in the next couple of days. Stay tuned.
 
