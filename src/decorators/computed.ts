@@ -1,6 +1,5 @@
-import { setSymbol, getSymbol, COMPUTED } from '../symbols';
-import { Reducer, AnyAction } from 'redux';
-import { Component } from '../components';
+import { AnyAction, Reducer } from 'redux';
+import { Component, Metadata, Schema } from '../components';
 import { log } from '../utils';
 
 const dataDescriptor: PropertyDescriptor = {
@@ -31,9 +30,8 @@ export function computed(target: any, propertyKey: string | symbol): void {
     Object.defineProperty(target, propertyKey, dataDescriptor);
 
     // store getter for later
-    const computedGetters = getSymbol(target, COMPUTED) || {};
-    computedGetters[propertyKey] = descriptor.get;
-    setSymbol(target, COMPUTED, computedGetters);
+    const schema = Schema.getOrCreateSchema(target);
+    schema.computedGetters[propertyKey] = descriptor.get;
 }
 
 export class Computed {
@@ -46,29 +44,28 @@ export class Computed {
         };
     }
 
-    public static setupComputedProps(component: Component<any>, schema: object): void {
-        const computedGetters = getSymbol(schema, COMPUTED);
-        if (!computedGetters)
-            return;
+    public static setupComputedProps(component: Component, schema: Schema): void {
 
         // delete real props
-        for (let propKey of Object.keys(computedGetters)) {
+        for (let propKey of Object.keys(schema.computedGetters)) {
             delete (component as any)[propKey];
         }
 
-        // store symbols data
-        setSymbol(component, COMPUTED, computedGetters);
+        // store getters
+        Metadata.getMeta(component).computedGetters = schema.computedGetters;
     }
 
-    private static computeProps(schema: object, state: any): void {
-        const computedGetters = getSymbol(schema, COMPUTED);
-        if (!computedGetters)
+    private static computeProps(obj: object, state: any): void {
+
+        // obj may be a component or any other object
+        const schema = Schema.getSchema(obj);
+        if (!schema)
             return;
 
-        for (let propKey of Object.keys(computedGetters)) {
+        for (let propKey of Object.keys(schema.computedGetters)) {
 
             // get old value
-            var getter = computedGetters[propKey];
+            var getter = schema.computedGetters[propKey];
             log.verbose(`[computeProps] computing new value of '${propKey}'`);
             var newValue = getter.call(state);
 

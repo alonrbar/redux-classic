@@ -1,19 +1,23 @@
-import { AnyAction, Reducer, ReducersMapObject, Store } from 'redux';
-import { Computed, ComponentId } from '../decorators';
-import { getActionName, getSchemaOptions } from '../options';
-import { COMPONENT_ID, DISPOSE, getSymbol, REDUCER, setSymbol } from '../symbols';
+import { AnyAction, Dispatch, Reducer, ReducersMapObject, Store } from 'redux';
+import { ComponentId, Computed } from '../decorators';
+import { getActionName } from '../options';
 import { getMethods, getProp, isPrimitive, log, simpleCombineReducers } from '../utils';
+import { Metadata } from './metadata';
 import { Schema } from './schema';
 
 // tslint:disable:member-ordering
 
-export class Component<T extends object> {
+export class Component<T extends object = object> {
 
     private static readonly identityReducer = (state: any) => state;
 
+    //
+    // public static
+    //
+
     public static create<T extends object>(store: Store<T>, schema: T, parent?: object, path: string[] = [], visited = new Set()): Component<T> {
         // tslint:disable-next-line:variable-name
-        var ComponentClass = Schema.getComponentClass(schema, store.dispatch);
+        var ComponentClass = Component.getComponentClass(schema, store.dispatch);
         return new ComponentClass(store, schema, parent, path, visited);
     }
 
@@ -29,7 +33,13 @@ export class Component<T extends object> {
             return undefined;
 
         // get the root reducer
-        const rootReducer = getSymbol(obj, REDUCER) || Component.identityReducer;
+        var rootReducer: Reducer<any>;
+        const meta = Metadata.getMeta(obj as any);
+        if (meta) {
+            rootReducer = meta.reducer;
+        } else {
+            rootReducer = Component.identityReducer;
+        }
 
         // gather the sub-reducers
         const subReducers: ReducersMapObject = {};
@@ -61,35 +71,100 @@ export class Component<T extends object> {
         }
 
         return Computed.wrapReducer(resultReducer, obj);
-    }    
+    }
 
-    private static createSelf(component: Component<object>, store: Store<object>, schema: object, parentSchema: any, path: string[]): void {
+    //
+    // private static
+    //
 
-        setSymbol(component, DISPOSE, []);
+    private static getComponentClass(creator: object, dispatch: Dispatch<object>): typeof Component {
+        var schema = Schema.getSchema(creator);
+        if (!schema.componentClass) {
+            schema.componentClass = Component.createComponentClass(creator, dispatch);
+        }
+        return schema.componentClass;
+    }
 
-        // decorator - withId
-        ComponentId.setComponentId(component, parentSchema, path);
+    private static createComponentClass<T extends object>(creator: object, dispatch: Dispatch<object>) {
 
-        // decorator - computed
-        Computed.setupComputedProps(component, schema);
-
-        // regular js props
-        for (let key of Object.keys(schema)) {
-            (component as any)[key] = (schema as any)[key];
+        // declare new class
+        class ComponentClass extends Component<T> {
+            constructor(store: Store<T>, schemaArg: T, ...params: any[]) {
+                super(store, schemaArg, ...params);
+            }
         }
 
-        // reducer
-        setSymbol(component, REDUCER, Component.createReducer(component, schema));
+        // patch it's prototype
+        const actions = Component.createActions(creator, dispatch);
+        Object.assign(ComponentClass.prototype, actions);
 
-        // state
-        const options = getSchemaOptions(schema);
-        if (options.updateState) {
+        return ComponentClass;
+    }
+
+    private static createActions(creator: object, dispatch: Dispatch<object>): any {
+
+        const methods = getMethods(creator);
+        if (!methods)
+            return undefined;
+
+        const schema = Schema.getSchema(creator);
+        const componentActions: any = {};
+        Object.keys(methods).forEach(key => {
+            componentActions[key] = function (this: Component<object>, ...payload: any[]): void {
+
+                // verify 'this' arg
+                if (!(this instanceof Component)) {
+                    const msg = "Component method invoked with non-Component as 'this'. " +
+                        "Some redux-app features such as the withId decorator will not work. Bound 'this' argument is: ";
+                    log.warn(msg, this);
+                }
+
+                const oldMethod = methods[key];
+                if (schema.noDispatch[key]) {
+
+                    // handle non-dispatch methods (just call the function)
+                    oldMethod.call(this, ...payload);
+                } else {
+
+                    // handle dispatch methods (use store dispatch)
+                    dispatch({
+                        type: getActionName(key, creator),
+                        id: Metadata.getMeta(this).id,
+                        payload: payload
+                    });
+                }
+            };
+        });
+
+        return componentActions;
+    }
+
+    private static createSelf(component: Component, store: Store<object>, creator: object, parentCreator: any, path: string[]): void {
+
+        // regular js props
+        for (let key of Object.keys(creator)) {
+            (component as any)[key] = (creator as any)[key];
+        }
+
+        // component id
+        const meta = Metadata.createMeta(component);
+        meta.id = ComponentId.getComponentId(parentCreator, path);
+
+        // computed properties
+        const schema = Schema.getSchema(creator);
+        Computed.setupComputedProps(component, schema);
+
+        // reducer
+        meta.reducer = Component.createReducer(component, creator);
+
+        // state        
+        if (schema.options.updateState) {
             const unsubscribe = store.subscribe(() => Component.updateState(component, store.getState(), path));
-            getSymbol(component, DISPOSE).push({ dispose: () => unsubscribe() });
+            meta.disposables.push({ dispose: () => unsubscribe() });
         }
     }
 
-    private static createSubComponents(obj: any, store: Store<object>, schema: object, path: string[], visited: Set<any>): void {
+    private static createSubComponents(obj: any, store: Store<object>, creator: object, path: string[], visited: Set<any>): void {
 
         // prevent endless loops on circular references
         if (visited.has(obj))
@@ -100,41 +175,48 @@ export class Component<T extends object> {
         if (isPrimitive(obj))
             return;
 
-        // search for sub-components
-        const searchIn = schema || obj;
+        // traverse object children
+        const searchIn = creator || obj;
         for (let key of Object.keys(searchIn)) {
-            var subSchema = searchIn[key];
+
             var subPath = path.concat([key]);
-            if (Schema.isComponentSchema(subSchema)) {
-                obj[key] = Component.create(store, subSchema, schema, subPath, visited);
+
+            var subCreator = searchIn[key];
+            if (Schema.getSchema(subCreator)) {
+
+                // child is sub-component
+                obj[key] = Component.create(store, subCreator, creator, subPath, visited);
             } else {
+
+                // child is regular object, nothing special to do with it
                 Component.createSubComponents(obj[key], store, null, subPath, visited);
             }
         }
     }
 
-    private static createReducer(component: Component<object>, schema: object): Reducer<object> {
+    private static createReducer(component: Component, creator: object): Reducer<object> {
 
         // method names lookup
-        const methods = getMethods(schema);
+        const methods = getMethods(creator);
+        const options = Schema.getSchema(creator).options;
         const methodNames: any = {};
         Object.keys(methods).forEach(methName => {
-            var actionName = getActionName(methName, schema);
+            var actionName = getActionName(methName, options);
             methodNames[actionName] = methName;
         });
 
         // component id
-        const componentId = getSymbol(component, COMPONENT_ID);
+        const componentId = Metadata.getMeta(component).id;
 
         // the reducer
         return (state: object, action: AnyAction) => {
 
-            log.verbose(`[reducer] reducer of: ${schema.constructor.name}, action: ${action.type}`);
+            log.verbose(`[reducer] reducer of: ${creator.constructor.name}, action: ${action.type}`);
 
             // initial state
             if (state === undefined) {
                 log.verbose('[reducer] state is undefined, returning initial value');
-                return schema;
+                return creator;
             }
 
             // check component id
@@ -161,14 +243,15 @@ export class Component<T extends object> {
         };
     }
 
-    private static updateState(component: Component<object>, newGlobalState: object, path: string[]): void {
+    private static updateState(component: Component, newGlobalState: object, path: string[]): void {
 
         // vars
         var self = (component as any);
         var newScopedState = getProp(newGlobalState, path);
 
         // log
-        log.verbose('[updateState] updating component in path: ', path.join('.'));
+        const pathStr = 'root' + (path.length ? '.' : '') + path.join('.');
+        log.verbose('[updateState] updating component in path: root.', pathStr);
         log.verbose('[updateState] store before: ', newScopedState);
         log.verbose('[updateState] component before: ', component);
 
@@ -201,7 +284,7 @@ export class Component<T extends object> {
         if (propsDeleted.length || propsAssigned.length) {
             log.verbose('[updateState] store after: ', newScopedState);
             log.verbose('[updateState] component after: ', component);
-            log.debug(`[updateState] state of ${path.join('.')} changed`);
+            log.debug(`[updateState] state of ${pathStr} changed`);
             if (propsDeleted.length) {
                 log.debug('[updateState] props deleted: ', propsDeleted);
             } else {
@@ -218,25 +301,18 @@ export class Component<T extends object> {
     }
 
     //
-    // IMPORTANT: 
-    //
-    // The constructor should not be accessed directly. Call Component.create()
-    // instead. It is only public to allow the createComponentClass() function to
-    // compile.
+    // constructor
     //
 
-    /**
-     * IMPORTANT: Don't use the constructor. Call Component.create instead.
-     */
-    constructor(store: Store<T>, schema: T, parentSchema?: object, path: string[] = [], visited = new Set()) {
+    private constructor(store: Store<T>, creator: T, parentCreator?: object, path: string[] = [], visited = new Set()) {
 
-        if (!Schema.isComponentSchema(schema))
-            throw new Error(`Argument '${nameof(schema)}' is not a component schema. Did you forget to use the decorator?`);
+        if (!Schema.getSchema(creator))
+            throw new Error(`Argument '${nameof(creator)}' is not a component creator. Did you forget to use the decorator?`);
 
-        Component.createSelf(this, store, schema, parentSchema, path);
-        Component.createSubComponents(this, store, schema, path, visited);
+        Component.createSelf(this, store, creator, parentCreator, path);
+        Component.createSubComponents(this, store, creator, path, visited);
 
-        log.debug(`[Component] new ${schema.constructor.name} component created. path: root.${path.join('.')}`);
+        log.debug(`[Component] new ${creator.constructor.name} component created. path: root.${path.join('.')}`);
     }
 
     // 
@@ -245,7 +321,7 @@ export class Component<T extends object> {
     //
 
     public disposeComponent(): void {
-        const disposables: any[] = getSymbol(this, DISPOSE);
+        const disposables = Metadata.getMeta(this).disposables;
         while (disposables.length) {
             var disposable = disposables.pop();
             if (disposable && disposable.dispose)

@@ -1,13 +1,11 @@
-import { Component } from '../components';
-import { AUTO_ID, COMPONENT_ID, setSymbol, WITH_ID } from '../symbols';
+import { Schema } from '../components';
+import { AUTO_ID } from '../symbols';
 import { log } from '../utils';
 
 export function withId(id?: any): PropertyDecorator {
-    return (target: any, propertyKey: string | symbol) => {
-        if (!target[WITH_ID])
-            target[WITH_ID] = {};
-
-        target[WITH_ID][propertyKey] = id || AUTO_ID;
+    return (target: object, propertyKey: string | symbol) => {
+        const schema = Schema.getOrCreateSchema(target);
+        schema.childIds[propertyKey] = id || AUTO_ID;
     };
 }
 
@@ -15,7 +13,7 @@ export class ComponentId {
 
     private static autoComponentId = 0;
 
-    public static setComponentId(component: Component<any>, parent: Component<any>, path: string[]): void {
+    public static getComponentId(parentCreator: object, path: string[]): any {
 
         //
         // Note: The component id is first stored on it's parent. It can be only
@@ -26,27 +24,14 @@ export class ComponentId {
         // chosen.
         //
 
-        const componentId = ComponentId.getComponentId(parent, path);
-        if (componentId !== undefined && componentId !== null) {
-            setSymbol(component, COMPONENT_ID, componentId);
-        }
-    }
-
-    private static getComponentId(parent: Component<any>, path: string[]): any {
-
-        const anyParent = (parent as any);
+        const schema = Schema.getSchema(parentCreator);
 
         // no parent
-        if (!parent || !path.length)
-            return undefined;
-
-        // withID not used
-        const idLookup = anyParent[WITH_ID];
-        if (!idLookup)
+        if (!parentCreator || !path.length)
             return undefined;
 
         const selfKey = path[path.length - 1];
-        const id = anyParent[WITH_ID][selfKey];
+        const id = schema.childIds[selfKey];
 
         // the specific component was not assigned an id
         if (!id)
@@ -56,7 +41,7 @@ export class ComponentId {
         if (id === AUTO_ID) {
             const generatedId = --ComponentId.autoComponentId;  // using negative ids to decrease chance of collision with user assigned ids
             log.verbose('[getComponentId] new component id generated: ' + generatedId);
-            anyParent[WITH_ID][selfKey] = generatedId;
+            schema.childIds[selfKey] = generatedId;
             return generatedId;
         }
 

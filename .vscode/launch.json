@@ -11,7 +11,7 @@
             "program": "${file}"
         },
         {
-            "name": "debug mocha-webpack",
+            "name": "mocha-webpack playground",
             "type": "node",
             "request": "launch",
             "program": "${workspaceRoot}/node_modules/mocha-webpack/bin/mocha-webpack",
@@ -21,7 +21,7 @@
                 "source-map-support/register",
                 "--webpack-config",
                 "webpack.config.test.js",
-                "test/**/*.tests.ts"
+                "test/**/playground.ts"
             ],
             "runtimeArgs": [
                 "--debug-brk"

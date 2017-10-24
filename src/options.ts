@@ -1,6 +1,4 @@
 import { Schema } from './components';
-import { getConstructorProp } from './utils';
-import { COMPONENT_SCHEMA_OPTIONS } from './symbols';
 var snakecase = require('lodash.snakecase');
 
 //
@@ -31,16 +29,9 @@ export class SchemaOptions {
     public updateState? = true;
 }
 
-export function getSchemaOptions(schema: object): SchemaOptions {
-    Schema.assertComponentSchema(schema);
-    return Object.assign({}, new SchemaOptions(), globalOptions.schema,  getConstructorProp(schema, COMPONENT_SCHEMA_OPTIONS));
-}
-
-export function getActionName(key: string, schema: object): string {
-    var options = getSchemaOptions(schema);
-
-    var actionName = key;
-    var actionNamespace = schema.constructor.name;
+export function getActionName(methodName: string, options: SchemaOptions): string {
+    var actionName = methodName;
+    var actionNamespace = options.constructor.name;
 
     if (options.uppercaseActions) {
         actionName = snakecase(actionName).toUpperCase();

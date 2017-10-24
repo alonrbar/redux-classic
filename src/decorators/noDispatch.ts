@@ -1,4 +1,4 @@
-import { NO_DISPATCH } from "../symbols";
+import { Schema } from '../components';
 
 /**
  * Method decorator.
@@ -19,5 +19,6 @@ export function sequence(target: object, propertyKey: string | symbol): void {
 }
 
 function noDispatchDecorator(target: object, propertyKey: string | symbol): void {
-    (target as any)[propertyKey][NO_DISPATCH] = true;
+    const schema = Schema.getOrCreateSchema(target);
+    schema.noDispatch[propertyKey] = true;
 }

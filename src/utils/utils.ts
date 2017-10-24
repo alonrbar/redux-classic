@@ -1,7 +1,4 @@
-// tslint:disable:ban-types
-// tslint:disable:interface-over-type-literal
-
-export type MethodsMap = { [name: string]: Function };
+import { IMap, Method } from '../types';
 
 /**
  * Return true if 'val' is primitive. For the sake of this test 'null' and
@@ -15,7 +12,7 @@ export function isPrimitive(val: any): boolean {
     return type !== 'object' && type !== 'function';
 }
 
-export function getMethods(obj: object): MethodsMap {
+export function getMethods(obj: object): IMap<Method> {
     if (!obj)
         return undefined;
 
