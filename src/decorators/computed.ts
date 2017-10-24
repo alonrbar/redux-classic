@@ -36,46 +36,49 @@ export function computed(target: any, propertyKey: string | symbol): void {
     setSymbol(target, COMPUTED, computedGetters);
 }
 
-export function reducerWithComputed(reducer: Reducer<any>, obj: object): Reducer<any> {
-    return (state: any, action: AnyAction) => {
-        const newState = reducer(state, action);
-        computeProps(obj, newState);
-        return newState;
-    };
-}
+export class Computed {
 
-export function addComputed(component: Component<any>, schema: object): void {
-    const computedGetters = getSymbol(schema, COMPUTED);
-    if (!computedGetters)
-        return;
-
-    // delete real props
-    for (let propKey of Object.keys(computedGetters)) {
-        delete (component as any)[propKey];
+    public static wrapReducer(reducer: Reducer<any>, obj: object): Reducer<any> {
+        return (state: any, action: AnyAction) => {
+            const newState = reducer(state, action);
+            Computed.computeProps(obj, newState);
+            return newState;
+        };
     }
 
-    // store symbols data
-    setSymbol(component, COMPUTED, computedGetters);
-}
+    public static setupComputedProps(component: Component<any>, schema: object): void {
+        const computedGetters = getSymbol(schema, COMPUTED);
+        if (!computedGetters)
+            return;
 
-function computeProps(schema: object, state: any): void {
-    const computedGetters = getSymbol(schema, COMPUTED);
-    if (!computedGetters)
-        return;
+        // delete real props
+        for (let propKey of Object.keys(computedGetters)) {
+            delete (component as any)[propKey];
+        }
 
-    for (let propKey of Object.keys(computedGetters)) {
-        
-        // get old value
-        var getter = computedGetters[propKey];
-        log.verbose(`[computeProps] computing new value of '${propKey}'`);
-        var newValue = getter.call(state);
+        // store symbols data
+        setSymbol(component, COMPUTED, computedGetters);
+    }
 
-        // update if necessary
-        var oldValue = state[propKey];
-        if (newValue !== oldValue) {
-            log.verbose(`[computeProps] updating the state of '${propKey}'. New value: '${newValue}', Old value: '${oldValue}'.`);
-            delete state[propKey];
-            state[propKey] = newValue;
+    private static computeProps(schema: object, state: any): void {
+        const computedGetters = getSymbol(schema, COMPUTED);
+        if (!computedGetters)
+            return;
+
+        for (let propKey of Object.keys(computedGetters)) {
+
+            // get old value
+            var getter = computedGetters[propKey];
+            log.verbose(`[computeProps] computing new value of '${propKey}'`);
+            var newValue = getter.call(state);
+
+            // update if necessary
+            var oldValue = state[propKey];
+            if (newValue !== oldValue) {
+                log.verbose(`[computeProps] updating the state of '${propKey}'. New value: '${newValue}', Old value: '${oldValue}'.`);
+                delete state[propKey];
+                state[propKey] = newValue;
+            }
         }
     }
 }

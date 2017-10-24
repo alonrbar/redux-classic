@@ -1,4 +1,4 @@
-import { assertComponentSchema } from './components';
+import { Schema } from './components';
 import { getConstructorProp } from './utils';
 import { COMPONENT_SCHEMA_OPTIONS } from './symbols';
 var snakecase = require('lodash.snakecase');
@@ -32,7 +32,7 @@ export class SchemaOptions {
 }
 
 export function getSchemaOptions(schema: object): SchemaOptions {
-    assertComponentSchema(schema);
+    Schema.assertComponentSchema(schema);
     return Object.assign({}, new SchemaOptions(), globalOptions.schema,  getConstructorProp(schema, COMPONENT_SCHEMA_OPTIONS));
 }
 

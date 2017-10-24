@@ -1,5 +1,5 @@
 import { createStore, Store, StoreEnhancer } from 'redux';
-import { Component, getReducerFromTree } from './components';
+import { Component } from './components';
 import { globalOptions, GlobalOptions } from './options';
 
 export class ReduxApp<T extends object> {
@@ -31,7 +31,7 @@ export class ReduxApp<T extends object> {
         this.root = (rootComponent as any);
         
         // update the store
-        const actualReducer = getReducerFromTree(rootComponent);
+        const actualReducer = Component.getReducerFromTree(rootComponent);
         this.store.replaceReducer(actualReducer);
     }    
 }
