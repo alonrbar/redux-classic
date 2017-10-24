@@ -27,12 +27,12 @@ export class Component<T extends object> {
     /**
      * IMPORTANT: Don't use the constructor. Call Component.create instead.
      */
-    constructor(store: Store<T>, schema: T, parent?: object, path: string[] = [], visited = new Set()) {
+    constructor(store: Store<T>, schema: T, parentSchema?: object, path: string[] = [], visited = new Set()) {
 
         if (!isComponentSchema(schema))
             throw new Error(`Argument '${nameof(schema)}' is not a component schema. Did you forget to use the decorator?`);
 
-        createSelf(this, store, schema, parent, path);
+        createSelf(this, store, schema, parentSchema, path);
         createSubComponents(this, store, schema, path, visited);
 
         log.debug(`[Component] new ${schema.constructor.name} component created. path: root.${path.join('.')}`);
@@ -53,12 +53,12 @@ export class Component<T extends object> {
 // of method name collision.
 //
 
-function createSelf(component: Component<object>, store: Store<object>, schema: object, parent: any, path: string[]): void {
+function createSelf(component: Component<object>, store: Store<object>, schema: object, parentSchema: any, path: string[]): void {
 
     setSymbol(component, DISPOSE, []);
 
     // decorator - withId
-    setComponentId(component, parent, path);
+    setComponentId(component, parentSchema, path);
 
     // decorator - computed
     addComputed(component, schema);
@@ -84,15 +84,14 @@ function createSubComponents(obj: any, store: Store<object>, schema: object, pat
     // prevent endless loops on circular references
     if (visited.has(obj))
         return;
-    visited.add(obj);
-
-    const searchIn = schema || obj;
+    visited.add(obj);    
 
     // no need to search for components inside primitives
     if (isPrimitive(obj))
         return;
 
     // search for sub-components
+    const searchIn = schema || obj;
     for (let key of Object.keys(searchIn)) {
         var subSchema = searchIn[key];
         var subPath = path.concat([key]);
