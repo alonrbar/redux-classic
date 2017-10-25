@@ -1,6 +1,11 @@
 import { createStore, Store, StoreEnhancer } from 'redux';
 import { Component } from './components';
 import { globalOptions, GlobalOptions } from './options';
+import { isPrimitive, log } from './utils';
+
+class VisitCounter {
+    public value = 0;
+}
 
 export class ReduxApp<T extends object> {
 
@@ -18,10 +23,12 @@ export class ReduxApp<T extends object> {
      */
     public readonly store: Store<T>;
 
+    private subscriptionDisposer: () => void;
+
     constructor(appSchema: T, enhancer?: StoreEnhancer<T>);
     constructor(appSchema: T, preloadedState: T, enhancer?: StoreEnhancer<T>);
     constructor(appSchema: T, ...params: any[]) {
-        
+
         // create the store
         const dummyReducer = () => { /* noop  */ };
         this.store = createStore<T>(dummyReducer as any, ...params);
@@ -29,9 +36,99 @@ export class ReduxApp<T extends object> {
         // create the app
         const rootComponent = Component.create(this.store, appSchema);
         this.root = (rootComponent as any);
-        
+
+        // state        
+        if (ReduxApp.options.updateState) {
+            this.subscriptionDisposer = this.store.subscribe(() => this.updateState());
+        }
+
         // update the store
         const actualReducer = Component.getReducerFromTree(rootComponent);
         this.store.replaceReducer(actualReducer);
-    }    
+    }
+
+    /**
+     * Unsubscribe this instance from the it's underlying redux store.
+     */
+    public dispose(): void {
+        if (this.subscriptionDisposer) {
+            this.subscriptionDisposer();
+            this.subscriptionDisposer = null;
+        }
+    }
+
+    private updateState(): void {
+        
+        const startTime = Date.now();
+
+        const newState = this.store.getState();
+        log.verbose('[updateState] Store before: ', newState);
+
+        var counter = new VisitCounter();
+        const visited = new Set();
+        this.updateStateRecursion(this.root, newState, [], visited, counter);
+        log.verbose('[updateState] Store after: ', newState);
+
+        const endTime = Date.now();
+        log.verbose(`[updateState] Update done. Invoked ${counter.value} times. Visited: ${visited.size} objects. Total time: ${endTime - startTime}ms.`);
+    }
+
+    private updateStateRecursion(obj: any, newState: any, path: string[], visited: Set<any>, counter: VisitCounter): any {
+        counter.value++;
+
+        // properties are updated by their holders
+        if (isPrimitive(obj) || isPrimitive(newState))
+            return newState;
+
+        // prevent endless loops on circular references
+        if (visited.has(obj))
+            return obj;
+        visited.add(obj);
+
+        // log
+        const pathStr = 'root' + (path.length ? '.' : '') + path.join('.');
+        log.verbose(`[updateState] Updating app state in path '${pathStr}'`);
+        log.verbose('[updateState] Scoped app state before: ', obj);
+
+        // delete anything not in the new state
+        var propsDeleted: string[] = [];
+        Object.keys(obj).forEach(key => {
+            if (!newState.hasOwnProperty(key)) {
+                delete obj[key];
+                propsDeleted.push(key);
+            }
+        });
+
+        // assign new state recursively
+        var propsAssigned: string[] = [];
+        Object.keys(newState).forEach(key => {
+            var subState = newState[key];
+            var subObj = obj[key];
+            const newSubObj = this.updateStateRecursion(subObj, subState, path.concat(key), visited, counter);
+            if (newSubObj !== subObj) {
+                obj[key] = newSubObj;
+                propsAssigned.push(key);
+            }
+        });
+
+        // log
+        if (propsDeleted.length || propsAssigned.length) {            
+            log.debug(`[updateState] App state in path '${pathStr}' changed`);
+            log.verbose('[updateState] Scoped app state after: ', obj);
+            if (propsDeleted.length) {
+                log.debug('[updateState] Props deleted: ', propsDeleted);
+            } else {
+                log.verbose('[updateState] Props deleted: ', propsDeleted);
+            }
+            if (propsAssigned.length) {
+                log.debug('[updateState] Props assigned: ', propsAssigned);
+            } else {
+                log.verbose('[updateState] Props assigned: ', propsAssigned);
+            }
+        } else {
+            log.verbose('[updateState] No Change');
+        }
+
+        return obj;
+    }
 }

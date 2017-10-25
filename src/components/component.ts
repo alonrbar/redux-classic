@@ -1,7 +1,7 @@
-import { AnyAction, Dispatch, Reducer, ReducersMapObject, Store } from 'redux';
+import { AnyAction, Reducer, ReducersMapObject, Store } from 'redux';
 import { ComponentId, Computed } from '../decorators';
 import { getActionName } from '../options';
-import { getMethods, getProp, isPrimitive, log, simpleCombineReducers } from '../utils';
+import { getMethods, isPrimitive, log, simpleCombineReducers } from '../utils';
 import { Metadata } from './metadata';
 import { Schema } from './schema';
 
@@ -12,25 +12,25 @@ export class Component<T extends object = object> {
     private static readonly identityReducer = (state: any) => state;
 
     //
-    // public static
+    // public
     //
 
     public static create<T extends object>(store: Store<T>, schema: T, parent?: object, path: string[] = [], visited = new Set()): Component<T> {
         // tslint:disable-next-line:variable-name
-        var ComponentClass = Component.getComponentClass(schema, store.dispatch);
+        var ComponentClass = Component.getComponentClass(schema);
         return new ComponentClass(store, schema, parent, path, visited);
     }
 
     public static getReducerFromTree(obj: object, path: string[] = [], visited: Set<any> = new Set()): Reducer<any> {
 
+        // no need to search inside primitives
+        if (isPrimitive(obj))
+            return undefined;
+
         // prevent endless loops on circular references
         if (visited.has(obj))
             return undefined;
         visited.add(obj);
-
-        // no need to search inside primitives
-        if (isPrimitive(obj))
-            return undefined;
 
         // get the root reducer
         var rootReducer: Reducer<any>;
@@ -74,18 +74,18 @@ export class Component<T extends object = object> {
     }
 
     //
-    // private static
+    // private - new component class creation
     //
 
-    private static getComponentClass(creator: object, dispatch: Dispatch<object>): typeof Component {
+    private static getComponentClass(creator: object): typeof Component {
         var schema = Schema.getSchema(creator);
         if (!schema.componentClass) {
-            schema.componentClass = Component.createComponentClass(creator, dispatch);
+            schema.componentClass = Component.createComponentClass(creator);
         }
         return schema.componentClass;
     }
 
-    private static createComponentClass<T extends object>(creator: object, dispatch: Dispatch<object>) {
+    private static createComponentClass<T extends object>(creator: object) {
 
         // declare new class
         class ComponentClass extends Component<T> {
@@ -95,13 +95,13 @@ export class Component<T extends object = object> {
         }
 
         // patch it's prototype
-        const actions = Component.createActions(creator, dispatch);
+        const actions = Component.createActions(creator);
         Object.assign(ComponentClass.prototype, actions);
 
         return ComponentClass;
     }
 
-    private static createActions(creator: object, dispatch: Dispatch<object>): any {
+    private static createActions(creator: object): any {
 
         const methods = getMethods(creator);
         if (!methods)
@@ -128,7 +128,7 @@ export class Component<T extends object = object> {
 
                     // handle dispatch methods (use store dispatch)
                     const meta = Metadata.getMeta(this);
-                    dispatch({
+                    meta.dispatch({
                         type: getActionName(creator, key, schema.options),
                         id: (meta ? meta.id : undefined),
                         payload: payload
@@ -140,6 +140,10 @@ export class Component<T extends object = object> {
         return componentActions;
     }
 
+    //
+    // private - new component instance creation
+    //
+
     private static createSelf(component: Component, store: Store<object>, creator: object, parentCreator: any, path: string[]): void {
 
         // regular js props
@@ -147,9 +151,10 @@ export class Component<T extends object = object> {
             (component as any)[key] = (creator as any)[key];
         }
 
-        // component id
+        // component metadata
         const meta = Metadata.createMeta(component);
         meta.id = ComponentId.getComponentId(parentCreator, path);
+        meta.dispatch = store.dispatch;
 
         // computed properties
         const schema = Schema.getSchema(creator);
@@ -157,24 +162,18 @@ export class Component<T extends object = object> {
 
         // reducer
         meta.reducer = Component.createReducer(component, creator);
-
-        // state        
-        if (schema.options.updateState) {
-            const unsubscribe = store.subscribe(() => Component.updateState(component, store.getState(), path));
-            meta.disposables.push({ dispose: () => unsubscribe() });
-        }
     }
 
     private static createSubComponents(obj: any, store: Store<object>, creator: object, path: string[], visited: Set<any>): void {
+
+        // no need to search inside primitives
+        if (isPrimitive(obj))
+            return;
 
         // prevent endless loops on circular references
         if (visited.has(obj))
             return;
         visited.add(obj);
-
-        // no need to search for components inside primitives
-        if (isPrimitive(obj))
-            return;
 
         // traverse object children
         const searchIn = creator || obj;
@@ -210,14 +209,14 @@ export class Component<T extends object = object> {
         const componentId = Metadata.getMeta(component).id;
 
         // the reducer
-        return (state: object, action: AnyAction) => {
+        return (state: object, action: AnyAction) => {            
 
             log.verbose(`[reducer] reducer of: ${creator.constructor.name}, action: ${action.type}`);
 
             // initial state
             if (state === undefined) {
                 log.verbose('[reducer] state is undefined, returning initial value');
-                return creator;
+                return component;
             }
 
             // check component id
@@ -234,7 +233,7 @@ export class Component<T extends object = object> {
                 return state;
             }
 
-            // call the action-reducer with the new state as the 'this' argument        
+            // call the action-reducer with the new state as the 'this' argument
             var newState = Object.assign({}, state);
             actionReducer.call(newState, ...action.payload);
 
@@ -242,63 +241,6 @@ export class Component<T extends object = object> {
             log.verbose('[reducer] reducer invoked, returning new state');
             return newState;
         };
-    }
-
-    private static updateState(component: Component, newGlobalState: object, path: string[]): void {
-
-        // vars
-        var self = (component as any);
-        var newScopedState = getProp(newGlobalState, path);
-
-        // log
-        const pathStr = 'root' + (path.length ? '.' : '') + path.join('.');
-        log.verbose('[updateState] updating component in path: root.', pathStr);
-        log.verbose('[updateState] store before: ', newScopedState);
-        log.verbose('[updateState] component before: ', component);
-
-        // assign new state
-        var propsAssigned: string[] = [];
-        Object.keys(newScopedState).forEach(key => {
-            // We check two things:
-            // 1. The new value is not referencely equal to the previous. This
-            //    is just a minor optimization.
-            // 2. The old value isn't a component. Overwriting a component means
-            //    losing it's patched prototype and therefore invoking it's
-            //    methods will not use the store's dispatch function anymore
-            //    (and will mutate the component state directly).
-            if (self[key] !== newScopedState[key] && !(self[key] instanceof Component)) {
-                self[key] = newScopedState[key];
-                propsAssigned.push(key);
-            }
-        });
-
-        // delete left-overs from previous state
-        var propsDeleted: string[] = [];
-        Object.keys(component).forEach(key => {
-            if (!newScopedState.hasOwnProperty(key)) {
-                delete self[key];
-                propsDeleted.push(key);
-            }
-        });
-
-        // log
-        if (propsDeleted.length || propsAssigned.length) {
-            log.verbose('[updateState] store after: ', newScopedState);
-            log.verbose('[updateState] component after: ', component);
-            log.debug(`[updateState] state of ${pathStr} changed`);
-            if (propsDeleted.length) {
-                log.debug('[updateState] props deleted: ', propsDeleted);
-            } else {
-                log.verbose('[updateState] props deleted: ', propsDeleted);
-            }
-            if (propsAssigned.length) {
-                log.debug('[updateState] props assigned: ', propsAssigned);
-            } else {
-                log.verbose('[updateState] props assigned: ', propsAssigned);
-            }
-        } else {
-            log.verbose('[updateState] no change');
-        }
     }
 
     //
@@ -317,16 +259,9 @@ export class Component<T extends object = object> {
     }
 
     // 
-    // Note: Everything not strictly necessary is held outside of the component class
-    // to reduce the chance of naming collisions.
+    // Note: Component methods are static to avoid naming collisions on the
+    // prototype.
     //
-
-    public disposeComponent(): void {
-        const disposables = Metadata.getMeta(this).disposables;
-        while (disposables.length) {
-            var disposable = disposables.pop();
-            if (disposable && disposable.dispose)
-                disposable.dispose();
-        }
-    }
+    // TODO: reconsider...
+    //
 }

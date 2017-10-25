@@ -17,15 +17,7 @@ export class SchemaOptions {
      * 'INCREMENT_COUNTER'.
      * Default value: true.
      */
-    public uppercaseActions? = true;
-    /**
-     * By default each component is assigned (with some optimizations) with it's
-     * relevant sub state on each store change. Set this to false to disable
-     * this updating process. The store's state will still be updated as usual
-     * and can always be retrieved using store.getState().
-     * Default value: true.
-     */
-    public updateState? = true;
+    public uppercaseActions? = true;    
 }
 
 export function getActionName(creator: object, methodName: string, options: SchemaOptions): string {
@@ -64,6 +56,14 @@ export enum LogLevel {
 
 export class GlobalOptions {
     public logLevel = LogLevel.Silent;
+    /**
+     * By default each component is assigned (with some optimizations) with it's
+     * relevant sub state on each store change. Set this to false to disable
+     * this updating process. The store's state will still be updated as usual
+     * and can always be retrieved using store.getState().
+     * Default value: true.
+     */
+    public updateState? = true;
     /**
      * Global defaults.
      * Options supplied explicitly via the decorator will override options specified here.

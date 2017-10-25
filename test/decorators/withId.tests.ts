@@ -1,9 +1,15 @@
-import { expect } from "chai";
-import { Counter } from '../testTypes';
-import { withId } from 'src/decorators/withId';
-import { component, ReduxApp } from 'src';
+import { expect } from 'chai';
+import { component, ReduxApp, withId } from 'src';
 
-describe('withId', () => {
+describe('withId', () => {    
+
+    @component
+    class Counter {
+        public value = 0;
+        public increment() {
+            this.value = this.value + 1;
+        }
+    }
 
     it("syncs components with the same id but not others", () => {
 
@@ -21,7 +27,7 @@ describe('withId', () => {
         const app = new ReduxApp(new App());
 
         app.root.counter1.increment();
-
+        
         expect(app.root.counter1.value).to.eql(1);
         expect(app.root.counter2.value).to.eql(1);
         expect(app.root.counter3.value).to.eql(0);

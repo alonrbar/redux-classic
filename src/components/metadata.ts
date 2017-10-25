@@ -1,4 +1,4 @@
-import { Reducer } from 'redux';
+import { Dispatch, Reducer } from 'redux';
 import { COMPONENT_META, getSymbol, setSymbol } from '../symbols';
 import { Getter, IDisposable, IMap } from '../types';
 import { Component } from './component';
@@ -17,6 +17,7 @@ export class Metadata {
     }
 
     public id: any;
+    public dispatch: Dispatch<any>;
     public reducer: Reducer<any>;
     public disposables: IDisposable[] = [];
     public computedGetters: IMap<Getter>;

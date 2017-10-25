@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { component, ReduxApp } from 'src';
+import { component } from 'src';
 import { Component } from 'src/components/component';
 import { FakeStore } from '../testTypes';
 
@@ -8,6 +8,17 @@ import { FakeStore } from '../testTypes';
 describe(nameof(Component), () => {
 
     describe('constructor', () => {
+
+        it("does not throw on null values", () => {
+
+            @component
+            class Root {
+                public value: string = null;
+            }
+
+            const store = new FakeStore();
+            Component.create(store, new Root());
+        });
 
         it("components nested inside standard objects are constructed", () => {
 
@@ -116,45 +127,7 @@ describe(nameof(Component), () => {
             expect(isConnected).to.be.false;
         });
 
-        it("components nested inside standard objects are connected to store's state", () => {
-
-            @component
-            class Root {
-                public first = {
-                    second: new Level2()
-                };
-            }
-
-            class Level2 {
-                public third = new Level3();
-            }
-
-            class Level3 {
-                public some = new ThisIsAComponent();
-            }
-
-            @component
-            class ThisIsAComponent {
-
-                public value = 0;
-
-                public dispatchMe() {
-                    this.value = 1;
-                }
-            }
-
-            // create component tree
-            const app = new ReduxApp(new Root());
-
-            // before dispatching
-            expect(app.root.first.second.third.some.value).to.eql(0);
-
-            // after dispatching
-            app.root.first.second.third.some.dispatchMe();
-            expect(app.root.first.second.third.some.value).to.eql(1);
-        });
-
-        it("Two different component classes with the same method name has separate methods", () => {
+        it("two different component classes with the same method name has separate methods", () => {
 
             @component
             class Root {
@@ -181,7 +154,7 @@ describe(nameof(Component), () => {
             expect(root.first.foo.toString).to.not.equal(root.second.foo);
         });
 
-        it("Two component instances of the same class has the same methods", () => {
+        it("two component instances of the same class has the same methods", () => {
 
             @component
             class TheComponent {
@@ -195,81 +168,5 @@ describe(nameof(Component), () => {
 
             expect(comp1.foo).to.equal(comp2.foo);
         });
-
-        it("handles null values", () => {
-
-            @component
-            class Root {
-                public value: string = null;
-            }
-
-            // create component tree
-            new ReduxApp(new Root());
-        });
-    });
-
-    describe('updateState', () => {
-
-        it('removes component properties that do not exists on the new state', () => {
-
-            // configure the fake store
-            var store = new FakeStore();
-
-            var notifyStateChanged: () => void;
-            (store.subscribe as any) = (listener?: () => void) => {
-                notifyStateChanged = listener;
-            };
-
-            store.getState = () => ({
-                prop2: 'hello'
-            });
-
-            // create the component
-            @component
-            class MyComponent {
-                public prop1: string = undefined;
-                public prop2: string = undefined;
-            }
-            const comp = Component.create(store, new MyComponent());
-
-            // test before
-            expect(comp).to.haveOwnProperty('prop1');
-            expect(comp).to.haveOwnProperty('prop2');
-
-            // test after
-            notifyStateChanged();
-            expect(comp).to.not.haveOwnProperty('prop1');
-            expect(comp).to.haveOwnProperty('prop2');
-        });
-
-        it('does not remove component properties that exists on the new state but are undefined', () => {
-
-            // configure the fake store
-            var store = new FakeStore();
-
-            var notifyStateChanged: () => void;
-            (store.subscribe as any) = (listener?: () => void) => {
-                notifyStateChanged = listener;
-            };
-
-            store.getState = () => ({
-                prop: undefined
-            });
-
-            // create the component
-            @component
-            class MyComponent {
-                public prop: string = undefined;
-            }
-            const comp = Component.create(store, new MyComponent());
-
-            // test before
-            expect(comp).to.haveOwnProperty('prop');
-
-            // test after
-            notifyStateChanged();
-            expect(comp).to.haveOwnProperty('prop');
-        });
-
     });
 });
