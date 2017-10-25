@@ -5,6 +5,7 @@
 ### Changed
 
 - Updated type definitions (d.ts file).
+- Updated package exports (index.ts).
 
 ## [1.5.1 - 2017-10-25](https://github.com/alonrbar/redux-app/tree/v1.5.1)
 
