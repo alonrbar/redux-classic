@@ -6,16 +6,19 @@
 
 - New decorator: computed.
 - New utility function: isInstanceOf.
+- New global option: emitClassNames.
 
 ### Changed
 
 - When updating state do not remove component properties that exists on the state but are undefined.
 - The 'updateState' option is now an app level option instead of a component level option.
+- Throw if component method is invoked with non-component as 'this'.
+- Verbose logs are emitted using console.debug instead of console.log.
 
 ### Fixed
 
 - Major refactor to the library's internals that address several issues. The primary issues where:
-  1. All patched methods where store on Component prototype. This would mean that two different classes having a method with the same name will dispatch the same action.
+  1. All patched methods where store on the same Component prototype. This would mean that two different classes having a method with the same name will dispatch the same action.
   2. Updates to components nested inside regular objects where not applied correctly.
 
 ## [1.4.0 - 2017-10-22](https://github.com/alonrbar/redux-app/tree/v1.4.0)

@@ -70,7 +70,13 @@ export enum LogLevel {
 }
 
 export class GlobalOptions {
-    public logLevel = LogLevel.Silent;    
+    public logLevel = LogLevel.Silent;
+    /**
+     * When set to 'true' every component will have an additional __originalClassName__ property.
+     * May be useful for debugging.
+     * Default value: false.
+     */
+    public emitClassNames = false;
     /**
      * Global defaults.
      * Options supplied explicitly via the decorator will override options specified here.

@@ -72,8 +72,6 @@ export class ReduxApp<T extends object> {
         // method which copies the resulted values back to the components.
         //
 
-        const startTime = Date.now();
-
         const newState = this.store.getState();
         log.verbose('[updateState] Store before: ', newState);
 
@@ -81,9 +79,6 @@ export class ReduxApp<T extends object> {
         const visited = new Set();
         this.updateStateRecursion(this.root, newState, [], visited, counter);
         log.verbose('[updateState] Store after: ', newState);
-
-        const endTime = Date.now();
-        log.verbose(`[updateState] Update done. Invoked ${counter.value} times. Visited: ${visited.size} objects. Total time: ${endTime - startTime}ms.`);
     }
 
     private updateStateRecursion(obj: any, newState: any, path: string[], visited: Set<any>, counter: VisitCounter): any {
@@ -141,7 +136,7 @@ export class ReduxApp<T extends object> {
                 log.verbose('[updateState] Props assigned: ', propsAssigned);
             }
         } else {
-            log.verbose('[updateState] No Change');
+            log.verbose(`[updateState] No Change in path '${pathStr}'`);
         }
 
         return obj;

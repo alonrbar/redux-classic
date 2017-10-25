@@ -1,6 +1,6 @@
 import { AnyAction, Reducer, ReducersMapObject, Store } from 'redux';
 import { ComponentId, Computed } from '../decorators';
-import { getActionName } from '../options';
+import { getActionName, globalOptions } from '../options';
 import { getMethods, isPrimitive, log, simpleCombineReducers } from '../utils';
 import { Metadata } from './metadata';
 import { Schema } from './schema';
@@ -71,7 +71,7 @@ export class Component<T extends object = object> {
         }
 
         return Computed.wrapReducer(resultReducer, obj);
-    }    
+    }
 
     //
     // private - new component class creation
@@ -85,13 +85,18 @@ export class Component<T extends object = object> {
         }
         return schema.componentClass;
     }
-    
+
     private static createComponentClass<T extends object>(creator: object) {
 
         // declare new class
         class ComponentClass extends Component<T> {
+            public __originalClassName__ = creator.constructor.name; // tslint:disable-line:variable-name
+
             constructor(store: Store<T>, schemaArg: T, ...params: any[]) {
                 super(store, schemaArg, ...params);
+
+                if (!globalOptions.emitClassNames)
+                    delete this.__originalClassName__;
             }
         }
 
@@ -114,11 +119,8 @@ export class Component<T extends object = object> {
             componentActions[key] = function (this: Component<object>, ...payload: any[]): void {
 
                 // verify 'this' arg
-                if (!(this instanceof Component)) {
-                    const msg = "Component method invoked with non-Component as 'this'. " +
-                        "Some redux-app features such as the withId decorator will not work. Bound 'this' argument is: ";
-                    log.warn(msg, this);
-                }
+                if (!(this instanceof Component))
+                    throw new Error(`Component method invoked with non-Component as 'this'. Bound 'this' argument is: ${this}`);
 
                 const oldMethod = methods[key];
                 if (schema.noDispatch[key]) {
@@ -209,19 +211,19 @@ export class Component<T extends object = object> {
         const componentId = Metadata.getMeta(component).id;
 
         // the reducer
-        return (state: object, action: AnyAction) => {            
+        return (state: object, action: AnyAction) => {
 
-            log.verbose(`[reducer] reducer of: ${creator.constructor.name}, action: ${action.type}`);
+            log.verbose(`[reducer] Reducer of: ${creator.constructor.name}, action: ${action.type}`);
 
             // initial state
             if (state === undefined) {
-                log.verbose('[reducer] state is undefined, returning initial value');
+                log.verbose('[reducer] State is undefined, returning initial value');
                 return component;
             }
 
             // check component id
             if (componentId !== action.id) {
-                log.verbose(`[reducer] component id and action.id don't match (${componentId} !== ${action.id})`);
+                log.verbose(`[reducer] Component id and action.id don't match (${componentId} !== ${action.id})`);
                 return state;
             }
 
@@ -229,7 +231,7 @@ export class Component<T extends object = object> {
             const methodName = methodNames[action.type];
             const actionReducer = methods[methodName];
             if (!actionReducer) {
-                log.verbose('[reducer] no matching action in this reducer, returning previous state');
+                log.verbose('[reducer] No matching action in this reducer, returning previous state');
                 return state;
             }
 
@@ -238,7 +240,7 @@ export class Component<T extends object = object> {
             actionReducer.call(newState, ...action.payload);
 
             // return new state
-            log.verbose('[reducer] reducer invoked, returning new state');
+            log.verbose('[reducer] Reducer invoked, returning new state');
             return newState;
         };
     }
@@ -255,7 +257,7 @@ export class Component<T extends object = object> {
         Component.createSelf(this, store, creator, parentCreator, path);
         Component.createSubComponents(this, store, creator, path, visited);
 
-        log.debug(`[Component] new ${creator.constructor.name} component created. path: root.${path.join('.')}`);
+        log.debug(`[Component] New ${creator.constructor.name} component created. path: root.${path.join('.')}`);
     }
 
     // 
