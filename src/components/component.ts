@@ -71,20 +71,21 @@ export class Component<T extends object = object> {
         }
 
         return Computed.wrapReducer(resultReducer, obj);
-    }
+    }    
 
     //
     // private - new component class creation
-    //
+    //    
 
     private static getComponentClass(creator: object): typeof Component {
         var schema = Schema.getSchema(creator);
         if (!schema.componentClass) {
             schema.componentClass = Component.createComponentClass(creator);
+            schema.originalClass = creator.constructor;
         }
         return schema.componentClass;
     }
-
+    
     private static createComponentClass<T extends object>(creator: object) {
 
         // declare new class
@@ -151,14 +152,13 @@ export class Component<T extends object = object> {
             (component as any)[key] = (creator as any)[key];
         }
 
-        // component metadata
+        // component metadata        
         const meta = Metadata.createMeta(component);
         meta.id = ComponentId.getComponentId(parentCreator, path);
         meta.dispatch = store.dispatch;
-
-        // computed properties
         const schema = Schema.getSchema(creator);
-        Computed.setupComputedProps(component, schema);
+        meta.originalClass = schema.originalClass;
+        Computed.setupComputedProps(component, schema, meta);
 
         // reducer
         meta.reducer = Component.createReducer(component, creator);
@@ -259,9 +259,6 @@ export class Component<T extends object = object> {
     }
 
     // 
-    // Note: Component methods are static to avoid naming collisions on the
-    // prototype.
-    //
-    // TODO: reconsider...
+    // Note: Component methods are static so that they will not be exposed unnecessarily through the prototype chain.
     //
 }

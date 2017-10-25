@@ -5,6 +5,7 @@
 ### Added
 
 - New decorator: computed.
+- New utility function: isInstanceOf.
 
 ### Changed
 

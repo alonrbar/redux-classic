@@ -44,7 +44,7 @@ export class Computed {
         };
     }
 
-    public static setupComputedProps(component: Component, schema: Schema): void {
+    public static setupComputedProps(component: Component, schema: Schema, meta: Metadata): void {
 
         // delete real props
         for (let propKey of Object.keys(schema.computedGetters)) {
@@ -52,7 +52,7 @@ export class Computed {
         }
 
         // store getters
-        Metadata.getMeta(component).computedGetters = schema.computedGetters;
+        meta.computedGetters = schema.computedGetters;
     }
 
     private static computeProps(obj: object, state: any): void {

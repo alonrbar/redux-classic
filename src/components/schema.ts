@@ -55,6 +55,7 @@ export class Schema {
     // instance members
     //
 
+    public originalClass: Function;
     public componentClass: typeof Component;
     public options: SchemaOptions;
     public computedGetters: IMap<Getter> = {};

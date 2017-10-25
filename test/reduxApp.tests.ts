@@ -119,7 +119,7 @@ describe(nameof(ReduxApp), () => {
             expect(app.root).to.haveOwnProperty('prop2');
         });
 
-        it("components nested inside standard objects are synced with to store's state", () => {
+        it("components nested inside standard objects are synced with the store's state", () => {
 
             @component
             class Root {

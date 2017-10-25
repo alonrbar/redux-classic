@@ -3,6 +3,8 @@ import { COMPONENT_META, getSymbol, setSymbol } from '../symbols';
 import { Getter, IDisposable, IMap } from '../types';
 import { Component } from './component';
 
+// tslint:disable:ban-types
+
 /**
  * Metadata stored on each component instance.
  */
@@ -16,7 +18,8 @@ export class Metadata {
         return setSymbol(component, COMPONENT_META, new Metadata());
     }
 
-    public id: any;
+    public id: any;    
+    public originalClass: Function;
     public dispatch: Dispatch<any>;
     public reducer: Reducer<any>;
     public disposables: IDisposable[] = [];

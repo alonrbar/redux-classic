@@ -80,7 +80,7 @@ describe('withId', () => {
         expect(app.root.second.nested.nested.counter.value).to.eql(1);
     });
 
-    it("multiple components decorated with no parameters are not synced with one another", () => {
+    it("multiple components decorated with no parameters (auto-id) are not synced with one another", () => {
 
         @component
         class App {
