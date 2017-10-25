@@ -1,6 +1,6 @@
 import { createStore, Store, StoreEnhancer } from 'redux';
 import { Component } from './components';
-import { globalOptions, GlobalOptions } from './options';
+import { AppOptions, globalOptions, GlobalOptions } from './options';
 import { isPrimitive, log } from './utils';
 
 class VisitCounter {
@@ -26,19 +26,27 @@ export class ReduxApp<T extends object> {
     private subscriptionDisposer: () => void;
 
     constructor(appSchema: T, enhancer?: StoreEnhancer<T>);
-    constructor(appSchema: T, preloadedState: T, enhancer?: StoreEnhancer<T>);
+    constructor(appSchema: T, options: AppOptions, enhancer?: StoreEnhancer<T>);
+    constructor(appSchema: T, options: AppOptions, preloadedState: T, enhancer?: StoreEnhancer<T>);
     constructor(appSchema: T, ...params: any[]) {
+
+        var options = new AppOptions();
+        var storeParams = params;
+        if (params.length && typeof params[0] === 'object') {
+            options = Object.assign({}, new AppOptions(), params[0]);
+            storeParams = params.slice(1);
+        }
 
         // create the store
         const dummyReducer = () => { /* noop  */ };
-        this.store = createStore<T>(dummyReducer as any, ...params);
+        this.store = createStore<T>(dummyReducer as any, ...storeParams);
 
         // create the app
         const rootComponent = Component.create(this.store, appSchema);
         this.root = (rootComponent as any);
 
         // state        
-        if (ReduxApp.options.updateState) {
+        if (options.updateState) {
             this.subscriptionDisposer = this.store.subscribe(() => this.updateState());
         }
 
@@ -58,7 +66,12 @@ export class ReduxApp<T extends object> {
     }
 
     private updateState(): void {
-        
+
+        //
+        // Reducers are invoked with regular objects, therefor we use this
+        // method which copies the resulted values back to the components.
+        //
+
         const startTime = Date.now();
 
         const newState = this.store.getState();
@@ -105,6 +118,8 @@ export class ReduxApp<T extends object> {
             var subState = newState[key];
             var subObj = obj[key];
             const newSubObj = this.updateStateRecursion(subObj, subState, path.concat(key), visited, counter);
+
+            // assign only if changed, in case anyone is monitoring changes
             if (newSubObj !== subObj) {
                 obj[key] = newSubObj;
                 propsAssigned.push(key);
@@ -112,7 +127,7 @@ export class ReduxApp<T extends object> {
         });
 
         // log
-        if (propsDeleted.length || propsAssigned.length) {            
+        if (propsDeleted.length || propsAssigned.length) {
             log.debug(`[updateState] App state in path '${pathStr}' changed`);
             log.verbose('[updateState] Scoped app state after: ', obj);
             if (propsDeleted.length) {

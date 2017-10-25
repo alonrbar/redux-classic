@@ -9,7 +9,7 @@
 ### Changed
 
 - When updating state do not remove component properties that exists on the state but are undefined.
-- The 'updateState' option is no longer a component level option but only a global option.
+- The 'updateState' option is now an app level option instead of a component level option.
 
 ### Fixed
 

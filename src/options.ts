@@ -37,6 +37,21 @@ export function getActionName(creator: object, methodName: string, options: Sche
 }
 
 //
+// app options
+//
+
+export class AppOptions {
+    /**
+     * By default each component is assigned (with some optimizations) with it's
+     * relevant sub state on each store change. Set this to false to disable
+     * this updating process. The store's state will still be updated as usual
+     * and can always be retrieved using store.getState().
+     * Default value: true.
+     */
+    public updateState? = true;
+}
+
+//
 // global options
 //
 
@@ -55,15 +70,7 @@ export enum LogLevel {
 }
 
 export class GlobalOptions {
-    public logLevel = LogLevel.Silent;
-    /**
-     * By default each component is assigned (with some optimizations) with it's
-     * relevant sub state on each store change. Set this to false to disable
-     * this updating process. The store's state will still be updated as usual
-     * and can always be retrieved using store.getState().
-     * Default value: true.
-     */
-    public updateState? = true;
+    public logLevel = LogLevel.Silent;    
     /**
      * Global defaults.
      * Options supplied explicitly via the decorator will override options specified here.

@@ -52,6 +52,24 @@ describe(nameof(ReduxApp), () => {
 
     describe('updateState', () => {
 
+        it("component tree is not updated when 'updateState' options is turned off", () => {
+            @component
+            class App {
+                public num = 0;
+                public increment() {
+                    this.num = this.num + 1;
+                }
+            }
+
+            const app = new ReduxApp(new App(), { updateState: false });
+
+            expect(app.root.num).to.eq(0);
+
+            app.root.increment();
+
+            expect(app.root.num).to.eq(0);
+        });
+
         it('removes component properties that do not exists on the new state', () => {
 
             // create the component
