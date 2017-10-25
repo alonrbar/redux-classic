@@ -1,7 +1,3 @@
-# Acknowledgment - Painful Issues
-
-#### I've found some painful **bugs** in redux-app core. The examples still work but some more real-life use cases may fail. I'm working on fixing the issues and hoping to release a fixed version in the next couple of days. Stay tuned.
-
 # redux-app
 
 Type-safe, DRY and OO redux. Implemented with typescript.
@@ -10,6 +6,8 @@ Type-safe, DRY and OO redux. Implemented with typescript.
 [![npm license](https://img.shields.io/npm/l/redux-app.svg)](https://www.npmjs.com/package/redux-app)
 [![dependencies](https://david-dm.org/alonrbar/redux-app.svg)](https://github.com/alonrbar/redux-app)
 [![dependencies](https://david-dm.org/alonrbar/redux-app/dev-status.svg)](https://github.com/alonrbar/redux-app)
+
+[Change Log](https://github.com/alonrbar/redux-app/blob/master/CHANGELOG.md)
 
 ## Installation
 
@@ -73,7 +71,8 @@ _Reading the source tip #1: There are two main classes in redux-app. The first i
 - [The `withId` decorator - "mini ORM" feature](#withid)
 - [Options](#options)
   - [Component Options](#component-options)
-  - [Global Options](global-options)
+  - [Global Options](#global-options)
+- [Changelog](https://github.com/alonrbar/redux-app/blob/master/CHANGELOG.md)
 
 ### Async Actions
 
@@ -230,3 +229,7 @@ Usage:
 ```javascript
 ReduxApp.options.logLevel = LogLevel.Debug;
 ```
+
+### Changelog
+
+The change log can be found [here](https://github.com/alonrbar/redux-app/blob/master/CHANGELOG.md).

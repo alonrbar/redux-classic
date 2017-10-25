@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased](https://github.com/alonrbar/redux-app/tree/develop)
+## [1.5.0 - 2017-10-25](https://github.com/alonrbar/redux-app/tree/v1.5.0)
 
 ### Added
 
