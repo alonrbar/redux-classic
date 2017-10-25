@@ -28,7 +28,7 @@ class Counter {
     value = 0;
 
     increment() {
-        this.value = value + 1; // <--- see Important Notice below
+        this.value = this.value + 1; // <--- see Important Notice below
     }
 }
 
@@ -46,7 +46,7 @@ console.log(app.store.getState()); // { counter: { value: 1 } }
 ## Important Notice
 
 You should **not mutate** the object properties but rather assign them with new values.
-That's why we write `this.value = value + 1` and not `this.value++`.
+That's why we write `this.value = this.value + 1` and not `this.value++`.
 
 ## More Examples
 
@@ -284,7 +284,7 @@ class Counter {
     value = 0;
 
     increment() { // <-- Will now dispatch 'Counter.increment' instead of 'COUNTER.INCREMENT'. Everything else still works the same, no further change required.
-        this.value = value + 1;
+        this.value = this.value + 1;
     }
 }
 ```
