@@ -73,7 +73,7 @@ _Reading the source tip #1: There are two main classes in redux-app. The first i
   - [The `withId` decorator - "mini ORM" feature](#withid)
   - [Computed Values](#computed-values)
 - [Utilities](#utilities)
-  - [isInstanceOf](#isInstanceOf)
+  - [isInstanceOf](#isinstanceof)
 - [Applying Enhancers (devtools, etc.)](#applying-enhancers)
 - [Options](#options)
   - [Component Options](#component-options)

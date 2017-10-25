@@ -22,6 +22,12 @@ export function noDispatch(target: any, propertyKey: string | symbol): void;
  */
 export function sequence(target: any, propertyKey: string | symbol): void;
 
+/**
+ * Property decorator.
+ * Computed values are computed each time the store state is changed.
+ */
+export function computed(target: any, propertyKey: string | symbol): void;
+
 //
 // ReduxApp
 //
@@ -42,9 +48,16 @@ export declare class ReduxApp<T extends object> {
      */
     readonly store: Store<T>;
     
-    constructor(appSchema: T, enhancer?: StoreEnhancer<T>);
-    constructor(appSchema: T, preloadedState: T, enhancer?: StoreEnhancer<T>);
+    constructor(appCreator: T, enhancer?: StoreEnhancer<T>);
+    constructor(appCreator: T, options: AppOptions, enhancer?: StoreEnhancer<T>);
+    constructor(appCreator: T, options: AppOptions, preloadedState: any, enhancer?: StoreEnhancer<T>);
 }
+
+//
+// Utilities
+//
+
+export function isInstanceOf(obj: any, type: Function): boolean;
 
 //
 // Options
@@ -74,6 +87,26 @@ export class SchemaOptions {
     public updateState?: boolean;
 }
 
+export class AppOptions {
+    /**
+     * By default each component is assigned (with some optimizations) with it's
+     * relevant sub state on each store change. Set this to false to disable
+     * this updating process. The store's state will still be updated as usual
+     * and can always be retrieved using store.getState().
+     * Default value: true.
+     */
+    public updateState? = true;
+}
+
+export class GlobalOptions {
+    logLevel: LogLevel;
+    /**
+     * Global defaults.
+     * Options supplied explicitly via the decorator will override options specified here.
+     */
+    schema: SchemaOptions;
+}
+
 export enum LogLevel {
     /**
      * Emit no logs
@@ -85,13 +118,4 @@ export enum LogLevel {
      * Emit no logs (same as None)
      */
     Silent = 10
-}
-
-export declare class GlobalOptions {
-    logLevel: LogLevel;
-    /**
-     * Global defaults.
-     * Options supplied explicitly via the decorator will override options specified here.
-     */
-    schema: SchemaOptions;
 }

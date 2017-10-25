@@ -1,7 +1,7 @@
 import { Metadata } from './metadata';
 
 // tslint:disable-next-line:ban-types
-export function isInstanceOf(obj: any, type: Function) {
+export function isInstanceOf(obj: any, type: Function): boolean {
     if (obj instanceof type)
         return true;
 

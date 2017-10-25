@@ -18,9 +18,9 @@
 
 ### Fixed
 
-- Major refactor to the library's internals that address several issues. The primary issues where:
-  1. All patched methods where store on the same Component prototype. This would mean that two different classes having a method with the same name will dispatch the same action.
-  2. Updates to components nested inside regular objects where not applied correctly.
+- Major refactor to the library's internals that address several issues. The primary issues were:
+  1. All patched methods were store on the same Component prototype. This would mean that two different classes having a method with the same name will dispatch the same action.
+  2. Updates to components nested inside regular objects were not applied correctly.
 
 ## [1.4.0 - 2017-10-22](https://github.com/alonrbar/redux-app/tree/v1.4.0)
 

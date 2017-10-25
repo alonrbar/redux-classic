@@ -9,10 +9,8 @@ const dataDescriptor: PropertyDescriptor = {
 };
 
 /**
- * Computed values are computed each time the store state is changed. They are
- * NOT STORED IN THE STORE but only on the component state. If you want to
- * change the state of the store you should dispatch an action using a component
- * method.
+ * Property decorator.
+ * Computed values are computed each time the store state is changed.
  */
 export function computed(target: any, propertyKey: string | symbol): void {
     const descriptor = Object.getOwnPropertyDescriptor(target, propertyKey);
