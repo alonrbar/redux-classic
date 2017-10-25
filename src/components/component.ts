@@ -15,10 +15,10 @@ export class Component<T extends object = object> {
     // public
     //
 
-    public static create<T extends object>(store: Store<T>, schema: T, parent?: object, path: string[] = [], visited = new Set()): Component<T> {
+    public static create<T extends object>(store: Store<T>, creator: T, parent?: object, path: string[] = [], visited = new Set()): Component<T> {
         // tslint:disable-next-line:variable-name
-        var ComponentClass = Component.getComponentClass(schema);
-        return new ComponentClass(store, schema, parent, path, visited);
+        var ComponentClass = Component.getComponentClass(creator);
+        return new ComponentClass(store, creator, parent, path, visited);
     }
 
     public static getReducerFromTree(obj: object, path: string[] = [], visited: Set<any> = new Set()): Reducer<any> {
@@ -92,8 +92,8 @@ export class Component<T extends object = object> {
         class ComponentClass extends Component<T> {
             public __originalClassName__ = creator.constructor.name; // tslint:disable-line:variable-name
 
-            constructor(store: Store<T>, schemaArg: T, ...params: any[]) {
-                super(store, schemaArg, ...params);
+            constructor(store: Store<T>, creatorArg: T, ...params: any[]) {
+                super(store, creatorArg, ...params);
 
                 if (!globalOptions.emitClassNames)
                     delete this.__originalClassName__;

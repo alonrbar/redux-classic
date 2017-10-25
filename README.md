@@ -32,7 +32,7 @@ class Counter {
     }
 }
 
-const app = new ReduxApp(new App(), devToolsEnhancer(undefined));
+const app = new ReduxApp(new App());
 
 console.log(app.root.counter.value); // 0
 console.log(app.store.getState()); // { counter: { value: 0 } }
@@ -56,31 +56,53 @@ More examples can be found here [redux-app-examples](https://github.com/alonrbar
 
 For each `component` decorated class the library generates an underlying `Component` object that holds the same properties and methods.
 The new Component object has it's prototype patched and all of it's methods replaced with dispatch() calls.
-The generated Component also has a hidden 'REDUCER' property which is later on used by redux store. The 'REDUCER' property itself is
+The generated Component also has a hidden 'reducer' property which is later on used by redux store. The 'reducer' property itself is
 generated from the original object methods, replacing all 'this' values with the current state from the store on each call (using
 Object.assign and Function.prototype.call).
 
-_Reading the source tip #1: There are two main classes in redux-app. The first is ReduxApp (~70 lines) and the second is Component (~220 lines)._
+_Reading the source tip #1: There are two main classes in redux-app. The first is ReduxApp and the second is Component._
 
 ## Documentation
 
 - [Important Notice](#important-notice)
 - [Examples](https://github.com/alonrbar/redux-app-examples)
 - [How it works](#how-it-works)
-- [Async Actions](#async-actions)
-- [The `withId` decorator - "mini ORM" feature](#withid)
+- [Stay Pure](#stay-pure)
+- [Features](#features)
+  - [Async Actions](#async-actions)
+  - [The `withId` decorator - "mini ORM" feature](#withid)
+  - [Computed Values](#computed-values)
+- [Utilities](#utilities)
+  - [isInstanceOf](#isInstanceOf)
+- [Applying Enhancers (devtools, etc.)](#applying-enhancers)
 - [Options](#options)
   - [Component Options](#component-options)
+  - [App Options](#app-options)
   - [Global Options](#global-options)
 - [Changelog](https://github.com/alonrbar/redux-app/blob/master/CHANGELOG.md)
 
-### Async Actions
+### Stay Pure
+
+Although redux-app embraces a new syntax it still adheres to [the three principals of redux](http://redux.js.org/docs/introduction/ThreePrinciples.html):
+
+- The store is still the single source of truth. An automatic process propagates it to the components, similarly to what happens in react-redux.
+- The state is still read only. **Don't mutate the component's state directly**, only via actions (methods).
+- Changes are made with pure functions so **keep your actions pure**.
+
+### Features
+
+#### Async Actions
 
 Async actions and side effects are handled in redux-app by using either the `sequence` decorator or the `noDispatch`.
 Both decorators does **exactly the same** and are actually aliases of the same underlying function. What they do is
 to tell redux-app that the decorated method is a plain old javascript method and that it should not be patched (about
 the patch process see [How it works](#how-it-works)). So, to conclude, what these decorators actually do is to tell
 redux-app to _do nothing special_ with the method.
+
+Remember:
+
+- Don't change the state inside `noDispatch` methods.
+- If you need to dispatch a series of actions use the `sequence` decorator. Don't call actions from within other actions directly.
 
 Usage:
 
@@ -122,7 +144,7 @@ class MyComponent {
 }
 ```
 
-### withId
+#### withId
 
 The role of the `withId` decorator is double. From one hand, it enables the co-existence of two (or more) instances of the same component,
 each with it's own separate state. From the other hand, it is used to keep two separate components in sync. The 'id' argument of the decorator
@@ -151,6 +173,85 @@ export class App {
 }
 ```
 
+#### Computed Values
+
+It is possible to automatically calculate values from other parts of the components state (similar in concept to redux selectors).
+To do that just declare a getter and decorate it with the `computed` decorator. Behind the scenes redux-app will replace the getter
+with regular values and will take care of updating it after each change to the relevant state.
+
+Example:
+
+```javascript
+@component
+class ComputedGreeter {
+
+    public name: string;
+
+    @computed
+    public get welcomeString(): string { // <-- updates when 'name' changes
+        return 'hello ' + this.name;
+    }
+
+    public setName(newVal: string) {
+        this.name = newVal;
+    }
+}
+```
+
+### Utilities
+
+#### isInstanceOf
+
+We've already said that classes decorated with the `component` decorator are being replaced at runtime
+with a generated subclass of the base Component class. This means you lose the ability to have assertions
+like this:
+
+```javascript
+@component
+class MyComponent {
+    // ...
+}
+
+// and elsewhere:
+
+if (!(obj instanceof MyComponent))
+    throw new Error("Invalid argument. Expected instance of MyComponent");
+```
+
+Luckily redux-app supplies a utility method called `isInstanceOf` which you can use instead:
+
+```javascript
+@component
+class MyComponent {
+    // ...
+}
+
+// and elsewhere:
+
+if (!isInstanceOf(obj, MyComponent))
+    throw new Error("Invalid argument. Expected instance of MyComponent");
+```
+
+The updated code will throw either if `obj` is instance of `MyComponent` or if it is an instance of a Component that was generated from the `MyComponent` class. In all other cases the call to `isInstanceOf` will return `false` and no exception will be thrown.
+
+### Applying Enhancers
+
+The `ReduxApp` class has few constructor overloads that lets you pass additional store arguments (for instance, the awesome [devtool extension](https://github.com/zalmoxisus/redux-devtools-extension) enhancer).
+
+```javascript
+constructor(appCreator: T, enhancer?: StoreEnhancer<T>);
+
+constructor(appCreator: T, options: AppOptions, enhancer?: StoreEnhancer<T>);
+
+constructor(appCreator: T, options: AppOptions, preloadedState: T, enhancer?: StoreEnhancer<T>);
+```
+
+Example:
+
+```javascript
+const app = new ReduxApp(new App(), devToolsEnhancer(undefined));
+```
+
 ### Options
 
 #### Component Options
@@ -164,22 +265,14 @@ class SchemaOptions {
      * Format: <class name>.<action name>.
      * Default value: true.
      */
-    public actionNamespace?: boolean;
+    actionNamespace?: boolean;
     /**
      * Use redux style action names. For instance, if a component defines a
      * method called 'incrementCounter' the matching action name will be
      * 'INCREMENT_COUNTER'.
      * Default value: true.
      */
-    public uppercaseActions?: boolean;
-    /**
-     * By default each component is assigned (with some optimizations) with it's
-     * relevant sub state on each store change. Set this to false to disable
-     * this updating process. The store's state will still be updated as usual
-     * and can always be retrieved using store.getState().
-     * Default value: true.
-     */
-    public updateState?: boolean;
+    uppercaseActions?: boolean;
 }
 ```
 
@@ -196,6 +289,27 @@ class Counter {
 }
 ```
 
+#### App Options
+
+```javascript
+export class AppOptions {
+    /**
+     * By default each component is assigned (with some optimizations) with it's
+     * relevant sub state on each store change. Set this to false to disable
+     * this updating process. The store's state will still be updated as usual
+     * and can always be retrieved using store.getState().
+     * Default value: true.
+     */
+    updateState?: boolean;
+}
+```
+
+Usage:
+
+```javascript
+const app = new ReduxApp(new App(), { updateState: false }, devToolsEnhancer(undefined));
+```
+
 #### Global Options
 
 Available global options:
@@ -203,6 +317,12 @@ Available global options:
 ```javascript
 class GlobalOptions {
     logLevel: LogLevel;
+    /**
+     * When set to 'true' every component will have an additional __originalClassName__ property.
+     * Can be useful for debugging.
+     * Default value: false.
+     */
+    emitClassNames: boolean;
     /**
      * Global defaults.
      * Options supplied explicitly via the decorator will override options specified here.

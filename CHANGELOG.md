@@ -7,6 +7,7 @@
 - New decorator: computed.
 - New utility function: isInstanceOf.
 - New global option: emitClassNames.
+- Handle pre-loaded state.
 
 ### Changed
 

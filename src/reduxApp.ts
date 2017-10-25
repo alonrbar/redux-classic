@@ -25,24 +25,20 @@ export class ReduxApp<T extends object> {
 
     private subscriptionDisposer: () => void;
 
-    constructor(appSchema: T, enhancer?: StoreEnhancer<T>);
-    constructor(appSchema: T, options: AppOptions, enhancer?: StoreEnhancer<T>);
-    constructor(appSchema: T, options: AppOptions, preloadedState: T, enhancer?: StoreEnhancer<T>);
-    constructor(appSchema: T, ...params: any[]) {
+    constructor(appCreator: T, enhancer?: StoreEnhancer<T>);
+    constructor(appCreator: T, options: AppOptions, enhancer?: StoreEnhancer<T>);
+    constructor(appCreator: T, options: AppOptions, preloadedState: any, enhancer?: StoreEnhancer<T>);
+    constructor(appCreator: T, ...params: any[]) {
 
-        var options = new AppOptions();
-        var storeParams = params;
-        if (params.length && typeof params[0] === 'object') {
-            options = Object.assign({}, new AppOptions(), params[0]);
-            storeParams = params.slice(1);
-        }
+        // handle different overloads
+        var { options, storeParams } = this.resolveParameters(params);
 
-        // create the store
-        const dummyReducer = () => { /* noop  */ };
-        this.store = createStore<T>(dummyReducer as any, ...storeParams);
+        // create the store        
+        const initialReducer = (state: any) => state;
+        this.store = createStore<T>(initialReducer as any, ...storeParams);
 
         // create the app
-        const rootComponent = Component.create(this.store, appSchema);
+        const rootComponent = Component.create(this.store, appCreator);
         this.root = (rootComponent as any);
 
         // state        
@@ -140,5 +136,40 @@ export class ReduxApp<T extends object> {
         }
 
         return obj;
+    }
+
+    private resolveParameters(params: any[]) {
+        var result: {
+            options?: AppOptions,
+            storeParams?: any
+        } = {};
+
+        if (params.length === 0) {
+
+            // no parameters
+            result.options = new AppOptions();
+
+        } else if (params.length === 1) {
+
+            if (typeof params[0] === 'function') {
+
+                // only enhancer
+                result.storeParams = params;
+                result.options = new AppOptions();
+
+            } else {
+
+                // only options
+                result.options = Object.assign(new AppOptions(), params[0]);
+
+            }
+        } else {
+
+            // options and other store params
+            result.options = Object.assign(new AppOptions(), params[0]);
+            result.storeParams = params.slice(1);
+        }
+
+        return result;
     }
 }

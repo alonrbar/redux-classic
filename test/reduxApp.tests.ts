@@ -48,6 +48,55 @@ describe(nameof(ReduxApp), () => {
 
             expect(app.root.first.second.third.some).to.be.an.instanceOf(Component);
         });
+
+        it("handles pre-loaded state", () => {
+
+            @component
+            class Root {
+                public first = {
+                    second: new Level2()
+                };
+            }
+
+            class Level2 {
+                public theComponent = new ThisIsAComponent();
+            }
+
+            @component
+            class ThisIsAComponent {
+
+                public value: string = 'before';
+
+                public changeValue() {
+                    this.value = 'after';
+                }
+            }
+
+            const preLoadedState = {
+                first: {
+                    second: {
+                        theComponent: {
+                            value: 'I am here!'
+                        }
+                    }
+                }
+            };
+
+            // create component tree
+            const root = new Root();
+            expect(root.first.second.theComponent).to.be.an.instanceOf(ThisIsAComponent);
+            expect(root.first.second.theComponent.value).to.eql('before');
+            
+            // create the app
+            const app = new ReduxApp(root, undefined, preLoadedState);
+            expect(app.root.first.second.theComponent).to.be.an.instanceOf(Component);
+            expect(app.root.first.second.theComponent.value).to.eql('I am here!');
+
+            // verify state is updating
+            app.root.first.second.theComponent.changeValue();
+            expect(app.root.first.second.theComponent).to.be.an.instanceOf(Component);
+            expect(app.root.first.second.theComponent.value).to.eql('after');
+        });
     });
 
     describe('updateState', () => {
@@ -68,6 +117,25 @@ describe(nameof(ReduxApp), () => {
             app.root.increment();
 
             expect(app.root.num).to.eq(0);
+        });
+
+        it("store still updates when 'updateState' options is turned off", () => {
+            
+            @component
+            class App {
+                public num = 0;
+                public increment() {
+                    this.num = this.num + 1;
+                }
+            }
+
+            const app = new ReduxApp(new App(), { updateState: false });
+
+            expect(app.store.getState().num).to.eq(0);
+
+            app.root.increment();
+
+            expect(app.store.getState().num).to.eq(1);
         });
 
         it('removes component properties that do not exists on the new state', () => {
