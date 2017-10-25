@@ -286,6 +286,7 @@ exports.sequence = decorators_1.sequence;
 exports.withId = decorators_1.withId;
 var options_1 = __webpack_require__(1);
 exports.SchemaOptions = options_1.SchemaOptions;
+exports.AppOptions = options_1.AppOptions;
 exports.GlobalOptions = options_1.GlobalOptions;
 exports.LogLevel = options_1.LogLevel;
 var reduxApp_1 = __webpack_require__(19);
