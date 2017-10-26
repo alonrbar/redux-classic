@@ -1,6 +1,5 @@
 import { appsRepository } from '../reduxApp';
 import { log } from '../utils';
-import { withId } from './withId';
 import 'reflect-metadata';
 
 export class ConnectOptions {
@@ -21,9 +20,11 @@ export function connect(options?: ConnectOptions): PropertyDecorator {
         // get the property type (see 'metadata' section of https://www.typescriptlang.org/docs/handbook/decorators.html)
         const type = Reflect.getMetadata("design:type", target, propertyKey);
         if (!type) {
-            const reflectErrMsg = `[connect] Failed to reflect type of property '${propertyKey}'. Either you're not using typescript ` +
-                `(and you really should...) or you forget to turn on the 'emitDecoratorMetadata' ` +
-                `compiler option in your tsconfig.json file.`;
+            const reflectErrMsg = `[connect] Failed to reflect type of property '${propertyKey}'. ` +
+                `Make sure you're using typescript (you really should if you don't already...) and that the ` + 
+                `'emitDecoratorMetadata' compiler option in your tsconfig.json file is turned on. ` + 
+                `Note that even if typescript is configured correctly it may fail to reflect ` +
+                `property types due to the loading order of your classes.` ;
             throw new Error(reflectErrMsg);
         }
 
@@ -32,11 +33,9 @@ export function connect(options?: ConnectOptions): PropertyDecorator {
 
         // delete old descriptor
         var oldGetter: () => any;
-        var oldSetter: any;
         const oldDescriptor = Object.getOwnPropertyDescriptor(target, propertyKey);
         if (oldDescriptor) {
             oldGetter = oldDescriptor.get;
-            oldSetter = oldDescriptor.set;
             delete target[propertyKey];
         }
 
@@ -58,10 +57,7 @@ export function connect(options?: ConnectOptions): PropertyDecorator {
                 const warehouse = app.getTypeWarehouse(type);
                 if (options.id) {
 
-                    // assign the id
-                    withId(options.id)(target, propertyKey);
-
-                    // return
+                    // return by id
                     return warehouse.get(options.id);
                 } else {
 
@@ -69,18 +65,11 @@ export function connect(options?: ConnectOptions): PropertyDecorator {
                     return warehouse.values().next().value;
                 }
             },
-            set: (newValue: any) => {
-
-                // uninitialized app
-                const app = appsRepository[options.app];
-                if (app)
-                    throw new Error("Can not set connected components directly after they've been connected. Set the their source object instead.");
-
-                if (oldSetter) {
-                    return oldSetter(newValue);
-                } else if (!oldDescriptor || oldDescriptor && oldDescriptor.writable) {
-                    return value = newValue;
-                }
+            set: () => {
+                throw new Error(
+                    `Can not assign value of '${propertyKey}'. ` +
+                    `Connected components are one-way links to their source. You can not assign them directly. ` +
+                    `If you need a default value to use in un-connected situations (such as tests) define a getter.`);
             }
         });
     };

@@ -60,17 +60,7 @@ describe(nameof(connect), () => {
     it("creates a connection between two components in the same app", () => {
 
         const testAppName = 'connect-test-2';
-        // const compId = 'comp-id';
-
-        @component
-        class App {
-
-            @connect({ app: testAppName })
-            public comp = new MyComponent();
-
-            public page1 = new Page();
-            public page2 = new Page();
-        }
+        // const compId = 'comp-id';        
 
         @component
         class MyComponent {
@@ -82,15 +72,23 @@ describe(nameof(connect), () => {
         }
 
         class Page {
-            @connect({ app: testAppName })
-            public comp: MyComponent;
+            public comp = new MyComponent();
         }
 
+        @component
+        class Zapp {
+            
+            @connect({ app: testAppName })
+            public comp: MyComponent;
+
+            public page1 = new Page();
+            public page2 = new Page();
+        }                        
+
         // create the app
-        const plainApp = new App();
+        const plainApp = new Zapp();
 
         expect(plainApp.comp.value).to.eql(0);
-        expect(plainApp.page1.comp).to.be.undefined;
 
         // elevate the app
         const reduxApp = new ReduxApp(plainApp, { name: testAppName });
@@ -99,14 +97,11 @@ describe(nameof(connect), () => {
         expect(reduxApp.root.page1.comp).to.equal(reduxApp.root.page2.comp);
 
         // more assertions
-        expect(reduxApp.root.comp).to.be.instanceOf(Component);
+        expect(reduxApp.root.comp).to.be.instanceOf(Component, 'component of elevated app not found');
         expect(reduxApp.root.comp.value).to.eql(0);
 
-        expect(plainApp.page1.comp).to.be.instanceOf(Component);
-        expect(plainApp.page1.comp.value).to.eql(0);
-
         reduxApp.root.comp.increment();
-        expect(plainApp.page1.comp.value).to.eql(1);
+        expect(reduxApp.root.comp.value).to.eql(1);
     });
 
     it("creates a connection between a component inside an app and a component outside of it - with id", () => {
