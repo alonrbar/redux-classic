@@ -1,11 +1,12 @@
 import { AnyAction, Reducer, ReducersMapObject, Store } from 'redux';
 import { ComponentId, Computed } from '../decorators';
 import { getActionName, globalOptions } from '../options';
+import { appsRepository, DEFAULT_APP_NAME } from '../reduxApp';
 import { getMethods, isPrimitive, log, simpleCombineReducers } from '../utils';
 import { Metadata } from './metadata';
 import { Schema } from './schema';
 
-// tslint:disable:member-ordering
+// tslint:disable:member-ordering variable-name
 
 export class Component<T extends object = object> {
 
@@ -16,9 +17,23 @@ export class Component<T extends object = object> {
     //
 
     public static create<T extends object>(store: Store<T>, creator: T, parent?: object, path: string[] = [], visited = new Set()): Component<T> {
-        // tslint:disable-next-line:variable-name
+
+        // create the component
         var ComponentClass = Component.getComponentClass(creator);
-        return new ComponentClass(store, creator, parent, path, visited);
+        const component = new ComponentClass(store, creator, parent, path, visited);
+
+        // register it on it's containing app
+        const appName = path[0] || DEFAULT_APP_NAME;
+        const app = appsRepository[appName];
+        if (app) {
+            const warehouse = app.getTypeWarehouse(creator.constructor);
+            const key = Metadata.getMeta(component).id || warehouse.size;
+            warehouse.set(key, component);
+        } else {
+            log.debug('[Component] Disconnected component created.');
+        }
+
+        return component;
     }
 
     public static getReducerFromTree(obj: object, path: string[] = [], visited: Set<any> = new Set()): Reducer<any> {

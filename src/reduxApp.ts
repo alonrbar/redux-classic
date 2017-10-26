@@ -1,11 +1,28 @@
 import { createStore, Store, StoreEnhancer } from 'redux';
 import { Component } from './components';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
+import { IMap } from './types';
 import { isPrimitive, log } from './utils';
+
+// tslint:disable:ban-types
+
+//
+// internal
+//
 
 class VisitCounter {
     public value = 0;
 }
+
+export const DEFAULT_APP_NAME = 'default';
+
+export const appsRepository: IMap<ReduxApp<any>> = {};
+
+export type AppWarehouse = Map<Function, Map<any, any>>;
+
+//
+// public
+//
 
 export class ReduxApp<T extends object> {
 
@@ -14,6 +31,7 @@ export class ReduxApp<T extends object> {
      */
     public static options: GlobalOptions = globalOptions;
 
+    public readonly name: string;
     /**
      * The root component of the application.
      */
@@ -22,6 +40,8 @@ export class ReduxApp<T extends object> {
      * The underlying redux store.
      */
     public readonly store: Store<T>;
+
+    private readonly warehouse: AppWarehouse = new Map<Function, Map<any, any>>();
 
     private subscriptionDisposer: () => void;
 
@@ -33,12 +53,18 @@ export class ReduxApp<T extends object> {
         // handle different overloads
         var { options, storeParams } = this.resolveParameters(params);
 
+        // assign name and register self
+        this.name = this.getAppName(options.name);
+        if (appsRepository[this.name])
+            throw new Error(`An app with name '${this.name}' already exists.`);
+        appsRepository[this.name] = this;
+
         // create the store        
         const initialReducer = (state: any) => state;
         this.store = createStore<T>(initialReducer as any, ...storeParams);
 
         // create the app
-        const rootComponent = Component.create(this.store, appCreator);
+        const rootComponent = Component.create(this.store, appCreator, null, [this.name]);
         this.root = (rootComponent as any);
 
         // state        
@@ -59,6 +85,23 @@ export class ReduxApp<T extends object> {
             this.subscriptionDisposer();
             this.subscriptionDisposer = null;
         }
+    }
+
+    /**
+     * INTERNAL: Should not appear on the public d.ts file.
+     */
+    public getTypeWarehouse(type: Function): Map<any, any> {
+        if (!this.warehouse.has(type))
+            this.warehouse.set(type, new Map());
+        return this.warehouse.get(type);
+    }
+
+    private getAppName(name: string): string {
+        if (name)
+            return name;
+
+        const appsCount = Object.keys(appsRepository).length;
+        return DEFAULT_APP_NAME + (appsCount ? '_' + appsCount : '');
     }
 
     private updateState(): void {

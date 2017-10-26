@@ -41,6 +41,7 @@ export function getActionName(creator: object, methodName: string, options: Sche
 //
 
 export class AppOptions {
+    public name?: string;
     /**
      * By default each component is assigned (with some optimizations) with it's
      * relevant sub state on each store change. Set this to false to disable

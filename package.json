@@ -30,17 +30,18 @@
   },
   "dependencies": {
     "lodash.snakecase": "^4.1.1",
-    "redux": "^3.7.2"
+    "redux": "^3.7.2",
+    "reflect-metadata": "^0.1.10"
   },
   "devDependencies": {
     "@types/chai": "^4.0.4",
     "@types/mocha": "^2.2.43",
-    "@types/node": "^8.0.46",
+    "@types/node": "^8.0.47",
     "chai": "^4.1.2",
     "mocha": "^4.0.1",
     "mocha-webpack": "^0.7.0",
     "source-map-support": "^0.5.0",
-    "ts-loader": "^3.0.5",
+    "ts-loader": "^3.1.0",
     "ts-nameof": "^0.10.2",
     "ts-nameof-loader": "^1.0.1",
     "tslint": "^5.8.0",
