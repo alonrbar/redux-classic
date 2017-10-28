@@ -1,12 +1,6 @@
 import { AnyAction, Reducer } from 'redux';
 import { Component, Metadata, Schema } from '../components';
-import { log } from '../utils';
-
-const dataDescriptor: PropertyDescriptor = {
-    writable: true,
-    configurable: true,
-    enumerable: true
-};
+import { dataDescriptor, log } from '../utils';
 
 /**
  * Property decorator.
