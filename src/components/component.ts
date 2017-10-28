@@ -169,11 +169,16 @@ export class Component<T extends object = object> {
 
         // component metadata        
         const meta = Metadata.createMeta(component);
-        meta.id = ComponentId.getComponentId(parentCreator, path);
-        meta.dispatch = store.dispatch;
         const schema = Schema.getSchema(creator);
+
+        meta.id = ComponentId.getComponentId(parentCreator, path);
         meta.originalClass = schema.originalClass;
+
+        // computed props
         Computed.setupComputedProps(component, schema, meta);
+
+        // dispatch
+        meta.dispatch = store.dispatch;
 
         // reducer
         meta.reducer = Component.createReducer(component, creator);
