@@ -55,6 +55,8 @@ describe(nameof(connect), () => {
         // assert actions still works
         reduxApp.root.comp.increment();
         expect(page.connectMe.value).to.eql(1);
+
+        reduxApp.dispose();
     });
 
     it("creates a connection between two components in the same app", () => {
@@ -102,6 +104,8 @@ describe(nameof(connect), () => {
 
         reduxApp.root.comp.increment();
         expect(reduxApp.root.comp.value).to.eql(1);
+
+        reduxApp.dispose();
     });
 
     it("creates a connection between a component inside an app and a component outside of it - with id", () => {
@@ -153,6 +157,8 @@ describe(nameof(connect), () => {
         // assert actions still works
         reduxApp.root.comp.increment();
         expect(page.connectMe.value).to.eql(1);
+
+        reduxApp.dispose();
     });
 
     it("does not connect a component with non-existent id", () => {
@@ -190,9 +196,11 @@ describe(nameof(connect), () => {
         expect(page.connectMe).to.be.undefined;
 
         // elevate the app
-        new ReduxApp(plainApp, { name: testAppName });
+        const reduxApp = new ReduxApp(plainApp, { name: testAppName });
 
         expect(page.connectMe).to.be.undefined;
+        
+        reduxApp.dispose();
     });
 
 });

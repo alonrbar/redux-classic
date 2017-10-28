@@ -24,6 +24,8 @@ describe(nameof(noDispatch), () => {
 
         app.root.increment();
         expect(dispatched).to.be.true;
+
+        app.dispose();
     });
 
     it("decorated method does not dispatch an action", () => {
@@ -45,6 +47,8 @@ describe(nameof(noDispatch), () => {
 
         app.root.increment();
         expect(dispatched).to.be.false;
+
+        app.dispose();
     });
 
 });

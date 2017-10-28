@@ -31,6 +31,8 @@ describe('withId', () => {
         expect(app.root.counter1.value).to.eql(1);
         expect(app.root.counter2.value).to.eql(1);
         expect(app.root.counter3.value).to.eql(0);
+
+        app.dispose();
     });
 
     it("syncs deeply nested components", () => {
@@ -78,6 +80,8 @@ describe('withId', () => {
 
         expect(app.root.first.nested.nested.counter.value).to.eql(1);
         expect(app.root.second.nested.nested.counter.value).to.eql(1);
+
+        app.dispose();
     });
 
     it("multiple components decorated with no parameters (auto-id) are not synced with one another", () => {
@@ -104,6 +108,8 @@ describe('withId', () => {
         expect(app.root.counter1.value).to.eql(1);
         expect(app.root.counter2.value).to.eql(2);
         expect(app.root.counter3.value).to.eql(0);
+
+        app.dispose();
     });
 
 });

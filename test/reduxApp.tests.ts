@@ -16,7 +16,8 @@ describe(nameof(ReduxApp), () => {
             }
 
             // create component tree            
-            new ReduxApp(new Root());
+            const app = new ReduxApp(new Root());
+            app.dispose();
         });
 
         it("components nested inside standard objects are constructed", () => {
@@ -47,6 +48,8 @@ describe(nameof(ReduxApp), () => {
             const app = new ReduxApp(new Root());
 
             expect(app.root.first.second.third.some).to.be.an.instanceOf(Component);
+
+            app.dispose();
         });
 
         it("handles pre-loaded state", () => {
@@ -96,6 +99,8 @@ describe(nameof(ReduxApp), () => {
             app.root.first.second.theComponent.changeValue();
             expect(app.root.first.second.theComponent).to.be.an.instanceOf(Component);
             expect(app.root.first.second.theComponent.value).to.eql('after');
+
+            app.dispose();
         });
     });
 
@@ -117,6 +122,8 @@ describe(nameof(ReduxApp), () => {
             app.root.increment();
 
             expect(app.root.num).to.eq(0);
+
+            app.dispose();
         });
 
         it("store still updates when 'updateState' options is turned off", () => {
@@ -136,6 +143,8 @@ describe(nameof(ReduxApp), () => {
             app.root.increment();
 
             expect(app.store.getState().num).to.eq(1);
+
+            app.dispose();
         });
 
         it('removes component properties that do not exists on the new state', () => {
@@ -161,6 +170,8 @@ describe(nameof(ReduxApp), () => {
             app.root.setAndRemove();
             expect(app.root).to.not.haveOwnProperty('prop1');
             expect(app.root).to.haveOwnProperty('prop2');
+
+            app.dispose();
         });
 
         it('does not remove component properties that exists on the new state but are undefined', () => {
@@ -185,6 +196,8 @@ describe(nameof(ReduxApp), () => {
             app.root.updateProp2Only();
             expect(app.root).to.haveOwnProperty('prop1');
             expect(app.root).to.haveOwnProperty('prop2');
+
+            app.dispose();
         });
 
         it("components nested inside standard objects are synced with the store's state", () => {
@@ -223,6 +236,8 @@ describe(nameof(ReduxApp), () => {
             // after dispatching
             app.root.first.second.third.some.dispatchMe();
             expect(app.root.first.second.third.some.value).to.eql(1);
+
+            app.dispose();
         });
 
         it("methods of components nested inside standard objects can be invoked multiple times", () => {
@@ -260,6 +275,8 @@ describe(nameof(ReduxApp), () => {
             expect(app.root.first.second.third.counter.value).to.eql(2);
             app.root.first.second.third.counter.increment();
             expect(app.root.first.second.third.counter.value).to.eql(3);
+
+            app.dispose();
         });
 
     });

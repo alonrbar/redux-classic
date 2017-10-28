@@ -24,6 +24,8 @@ describe(nameof(computed), () => {
         const app = new ReduxApp(new ComputedGreeter());
 
         expect(app.store.getState().welcomeString).to.equal('hello undefined');
+
+        app.dispose();
     });
 
     it("persists initial value on the store (nested)", () => {
@@ -42,6 +44,8 @@ describe(nameof(computed), () => {
         const app = new ReduxApp(new Root());
 
         expect(app.store.getState().first.second.third.welcomeString).to.equal('hello undefined');
+
+        app.dispose();
     });
 
     it("persists the computed value on the store", () => {
@@ -54,6 +58,8 @@ describe(nameof(computed), () => {
         // assert after
         app.root.setName('Alon');
         expect(app.store.getState().welcomeString).to.equal('hello Alon');
+
+        app.dispose();
     });
 
     it("persists the computed value on the store (nested)", () => {
@@ -77,5 +83,7 @@ describe(nameof(computed), () => {
         // assert after
         app.root.first.second.third.setName('Alon');
         expect(app.store.getState().first.second.third.welcomeString).to.equal('hello Alon');
+
+        app.dispose();
     });
 });
