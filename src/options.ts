@@ -71,7 +71,7 @@ export enum LogLevel {
 }
 
 export class GlobalOptions {
-    public logLevel = LogLevel.Silent;
+    public logLevel = LogLevel.Warn;
     /**
      * When set to 'true' every component will have an additional __originalClassName__ property.
      * May be useful for debugging.

@@ -30,7 +30,7 @@ export class Component<T extends object = object> {
             const key = Metadata.getMeta(component).id || warehouse.size;
             warehouse.set(key, component);
         } else {
-            log.debug('[Component] Disconnected component created.');
+            log.warn(`[Component] Disconnected component created at path 'root.${path.join('.')}'.`);
         }
 
         return component;
