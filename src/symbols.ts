@@ -10,3 +10,4 @@ export function getSymbol(obj: any, symbol: symbol): any {
 export const COMPONENT_META = Symbol('REDUX-APP.COMPONENT_METADATA');
 export const COMPONENT_SCHEMA = Symbol('REDUX-APP.COMPONENT_SCHEMA');
 export const AUTO_ID = Symbol('REDUX-APP.AUTO_ID');
+export const CONNECT = Symbol('REDUX-APP.CONNECT');

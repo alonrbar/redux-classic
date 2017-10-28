@@ -179,6 +179,8 @@ export class Component<T extends object = object> {
         // computed props
         Computed.setupComputedProps(component, schema, meta);
 
+        // connected props
+
         // dispatch
         meta.dispatch = store.dispatch;
 

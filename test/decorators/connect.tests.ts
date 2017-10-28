@@ -72,6 +72,7 @@ describe(nameof(connect), () => {
             }
         }
 
+        @component
         class Page1 {
             @connect({ app: testAppName })
             public comp1: MyComponent;

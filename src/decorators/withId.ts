@@ -19,9 +19,10 @@ export class ComponentId {
         // Note: The component id is first stored on it's parent. It can be only
         // assigned to it once the component itself has been constructed. The
         // differed assigned resolves situations where the component is created
-        // inside it's parent constructor or injected via DI. For some reason,
-        // getter and setter did not solve this problem so this solution was
-        // chosen.
+        // inside it's parent constructor or injected via DI. This could have
+        // been solved with custom getter and setter but there typescript has an
+        // issue with defining properties inside decorators, see:
+        // https://stackoverflow.com/questions/43950908/typescript-decorator-and-object-defineproperty-weird-behavior.
         //
 
         const schema = Schema.getSchema(parentCreator);

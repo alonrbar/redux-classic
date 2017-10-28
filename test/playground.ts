@@ -45,8 +45,8 @@ describe("playground", () => {
         const plainApp = new App();
 
         expect(plainApp.warehouse.components.comp.value).to.eql(0);
-        expect(plainApp.page1.comp1).to.be.undefined;
-        expect(plainApp.page2.comp2).to.be.undefined;
+        // expect(plainApp.page1.comp1).to.be.undefined;
+        // expect(plainApp.page2.comp2).to.be.undefined;
 
         // elevate the app
         const reduxApp = new ReduxApp(plainApp, { name: testAppName });
