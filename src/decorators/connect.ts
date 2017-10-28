@@ -1,8 +1,6 @@
 import 'reflect-metadata';
-import { Schema } from '../components';
 import { appsRepository, DEFAULT_APP_NAME } from '../reduxApp';
 import { accessorDescriptor, dataDescriptor, log } from '../utils';
-import { IMap } from '../types';
 
 export class ConnectOptions {
     public app?= DEFAULT_APP_NAME;
@@ -10,7 +8,7 @@ export class ConnectOptions {
     public live?= false;
 }
 
-class ConnectParams {
+class ConnectRequest {
     public options: ConnectOptions;
     public target: any;
     public propertyKey: string | symbol;
@@ -18,33 +16,25 @@ class ConnectParams {
 
 export class Connect {
 
-    private static readonly pendingConnections: IMap<ConnectParams[]> = {};
+    private static readonly pendingConnections: ConnectRequest[] = [];
 
-    public static addPendingConnection(options: ConnectOptions, target: any, propertyKey: string | symbol): void {
-        options = Object.assign(new ConnectOptions(), options);
-
-        if (!Connect.pendingConnections[options.app])
-            Connect.pendingConnections[options.app] = [];
-
-        Connect.pendingConnections[options.app].push({
-            options,
-            target,
-            propertyKey
+    public static requestConnection(options: ConnectOptions, target: any, propertyKey: string | symbol): void {
+        Connect.pendingConnections.push({
+            options: Object.assign(new ConnectOptions(), options),
+            target: target,
+            propertyKey: propertyKey
         });
     }
 
     public static connect(): void {
-
-        
-
-        const pending = Connect.pendingConnections[appName];
-        if (!pending)
+        const pending = Connect.pendingConnections.splice(0);
+        if (!pending.length)
             return;
 
         pending.forEach(params => Connect.connectProperty(params));
     }
 
-    private static connectProperty(params: ConnectParams) {
+    private static connectProperty(params: ConnectRequest) {
 
         const options = params.options;
         const target = params.target;
@@ -128,6 +118,8 @@ export class Connect {
                 }
             }
         }));
+
+        // TODO: invoke the getter here (https://stackoverflow.com/questions/43950908/typescript-decorator-and-object-defineproperty-weird-behavior)
     }
 }
 
@@ -137,7 +129,7 @@ export class Connect {
  */
 export function connect(options?: ConnectOptions): PropertyDecorator {
     return (target: any, propertyKey: string | symbol): void => {
-        Connect.addPendingConnection(options, target, propertyKey);
-        Connect.connect();
+        Connect.requestConnection(options, target, propertyKey);
+        setTimeout(Connect.connect, 0);
     };
 }

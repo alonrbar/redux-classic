@@ -164,9 +164,10 @@ export class Component<T extends object = object> {
 
     private static createSelf(component: Component, store: Store<object>, creator: object, parentCreator: any, path: string[]): void {
 
-        // regular js props
-        for (let key of Object.keys(creator)) {
-            (component as any)[key] = (creator as any)[key];
+        // regular js props (including getters and setters)
+        for (let key of Object.getOwnPropertyNames(creator)) {
+            var desc = Object.getOwnPropertyDescriptor(creator, key);
+            Object.defineProperty(component, key, desc);
         }
 
         // component metadata        
