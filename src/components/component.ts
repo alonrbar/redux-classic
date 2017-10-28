@@ -29,8 +29,6 @@ export class Component<T extends object = object> {
             const warehouse = app.getTypeWarehouse(creator.constructor);
             const key = Metadata.getMeta(component).id || warehouse.size;
             warehouse.set(key, component);
-        } else {
-            log.warn(`[Component] Disconnected component created at path 'root.${path.join('.')}'.`);
         }
 
         return component;

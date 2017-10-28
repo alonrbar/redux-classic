@@ -1,11 +1,9 @@
 import { expect } from 'chai';
-import { component, LogLevel, ReduxApp } from 'src';
-import { Component } from 'src/components/component';
+import { component } from 'src';
+import { Component } from 'src/components';
 import { FakeStore } from '../testTypes';
 
 // tslint:disable:no-unused-expression
-
-ReduxApp.options.logLevel = LogLevel.Silent;
 
 describe(nameof(Component), () => {
 
