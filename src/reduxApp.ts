@@ -18,6 +18,8 @@ export const DEFAULT_APP_NAME = 'default';
 
 export const appsRepository: IMap<ReduxApp<any>> = {};
 
+var appsCount = 0;
+
 export type AppWarehouse = Map<Function, Map<any, any>>;
 
 //
@@ -85,6 +87,9 @@ export class ReduxApp<T extends object> {
             this.subscriptionDisposer();
             this.subscriptionDisposer = null;
         }
+        if (appsRepository[this.name]) {
+            delete appsRepository[this.name];
+        }
     }
 
     /**
@@ -100,8 +105,7 @@ export class ReduxApp<T extends object> {
         if (name)
             return name;
 
-        const appsCount = Object.keys(appsRepository).length;
-        return DEFAULT_APP_NAME + (appsCount ? '_' + appsCount : '');
+        return DEFAULT_APP_NAME + (appsCount++ ? '_' + appsCount : '');
     }
 
     private updateState(): void {
