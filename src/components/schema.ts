@@ -59,6 +59,7 @@ export class Schema {
     public componentClass: typeof Component;
     public options: SchemaOptions;
     public computedGetters: IMap<Getter> = {};
+    public connectedProps: IMap<boolean> = {};
     public noDispatch: IMap<boolean> = {};
     public childIds: any = {};
 }

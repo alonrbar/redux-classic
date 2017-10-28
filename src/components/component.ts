@@ -16,16 +16,18 @@ export class Component<T extends object = object> {
     // public
     //
 
-    public static create<T extends object>(store: Store<T>, creator: T, parent?: object, path: string[] = [], visited = new Set()): Component<T> {
+    public static create<T extends object>(store: Store<T>, creator: T, parentCreator?: object, path: string[] = [], visited = new Set()): Component<T> {
 
         // create the component
         var ComponentClass = Component.getComponentClass(creator);
-        const component = new ComponentClass(store, creator, parent, path, visited);
+        const component = new ComponentClass(store, creator, parentCreator, path, visited);
 
         // register it on it's containing app
         const appName = path[0] || DEFAULT_APP_NAME;
         const app = appsRepository[appName];
-        if (app) {
+        const selfPropName = path[path.length - 1];
+        const isConnected = Schema.getSchema(creator).connectedProps[selfPropName];
+        if (app && !isConnected) {
             const warehouse = app.getTypeWarehouse(creator.constructor);
             const key = Metadata.getMeta(component).id || warehouse.size;
             warehouse.set(key, component);

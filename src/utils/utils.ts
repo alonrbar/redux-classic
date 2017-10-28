@@ -52,3 +52,8 @@ export const dataDescriptor: PropertyDescriptor = {
     configurable: true,
     enumerable: true
 };
+
+export const accessorDescriptor: PropertyDescriptor = {
+    configurable: true,
+    enumerable: true
+};

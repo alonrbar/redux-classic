@@ -1,6 +1,7 @@
 import 'reflect-metadata';
+import { Schema } from '../components';
 import { appsRepository } from '../reduxApp';
-import { dataDescriptor, log } from '../utils';
+import { accessorDescriptor, dataDescriptor, log } from '../utils';
 
 export class ConnectOptions {
     public app?= 'default';
@@ -29,17 +30,22 @@ export function connect(options?: ConnectOptions): PropertyDecorator {
             throw new Error(reflectErrMsg);
         }
 
+        // mark as connected
+        const schema = Schema.getOrCreateSchema(target);
+        schema.connectedProps[propertyKey] = true;
+
         // initial value
         var value = target[propertyKey];
 
         // delete old descriptor
         const oldDescriptor = Object.getOwnPropertyDescriptor(target, propertyKey);
         if (oldDescriptor) {
-            delete target[propertyKey];
+            if (!delete target[propertyKey])
+                throw new Error("[connect] Failed to create connected property. Can not replace existing property.");
         }
 
         // and replace it with a new descriptor        
-        Object.defineProperty(target, propertyKey, {
+        Object.defineProperty(target, propertyKey, Object.assign({}, accessorDescriptor, {
             get: () => {
 
                 // no app to connect
@@ -91,7 +97,7 @@ export function connect(options?: ConnectOptions): PropertyDecorator {
                 // disconnection warning
                 const app = appsRepository[options.app];
                 if (app) {
-                    
+
                     // will only get here if 'live' option is on
                     log.warn(`[connect] Connected component '${propertyKey}' value assigned. Component disconnected.`);
                 }
@@ -103,6 +109,6 @@ export function connect(options?: ConnectOptions): PropertyDecorator {
                     return value = newValue;
                 }
             }
-        });
+        }));
     };
 }
