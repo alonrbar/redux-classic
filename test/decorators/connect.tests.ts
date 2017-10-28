@@ -74,12 +74,12 @@ describe(nameof(connect), () => {
 
         class Page1 {
             @connect({ app: testAppName })
-            public comp: MyComponent;
+            public comp1: MyComponent;
         }
 
         class Page2 {
             @connect({ app: testAppName })
-            public comp: MyComponent;
+            public comp2: MyComponent;
         }
 
         @component
@@ -99,24 +99,24 @@ describe(nameof(connect), () => {
         const plainApp = new App();
 
         expect(plainApp.warehouse.components.comp.value).to.eql(0);
-        expect(plainApp.page1.comp).to.be.undefined;
-        expect(plainApp.page2.comp).to.be.undefined;
+        expect(plainApp.page1.comp1).to.be.undefined;
+        expect(plainApp.page2.comp2).to.be.undefined;
 
         // elevate the app
         const reduxApp = new ReduxApp(plainApp, { name: testAppName });
 
         // assert connected
-        expect(reduxApp.root.page1.comp).to.equal(reduxApp.root.warehouse.components.comp);
-        expect(reduxApp.root.page1.comp).to.be.instanceOf(Component);
-        expect(reduxApp.root.page1.comp).to.equal(reduxApp.root.page2.comp);
+        expect(reduxApp.root.page1.comp1).to.equal(reduxApp.root.warehouse.components.comp);
+        expect(reduxApp.root.page1.comp1).to.be.instanceOf(Component);
+        expect(reduxApp.root.page1.comp1).to.equal(reduxApp.root.page2.comp2);
 
         // validate values
-        expect(reduxApp.root.page1.comp.value).to.eql(0);
+        expect(reduxApp.root.page1.comp1.value).to.eql(0);
 
         // assert action works
-        reduxApp.root.page1.comp.increment();
-        expect(reduxApp.root.page1.comp.value).to.eql(1);
-        expect(reduxApp.root.page2.comp.value).to.eql(1);
+        reduxApp.root.page1.comp1.increment();
+        expect(reduxApp.root.page1.comp1.value).to.eql(1);
+        expect(reduxApp.root.page2.comp2.value).to.eql(1);
         expect(reduxApp.root.warehouse.components.comp.value).to.eql(1);
 
         reduxApp.dispose();
