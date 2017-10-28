@@ -1,10 +1,11 @@
-import { appsRepository } from '../reduxApp';
-import { log } from '../utils';
 import 'reflect-metadata';
+import { appsRepository } from '../reduxApp';
+import { dataDescriptor, log } from '../utils';
 
 export class ConnectOptions {
     public app?= 'default';
     public id?: any;
+    public live?= false;
 }
 
 /**
@@ -21,10 +22,10 @@ export function connect(options?: ConnectOptions): PropertyDecorator {
         const type = Reflect.getMetadata("design:type", target, propertyKey);
         if (!type) {
             const reflectErrMsg = `[connect] Failed to reflect type of property '${propertyKey}'. ` +
-                `Make sure you're using typescript (you really should if you don't already...) and that the ` + 
-                `'emitDecoratorMetadata' compiler option in your tsconfig.json file is turned on. ` + 
+                `Make sure you're using typescript (you really should if you don't already...) and that the ` +
+                `'emitDecoratorMetadata' compiler option in your tsconfig.json file is turned on. ` +
                 `Note that even if typescript is configured correctly it may fail to reflect ` +
-                `property types due to the loading order of your classes.` ;
+                `property types due to the loading order of your classes.`;
             throw new Error(reflectErrMsg);
         }
 
@@ -32,10 +33,8 @@ export function connect(options?: ConnectOptions): PropertyDecorator {
         var value = target[propertyKey];
 
         // delete old descriptor
-        var oldGetter: () => any;
         const oldDescriptor = Object.getOwnPropertyDescriptor(target, propertyKey);
         if (oldDescriptor) {
-            oldGetter = oldDescriptor.get;
             delete target[propertyKey];
         }
 
@@ -43,33 +42,66 @@ export function connect(options?: ConnectOptions): PropertyDecorator {
         Object.defineProperty(target, propertyKey, {
             get: () => {
 
-                // uninitialized app
+                // no app to connect
                 const app = appsRepository[options.app];
                 if (!app) {
                     log.debug(`[connect] Application '${options.app}' does not exist. Property ${propertyKey} is not connected.`);
-                    if (oldGetter) {
-                        return oldGetter();
+                    if (oldDescriptor && oldDescriptor.get) {
+                        return oldDescriptor.get();
                     } else {
                         return value;
                     }
                 }
 
+                // get the component to connect
                 const warehouse = app.getTypeWarehouse(type);
+                var result: any;
                 if (options.id) {
 
-                    // return by id
-                    return warehouse.get(options.id);
+                    // get by id
+                    result = warehouse.get(options.id);
                 } else {
 
                     // get the first value
-                    return warehouse.values().next().value;
+                    result = warehouse.values().next().value;
                 }
+
+                // once connected, replace getter with regular data descriptor
+                // (so that view frameworks such as Aurelia and Angular won't
+                // need to use dirty-checking)
+                if (result && !options.live) {
+                    setTimeout(() => {
+
+                        // avoid race conditions
+                        if (!(propertyKey in Object.keys(target)))
+                            return;
+
+                        // replace descriptor
+                        delete target[propertyKey];
+                        Object.defineProperty(target, propertyKey, dataDescriptor);
+                        value = target[propertyKey] = result;
+                        log.debug(`[connect] Property '${propertyKey}' connected.`);
+                    });
+                }
+
+                return result;
             },
-            set: () => {
-                throw new Error(
-                    `Can not assign value of '${propertyKey}'. ` +
-                    `Connected components are one-way links to their source. You can not assign them directly. ` +
-                    `If you need a default value to use in un-connected situations (such as tests) define a getter.`);
+            set: (newValue: any) => {
+
+                // disconnection warning
+                const app = appsRepository[options.app];
+                if (app) {
+                    
+                    // will only get here if 'live' option is on
+                    log.warn(`[connect] Connected component '${propertyKey}' value assigned. Component disconnected.`);
+                }
+
+                // set value
+                if (oldDescriptor && oldDescriptor.set) {
+                    return oldDescriptor.set(newValue);
+                } else if (!oldDescriptor || oldDescriptor && oldDescriptor.writable) {
+                    return value = newValue;
+                }
             }
         });
     };
