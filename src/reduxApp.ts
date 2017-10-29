@@ -28,10 +28,25 @@ export type AppWarehouse = Map<Function, Map<any, any>>;
 
 export class ReduxApp<T extends object> {
 
+    //
+    // static
+    //
+
     /**
      * Global redux-app options
      */
     public static options: GlobalOptions = globalOptions;
+
+    public static createApp<T extends object>(appCreator: T, enhancer?: StoreEnhancer<T>): ReduxApp<T>;
+    public static createApp<T extends object>(appCreator: T, options: AppOptions, enhancer?: StoreEnhancer<T>): ReduxApp<T>;
+    public static createApp<T extends object>(appCreator: T, options: AppOptions, preloadedState: any, enhancer?: StoreEnhancer<T>): ReduxApp<T>;
+    public static createApp<T extends object>(appCreator: T, ...params: any[]): ReduxApp<T> {
+        return new ReduxApp(appCreator, ...params);
+    }
+
+    //
+    // instance
+    //
 
     public readonly name: string;
     /**
