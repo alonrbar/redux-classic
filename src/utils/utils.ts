@@ -46,14 +46,3 @@ export function getProp<T = any>(obj: any, path: string | (string | number)[]): 
 export function getConstructorProp(obj: object, key: symbol | string): any {
     return obj && obj.constructor && (obj.constructor as any)[key];
 }
-
-export const dataDescriptor: PropertyDescriptor = {
-    writable: true,
-    configurable: true,
-    enumerable: true
-};
-
-export const accessorDescriptor: PropertyDescriptor = {
-    configurable: true,
-    enumerable: true
-};
