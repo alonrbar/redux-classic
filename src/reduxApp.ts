@@ -1,6 +1,5 @@
 import { createStore, Store, StoreEnhancer } from 'redux';
 import { Component } from './components';
-import { Connect } from './decorators/connect';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
 import { IMap } from './types';
 import { isPrimitive, log } from './utils';
@@ -78,9 +77,6 @@ export class ReduxApp<T extends object> {
         // update the store
         const actualReducer = Component.getReducerFromTree(rootComponent);
         this.store.replaceReducer(actualReducer);
-
-        // connect pending connection requests
-        Connect.connect();
     }
 
     /**

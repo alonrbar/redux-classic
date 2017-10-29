@@ -1,67 +1,43 @@
 import 'reflect-metadata';
 import { appsRepository, DEFAULT_APP_NAME } from '../reduxApp';
-import { accessorDescriptor, dataDescriptor, log } from '../utils';
+import { accessorDescriptor, dataDescriptor, deferredDefineProperty, log } from '../utils';
 
 export class ConnectOptions {
+    /**
+     * The name of the ReduxApp instance to connect to. 
+     * Default value is the default app name.
+     */
     public app?= DEFAULT_APP_NAME;
+    /**
+     * The ID of the target component. Assuming the ID was assigned to the
+     * component by the 'withId' decorator.
+     */
     public id?: any;
+    /**
+     * The 'connect' decorator uses a getter to connect to the it's target. By
+     * default the the getter is replaced with a standard value once the first
+     * non-empty value is retrieved. Set this value to false to leave the getter
+     * in place.
+     */
     public live?= false;
 }
 
-class ConnectRequest {
-    public options: ConnectOptions;
-    public target: any;
-    public propertyKey: string | symbol;
-}
+/**
+ * Property decorator.
+ * Connects the component to the specified (or default) app.
+ */
+export function connect(options?: ConnectOptions): PropertyDecorator {
 
-export class Connect {
-
-    private static readonly pendingConnections: ConnectRequest[] = [];
-
-    public static requestConnection(options: ConnectOptions, target: any, propertyKey: string | symbol): void {
-        Connect.pendingConnections.push({
-            options: Object.assign(new ConnectOptions(), options),
-            target: target,
-            propertyKey: propertyKey
-        });
-    }
-
-    public static connect(): void {
-        const pending = Connect.pendingConnections.splice(0);
-        if (!pending.length)
-            return;
-
-        pending.forEach(params => Connect.connectProperty(params));
-    }
-
-    private static connectProperty(params: ConnectRequest) {
-
-        const options = params.options;
-        const target = params.target;
-        const propertyKey = params.propertyKey;
-
-        // get the property type 
-        // (see 'metadata' section of https://www.typescriptlang.org/docs/handbook/decorators.html)
-        const type = Reflect.getMetadata("design:type", target, propertyKey);
-        if (!type) {
-            const reflectErrMsg = `[connect] Failed to reflect type of property '${propertyKey}'. ` +
-                `Make sure you're using typescript (you really should if you don't already...) and that the ` +
-                `'emitDecoratorMetadata' compiler option in your tsconfig.json file is turned on. ` +
-                `Note that even if typescript is configured correctly it may fail to reflect ` +
-                `property types due to the loading order of your classes.`;
-            throw new Error(reflectErrMsg);
-        }
+    return (target: any, propertyKey: string | symbol) => {
 
         // initial value
         var value = target[propertyKey];
 
-        // delete old descriptor
+        // remember old descriptor
         const oldDescriptor = Object.getOwnPropertyDescriptor(target, propertyKey);
-        if (!delete target[propertyKey])
-            throw new Error(`[connect] Failed to create connected property '${propertyKey}'. Can not replace existing property.`);
 
-        // and replace it with a new descriptor        
-        Object.defineProperty(target, propertyKey, Object.assign({}, accessorDescriptor, {
+        // and replace it with a new descriptor
+        const newDescriptor = {
             get: () => {
 
                 const app = appsRepository[options.app];
@@ -72,6 +48,18 @@ export class Connect {
                     } else {
                         return value;
                     }
+                }
+
+                // get the property type 
+                // (see 'metadata' section of https://www.typescriptlang.org/docs/handbook/decorators.html)
+                const type = Reflect.getMetadata("design:type", target, propertyKey);
+                if (!type) {
+                    const reflectErrMsg = `[connect] Failed to reflect type of property '${propertyKey}'. ` +
+                        `Make sure you're using typescript (you really should if you don't already...) and that the ` +
+                        `'emitDecoratorMetadata' compiler option in your tsconfig.json file is turned on. ` +
+                        `Note that even if typescript is configured correctly it may fail to reflect ` +
+                        `property types due to the loading order of your classes.`;
+                    throw new Error(reflectErrMsg);
                 }
 
                 // get the component to connect
@@ -110,26 +98,17 @@ export class Connect {
                     log.warn(`[connect] Connected component '${propertyKey}' value assigned. Component disconnected.`);
                 }
 
-                // set value
+                // Set value.
+                // If called after connection it will disconnect the property.
+                // If called before connection will behave as the original property did.
                 if (oldDescriptor && oldDescriptor.set) {
                     return oldDescriptor.set(newValue);
                 } else if (!oldDescriptor || oldDescriptor && oldDescriptor.writable) {
                     return value = newValue;
                 }
             }
-        }));
+        };
 
-        // TODO: invoke the getter here (https://stackoverflow.com/questions/43950908/typescript-decorator-and-object-defineproperty-weird-behavior)
-    }
-}
-
-/**
- * Property decorator.
- * Connects the component to the specified (or default) app.
- */
-export function connect(options?: ConnectOptions): PropertyDecorator {
-    return (target: any, propertyKey: string | symbol): void => {
-        Connect.requestConnection(options, target, propertyKey);
-        setTimeout(Connect.connect, 0);
+        return deferredDefineProperty(target, propertyKey, Object.assign({}, accessorDescriptor, newDescriptor));
     };
 }
