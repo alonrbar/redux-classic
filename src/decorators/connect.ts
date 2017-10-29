@@ -55,10 +55,12 @@ export function connect(options?: ConnectOptions): PropertyDecorator {
                 const type = Reflect.getMetadata("design:type", target, propertyKey);
                 if (!type) {
                     const reflectErrMsg = `[connect] Failed to reflect type of property '${propertyKey}'. ` +
-                        `Make sure you're using typescript (you really should if you don't already...) and that the ` +
-                        `'emitDecoratorMetadata' compiler option in your tsconfig.json file is turned on. ` +
-                        `Note that even if typescript is configured correctly it may fail to reflect ` +
-                        `property types due to the loading order of your classes.`;
+                        `Make sure you're using TypeScript and that the 'emitDecoratorMetadata' compiler ` + 
+                        `option in your tsconfig.json file is turned on. ` +
+                        `Note that even if TypeScript is configured correctly it may fail to reflect ` +
+                        `property types due to the loading order of your classes. ` + 
+                        `In that case, make sure that the type of '${propertyKey}' is loaded prior to the ` +
+                        `type of it's containing class (${target.constructor.name}).`;
                     throw new Error(reflectErrMsg);
                 }
 
