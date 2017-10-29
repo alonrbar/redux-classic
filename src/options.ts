@@ -41,6 +41,9 @@ export function getActionName(creator: object, methodName: string, options: Sche
 //
 
 export class AppOptions {
+    /**
+     * Name of the newly created app.
+     */
     public name?: string;
     /**
      * By default each component is assigned (with some optimizations) with it's
@@ -71,6 +74,9 @@ export enum LogLevel {
 }
 
 export class GlobalOptions {
+    /**
+     * Default value: LogLevel.Warn
+     */
     public logLevel = LogLevel.Warn;
     /**
      * When set to 'true' every component will have an additional __originalClassName__ property.

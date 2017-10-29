@@ -4,13 +4,14 @@ import { accessorDescriptor, dataDescriptor, deferredDefineProperty, log } from 
 
 export class ConnectOptions {
     /**
-     * The name of the ReduxApp instance to connect to. 
-     * Default value is the default app name.
+     * The name of the ReduxApp instance to connect to.
+     * If not specified will connect to default app.
      */
     public app?= DEFAULT_APP_NAME;
     /**
-     * The ID of the target component. Assuming the ID was assigned to the
-     * component by the 'withId' decorator.
+     * The ID of the target component (assuming the ID was assigned to the
+     * component by the 'withId' decorator).
+     * If not specified will connect to the first available component of that type.
      */
     public id?: any;
     /**
@@ -29,9 +30,9 @@ export class ConnectOptions {
  * 
  * Usage Note: 
  * 
- * Connected properties can be described as pointers to other components. If the
- * connected property has an initial value assigned, it will be overridden once
- * the the component is connected. One consequence of this fact is that there
+ * Connected properties can be thought of as pointers to other components. If
+ * the connected property has an initial value assigned, it will be overridden
+ * once the component is connected. One consequence of this fact is that there
  * must be at least one source component, i.e. there must be at least one
  * component of that type that has a value and is not decorated with the
  * 'connect' decorator.

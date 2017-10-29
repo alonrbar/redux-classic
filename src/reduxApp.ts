@@ -94,9 +94,6 @@ export class ReduxApp<T extends object> {
         this.store.replaceReducer(actualReducer);
     }
 
-    /**
-     * Unsubscribe this instance from the it's underlying redux store.
-     */
     public dispose(): void {
         if (this.subscriptionDisposer) {
             this.subscriptionDisposer();
