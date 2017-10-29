@@ -2,11 +2,19 @@ import { Schema } from '../components';
 import { AUTO_ID } from '../symbols';
 import { log } from '../utils';
 
-export function withId(id?: any): PropertyDecorator {
-    return (target: object, propertyKey: string | symbol) => {
-        const schema = Schema.getOrCreateSchema(target);
-        schema.childIds[propertyKey] = id || AUTO_ID;
-    };
+export function withId(id?: any): PropertyDecorator;
+export function withId(target: object, propertyKey: string | symbol): void;
+export function withId(targetOrId: any, propertyKeyOrNothing?: string | symbol): any {
+    if (propertyKeyOrNothing) {
+        withIdDecorator.call(undefined, targetOrId, propertyKeyOrNothing);
+    } else {
+        return (target: object, propertyKey: string | symbol) => withIdDecorator(target, propertyKey, targetOrId);
+    }
+}
+
+function withIdDecorator(target: object, propertyKey: string | symbol, id?: any) {
+    const schema = Schema.getOrCreateSchema(target);
+    schema.childIds[propertyKey] = id || AUTO_ID;
 }
 
 export class ComponentId {

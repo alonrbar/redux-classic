@@ -9,8 +9,6 @@ describe(nameof(connect), () => {
 
     it("creates a connection between a component inside an app and a component outside of it", () => {
 
-        const testAppName = 'connect-test-1';
-
         @component
         class App {
             public comp = new MyComponent();
@@ -27,7 +25,7 @@ describe(nameof(connect), () => {
         }
 
         class Page {
-            @connect({ app: testAppName })
+            @connect
             public connectMe: MyComponent;
         }
 
@@ -43,7 +41,7 @@ describe(nameof(connect), () => {
         expect(plainApp.comp.value).to.eql(0);
 
         // elevate the app
-        const reduxApp = new ReduxApp(plainApp, { name: testAppName });
+        const reduxApp = new ReduxApp(plainApp);
 
         // assert connected
         expect(page.connectMe).to.equal(reduxApp.root.comp);

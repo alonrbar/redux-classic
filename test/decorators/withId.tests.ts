@@ -89,10 +89,10 @@ describe('withId', () => {
         @component
         class App {
 
-            @withId()
+            @withId
             public counter1 = new Counter();
 
-            @withId()
+            @withId
             public counter2 = new Counter();
 
             @withId()
