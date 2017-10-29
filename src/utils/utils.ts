@@ -22,7 +22,12 @@ export function getMethods(obj: object): IMap<Method> {
 
     var methods: any = {};
     for (let key of Object.keys(proto)) {
-        if (typeof proto[key] === 'function')
+        
+        // avoid invoking getters
+        var desc = Object.getOwnPropertyDescriptor(proto, key);
+        var hasGetter = desc && typeof desc.get === 'function';
+        
+        if (!hasGetter && typeof proto[key] === 'function')
             methods[key] = proto[key];
     }
 
