@@ -105,7 +105,11 @@ export class ReduxApp<T extends object> {
         if (name)
             return name;
 
-        return DEFAULT_APP_NAME + (appsCount++ ? '_' + appsCount : '');
+        if (!Object.keys(appsRepository).length) {
+            return DEFAULT_APP_NAME;
+        } else {
+            return DEFAULT_APP_NAME + '_' + (++appsCount);
+        }
     }
 
     private updateState(): void {
