@@ -23,8 +23,18 @@ export class ConnectOptions {
 }
 
 /**
- * Property decorator.
- * Connects the component to the specified (or default) app.
+ * Property decorator. 
+ * 
+ * Connects the property to a component in the specified (or default) app.
+ * 
+ * Usage Note: 
+ * 
+ * Connected properties can be described as pointers to other components. If the
+ * connected property has an initial value assigned, it will be overridden once
+ * the the component is connected. One consequence of this fact is that there
+ * must be at least one source component, i.e. there must be at least one
+ * component of that type that has a value and is not decorated with the
+ * 'connect' decorator.
  */
 export function connect(options?: ConnectOptions): PropertyDecorator {
 
