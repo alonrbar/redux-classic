@@ -48,18 +48,32 @@ export function connect(targetOrOptions?: any, propertyKeyOrNothing?: string | s
 }
 
 function connectDecorator(target: any, propertyKey: string | symbol, options?: ConnectOptions) {
-    
+
     options = Object.assign(new ConnectOptions(), options);
-    
+
     // initial value
     var value = target[propertyKey];
 
     // remember old descriptor
     const oldDescriptor = Object.getOwnPropertyDescriptor(target, propertyKey);
 
+    // get the property type 
+    // (see 'metadata' section of https://www.typescriptlang.org/docs/handbook/decorators.html)
+    const type = Reflect.getMetadata("design:type", target, propertyKey);
+    if (!type) {
+        const reflectErrMsg = `[connect] Failed to reflect type of property '${propertyKey}'. ` +
+            `Make sure you're using TypeScript and that the 'emitDecoratorMetadata' compiler ` +
+            `option in your tsconfig.json file is turned on. ` +
+            `Note that even if TypeScript is configured correctly it may fail to reflect ` +
+            `property types due to the loading order of your classes. ` +
+            `In that case, make sure that the type of '${propertyKey}' is loaded prior to the ` +
+            `type of it's containing class (${target.constructor.name}).`;
+        throw new Error(reflectErrMsg);
+    }
+
     // and replace it with a new descriptor
     const newDescriptor = {
-        get: () => {
+        get: function (this: any) {
 
             const app = appsRepository[options.app];
             if (!app) {
@@ -69,20 +83,6 @@ function connectDecorator(target: any, propertyKey: string | symbol, options?: C
                 } else {
                     return value;
                 }
-            }
-
-            // get the property type 
-            // (see 'metadata' section of https://www.typescriptlang.org/docs/handbook/decorators.html)
-            const type = Reflect.getMetadata("design:type", target, propertyKey);
-            if (!type) {
-                const reflectErrMsg = `[connect] Failed to reflect type of property '${propertyKey}'. ` +
-                    `Make sure you're using TypeScript and that the 'emitDecoratorMetadata' compiler ` +
-                    `option in your tsconfig.json file is turned on. ` +
-                    `Note that even if TypeScript is configured correctly it may fail to reflect ` +
-                    `property types due to the loading order of your classes. ` +
-                    `In that case, make sure that the type of '${propertyKey}' is loaded prior to the ` +
-                    `type of it's containing class (${target.constructor.name}).`;
-                throw new Error(reflectErrMsg);
             }
 
             // get the component to connect
@@ -103,10 +103,9 @@ function connectDecorator(target: any, propertyKey: string | symbol, options?: C
             // need to use dirty-checking)
             if (result && !options.live) {
 
-                delete target[propertyKey];
-                Object.defineProperty(target, propertyKey, dataDescriptor);
-                value = target[propertyKey] = result;
-                log.debug(`[connect] Property '${propertyKey}' connected.`);
+                Object.defineProperty(this, propertyKey, dataDescriptor);
+                value = this[propertyKey] = result;
+                log.debug(`[connect] Property '${propertyKey}' connected. Type: ${type.name}.`);
             }
 
             return result;
