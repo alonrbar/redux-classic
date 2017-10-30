@@ -1,5 +1,0 @@
-* don't delete getters? don't delete what is undefined already.
-* add changelog
-* add listensTo
-* add option to subscribe to component state
-* warn about mutations
