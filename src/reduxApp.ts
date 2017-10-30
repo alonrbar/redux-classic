@@ -64,7 +64,7 @@ export class ReduxApp<T extends object> {
     constructor(appCreator: T, ...params: any[]) {
 
         // handle different overloads
-        var { options, storeParams } = this.resolveParameters(params);
+        var { options, preLoadedState, enhancer } = this.resolveParameters(params);
 
         // assign name and register self
         this.name = this.getAppName(options.name);
@@ -74,7 +74,7 @@ export class ReduxApp<T extends object> {
 
         // create the store        
         const initialReducer = (state: any) => state;
-        this.store = createStore<T>(initialReducer as any, ...storeParams);
+        this.store = createStore<T>(initialReducer as any, preLoadedState, enhancer);
 
         // create the app
         const rootComponent = Component.create(this.store, appCreator, null, [this.name]);
@@ -177,6 +177,7 @@ export class ReduxApp<T extends object> {
         if (changeMessage && changeMessage.length) {
             log.debug(`[updateState] App state in path '${pathStr}' changed.`);
             log.debug(`[updateState] ${changeMessage}`);
+            log.verbose(`[updateState] New state: `, obj);
         } else {
             log.verbose(`[updateState] No change in path '${pathStr}'.`);
         }
@@ -215,7 +216,7 @@ export class ReduxApp<T extends object> {
         if (propsDeleted.length || propsAssigned.length) {
             const propsDeleteMessage = `Props deleted: ${propsDeleted.length ? propsDeleted.join(', ') : '<none>'}.`;
             const propsAssignedMessage = `Props assigned: ${propsAssigned.length ? propsAssigned.join(', ') : '<none>'}.`;
-            return propsDeleteMessage + ' ' + propsAssignedMessage;
+            return propsAssignedMessage + ' ' + propsDeleteMessage;
         } else {
             return null;
         }
@@ -261,9 +262,10 @@ export class ReduxApp<T extends object> {
     }
 
     private resolveParameters(params: any[]) {
-        var result: {
-            options?: AppOptions,
-            storeParams?: any
+        var result: {            
+            options?: AppOptions,            
+            preLoadedState?: T,
+            enhancer?: StoreEnhancer<T>
         } = {};
 
         if (params.length === 0) {
@@ -276,8 +278,8 @@ export class ReduxApp<T extends object> {
             if (typeof params[0] === 'function') {
 
                 // only enhancer
-                result.storeParams = params;
                 result.options = new AppOptions();
+                result.enhancer = params[0];
 
             } else {
 
@@ -285,11 +287,18 @@ export class ReduxApp<T extends object> {
                 result.options = Object.assign(new AppOptions(), params[0]);
 
             }
+        } else if (params.length === 2) {
+
+            // options and pre-loaded state
+            result.options = Object.assign(new AppOptions(), params[0]);
+            result.preLoadedState = JSON.parse(JSON.stringify(params[1]));
+
         } else {
 
-            // options and other store params
+            // options, pre-loaded state and enhancer
             result.options = Object.assign(new AppOptions(), params[0]);
-            result.storeParams = params.slice(1);
+            result.preLoadedState = JSON.parse(JSON.stringify(params[1]));
+            result.enhancer = params[2];
         }
 
         return result;
