@@ -7,7 +7,7 @@ import { IMap, Method } from '../types';
 export function isPrimitive(val: any): boolean {
     if (!val)
         return true;
-    
+
     const type = typeof val;
     return type !== 'object' && type !== 'function';
 }
@@ -22,11 +22,11 @@ export function getMethods(obj: object): IMap<Method> {
 
     var methods: any = {};
     for (let key of Object.keys(proto)) {
-        
+
         // avoid invoking getters
         var desc = Object.getOwnPropertyDescriptor(proto, key);
         var hasGetter = desc && typeof desc.get === 'function';
-        
+
         if (!hasGetter && typeof proto[key] === 'function')
             methods[key] = proto[key];
     }
@@ -50,4 +50,12 @@ export function getProp<T = any>(obj: any, path: string | (string | number)[]): 
 
 export function getConstructorProp(obj: object, key: symbol | string): any {
     return obj && obj.constructor && (obj.constructor as any)[key];
+}
+
+export function pathString(path: string[]): string {
+    if (path.length) {
+        return `root.${path.join('.')}`;
+    } else {
+        return 'root';
+    }
 }

@@ -2,7 +2,7 @@ import { AnyAction, Reducer, ReducersMapObject, Store } from 'redux';
 import { ComponentId, Computed } from '../decorators';
 import { getActionName, globalOptions } from '../options';
 import { appsRepository, DEFAULT_APP_NAME } from '../reduxApp';
-import { getMethods, isPrimitive, log, simpleCombineReducers } from '../utils';
+import { getMethods, isPrimitive, log, pathString, simpleCombineReducers } from '../utils';
 import { Metadata } from './metadata';
 import { Schema } from './schema';
 
@@ -36,7 +36,7 @@ export class Component<T extends object = object> {
         return component;
     }
 
-    public static getReducerFromTree(obj: object, path: string[] = [], visited: Set<any> = new Set()): Reducer<any> {
+    public static getReducerFromTree(obj: object, visited: Set<any> = new Set()): Reducer<any> {
 
         // no need to search inside primitives
         if (isPrimitive(obj))
@@ -59,7 +59,7 @@ export class Component<T extends object = object> {
         // gather the sub-reducers
         const subReducers: ReducersMapObject = {};
         for (let key of Object.keys(obj)) {
-            var newSubReducer = Component.getReducerFromTree((obj as any)[key], path.concat(key), visited);
+            var newSubReducer = Component.getReducerFromTree((obj as any)[key], visited);
             if (typeof newSubReducer === 'function')
                 subReducers[key] = newSubReducer;
         }
@@ -280,7 +280,7 @@ export class Component<T extends object = object> {
         Component.createSelf(this, store, creator, parentCreator, path);
         Component.createSubComponents(this, store, creator, path, visited);
 
-        log.debug(`[Component] New ${creator.constructor.name} component created. path: root.${path.join('.')}`);
+        log.debug(`[Component] New ${creator.constructor.name} component created. path: ${pathString(path)}`);
     }
 
     // 

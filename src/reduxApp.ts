@@ -2,7 +2,7 @@ import { createStore, Store, StoreEnhancer } from 'redux';
 import { Component } from './components';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
 import { IMap } from './types';
-import { isPrimitive, log } from './utils';
+import { isPrimitive, log, pathString } from './utils';
 
 // tslint:disable:ban-types
 
@@ -173,13 +173,12 @@ export class ReduxApp<T extends object> {
         }
 
         // log
-        const pathStr = path.join('.');
         if (changeMessage && changeMessage.length) {
-            log.debug(`[updateState] App state in path '${pathStr}' changed.`);
+            log.debug(`[updateState] App state in path '${pathString(path)}' changed.`);
             log.debug(`[updateState] ${changeMessage}`);
             log.verbose(`[updateState] New state: `, obj);
         } else {
-            log.verbose(`[updateState] No change in path '${pathStr}'.`);
+            log.verbose(`[updateState] No change in path '${pathString(path)}'.`);
         }
 
         return obj;
