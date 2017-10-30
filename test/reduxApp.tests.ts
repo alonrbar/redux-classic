@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { component, ReduxApp } from 'src';
+import { component, ReduxApp, withId } from 'src';
 import { Component } from 'src/components';
 
 // tslint:disable:no-unused-expression
@@ -89,7 +89,7 @@ describe(nameof(ReduxApp), () => {
             const root = new Root();
             expect(root.first.second.theComponent).to.be.an.instanceOf(ThisIsAComponent);
             expect(root.first.second.theComponent.value).to.eql('before');
-            
+
             // create the app
             const app = new ReduxApp(root, undefined, preLoadedState);
             expect(app.root.first.second.theComponent).to.be.an.instanceOf(Component);
@@ -127,7 +127,7 @@ describe(nameof(ReduxApp), () => {
         });
 
         it("store still updates when 'updateState' options is turned off", () => {
-            
+
             @component
             class App {
                 public num = 0;
@@ -279,5 +279,97 @@ describe(nameof(ReduxApp), () => {
             app.dispose();
         });
 
+        it("updates arrays and contained components correctly", () => {
+
+            @component
+            class App {
+                public parents = [new ParentComponent()];
+            }
+
+            @component
+            class ParentComponent {
+                public arr: Component1[] = [];
+
+                public push() {
+                    this.arr = this.arr.concat(new Component1());
+                }
+
+                public pop() {
+                    this.arr = this.arr.slice(0, this.arr.length - 1);
+                }
+
+                public assign() {
+                    const newComp = new Component1();
+                    newComp.value = 5;
+                    this.arr = this.arr.map((val, index) => index === 0 ? newComp : val);
+                }
+
+                public updateOdds() {
+                    this.arr.forEach((item, index) => {
+                        if (index % 2 === 1) {
+                            item.increment();
+                            item.child.setMessage('hello_' + item.value);
+                        }
+                    });
+                }
+            }
+
+            @component
+            class Component1 {
+                public value = 0;
+
+                @withId
+                public child = new Component2();
+
+                public increment() {
+                    this.value = this.value + 1;
+                }
+            }
+
+            @component
+            class Component2 {
+                public message = 'hello';
+                public setMessage(newMessage: string): void {
+                    this.message = newMessage;
+                }
+            }
+
+            const app = new ReduxApp(new App());
+
+            // push
+
+            expect(app.root.parents[0].arr.length).to.eql(0);
+
+            app.root.parents[0].push();
+            app.root.parents[0].push();
+
+            expect(app.root.parents[0].arr.length).to.eql(2);
+
+            // dispatch
+
+            expect(app.root.parents[0].arr[0].child.message).to.eql('hello');
+            expect(app.root.parents[0].arr[1].child.message).to.eql('hello');
+
+            app.root.parents[0].updateOdds();
+
+            expect(app.root.parents[0].arr[0].child.message).to.eql('hello');
+            expect(app.root.parents[0].arr[1].child.message).to.eql('hello_1');
+
+            // pop
+
+            app.root.parents[0].pop();
+
+            expect(app.root.parents[0].arr.length).to.eql(1);
+            expect(app.root.parents[0].arr[0].child.message).to.eql('hello');
+
+            // assign
+
+            app.root.parents[0].push();
+            app.root.parents[0].assign();
+
+            expect(app.root.parents[0].arr.length).to.eql(2);
+            expect(app.root.parents[0].arr[0].value).to.eql(5);
+            expect(app.root.parents[0].arr[1].value).to.eql(0);
+        });
     });
 });

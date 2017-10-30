@@ -10,10 +10,6 @@ import { isPrimitive, log } from './utils';
 // internal
 //
 
-class VisitCounter {
-    public value = 0;
-}
-
 export const DEFAULT_APP_NAME = 'default';
 
 export const appsRepository: IMap<ReduxApp<any>> = {};
@@ -134,16 +130,19 @@ export class ReduxApp<T extends object> {
         const newState = this.store.getState();
         log.verbose('[updateState] Store before: ', newState);
 
-        var counter = new VisitCounter();
         const visited = new Set();
-        this.updateStateRecursion(this.root, newState, [], visited, counter);
+        this.updateStateRecursion(this.root, newState, [], visited);
+
         log.verbose('[updateState] Store after: ', newState);
     }
 
-    private updateStateRecursion(obj: any, newState: any, path: string[], visited: Set<any>, counter: VisitCounter): any {
-        counter.value++;
+    private updateStateRecursion(obj: any, newState: any, path: string[], visited: Set<any>): any {
 
-        // properties are updated by their holders
+        // same object
+        if (obj === newState)
+            return newState;
+
+        // primitive properties are updated by their owner objects
         if (isPrimitive(obj) || isPrimitive(newState))
             return newState;
 
@@ -152,10 +151,40 @@ export class ReduxApp<T extends object> {
             return obj;
         visited.add(obj);
 
+        // update
+        const targetType = obj.constructor;
+        const newStateType = newState.constructor;
+
+        if ((targetType === newStateType) || newStateType === Object) {
+
+            // update if:
+            // 1. same type
+            // 2. new state is a plain object (this is the reason we update recursively, to keep methods while updating props)
+            var changeMessage: string;
+            if (Array.isArray(obj) && Array.isArray(newState)) {
+                changeMessage = this.updateArray(obj, newState, path, visited);
+            } else {
+                changeMessage = this.updateObject(obj, newState, path, visited);
+            }
+        } else {
+
+            // overwrite, since those are different types (and the newState is not a plain object)
+            return newState;
+        }
+
         // log
-        const pathStr = 'root' + (path.length ? '.' : '') + path.join('.');
-        log.verbose(`[updateState] Updating app state in path '${pathStr}'`);
-        log.verbose('[updateState] Scoped app state before: ', obj);
+        const pathStr = path.join('.');
+        if (changeMessage && changeMessage.length) {
+            log.debug(`[updateState] App state in path '${pathStr}' changed.`);
+            log.debug(`[updateState] ${changeMessage}`);
+        } else {
+            log.verbose(`[updateState] No change in path '${pathStr}'.`);
+        }
+
+        return obj;
+    }
+
+    private updateObject(obj: any, newState: any, path: string[], visited: Set<any>): string {
 
         // delete anything not in the new state
         var propsDeleted: string[] = [];
@@ -171,9 +200,11 @@ export class ReduxApp<T extends object> {
         Object.keys(newState).forEach(key => {
             var subState = newState[key];
             var subObj = obj[key];
-            const newSubObj = this.updateStateRecursion(subObj, subState, path.concat(key), visited, counter);
 
-            // assign only if changed, in case anyone is monitoring changes
+            // must update recursively, otherwise we may lose children types (and methods...)
+            const newSubObj = this.updateStateRecursion(subObj, subState, path.concat(key), visited);
+
+            // assign only if changed, in case anyone is monitoring assignments
             if (newSubObj !== subObj) {
                 obj[key] = newSubObj;
                 propsAssigned.push(key);
@@ -182,23 +213,51 @@ export class ReduxApp<T extends object> {
 
         // log
         if (propsDeleted.length || propsAssigned.length) {
-            log.debug(`[updateState] App state in path '${pathStr}' changed`);
-            log.verbose('[updateState] Scoped app state after: ', obj);
-            if (propsDeleted.length) {
-                log.debug('[updateState] Props deleted: ', propsDeleted);
-            } else {
-                log.verbose('[updateState] Props deleted: ', propsDeleted);
-            }
-            if (propsAssigned.length) {
-                log.debug('[updateState] Props assigned: ', propsAssigned);
-            } else {
-                log.verbose('[updateState] Props assigned: ', propsAssigned);
-            }
+            const propsDeleteMessage = `Props deleted: ${propsDeleted.length ? propsDeleted.join(', ') : '<none>'}.`;
+            const propsAssignedMessage = `Props assigned: ${propsAssigned.length ? propsAssigned.join(', ') : '<none>'}.`;
+            return propsDeleteMessage + ' ' + propsAssignedMessage;
         } else {
-            log.verbose(`[updateState] No Change in path '${pathStr}'`);
+            return null;
+        }
+    }
+
+    private updateArray(arr: any[], newState: any[], path: string[], visited: Set<any>): string {
+
+        var changeMessage: string[] = [];
+
+        const prevLength = arr.length;
+        const newLength = newState.length;
+
+        // assign existing
+        var itemsAssigned: number[] = [];
+        for (let i = 0; i < Math.min(prevLength, newLength); i++) {
+            var subState = newState[i];
+            var subObj = arr[i];
+            const newSubObj = this.updateStateRecursion(subObj, subState, path.concat(i.toString()), visited);
+            if (newSubObj !== subObj) {
+                arr[i] = newSubObj;
+                itemsAssigned.push(i);
+            }
+        }
+        if (itemsAssigned.length)
+            changeMessage.push(`Assigned item(s) at indexes ${itemsAssigned.join(', ')}.`);
+
+        // add / remove
+        if (newLength > prevLength) {
+
+            // add new items
+            const newItems = newState.slice(prevLength);
+            Array.prototype.push.apply(arr, newItems);
+            changeMessage.push(`Added ${newLength - prevLength} item(s) at index ${prevLength}.`);
+
+        } else if (prevLength > newLength) {
+
+            // remove old items
+            arr.splice(newLength);
+            changeMessage.push(`Removed ${prevLength - newLength} item(s) at index ${newLength}.`);
         }
 
-        return obj;
+        return changeMessage.join(' ');
     }
 
     private resolveParameters(params: any[]) {
