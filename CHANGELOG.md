@@ -12,10 +12,13 @@
 
 - Marked the 'computed' decorator as experimental (requires further testing and validation).
 - Set default log level to LogLevel.Warn.
+- Remove some verbose log messages.
+
+### Fix
+
 - Avoid invoking getters unnecessarily when probing for Component methods.
 - Improve updateState logic. Array handling logic in specific.
 - Improve pre-loaded state handling.
-- Fix some logs and reduce amount of verbose messages.
 
 ## [1.5.2 - 2017-10-25](https://github.com/alonrbar/redux-app/tree/v1.5.2)
 
