@@ -206,7 +206,7 @@ class MyView {
 
 **Note 1:** This feature reflects the property type and therefor only works with typescript.
 
-**Note 2:** For the time being this feature is fully supported only *outside of the ReduxApp tree* (for instance, in your views). It is possible to connect two components inside your ReduxApp tree but this kind of usage is still experimental and may not fully work as expected.
+**Note 2:** For the time being this feature is fully supported only *outside of the ReduxApp tree* (as the example above demonstrates). It is possible to connect two components inside your ReduxApp tree but this kind of usage is still experimental and may not fully work as expected.
 
 You can pass an optional 'options' argument to the `connect` decorator:
 

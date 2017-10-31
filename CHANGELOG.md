@@ -10,6 +10,7 @@
 
 ### Changed
 
+- Marked the 'computed' decorator as experimental (requires further testing and validation).
 - Set default log level to LogLevel.Warn.
 - Avoid invoking getters unnecessarily when probing for Component methods.
 - Improve updateState logic. Array handling logic in specific.
