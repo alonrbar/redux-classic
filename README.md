@@ -71,6 +71,7 @@ _Reading the source tip #1: There are two main classes in redux-app. The first i
 - [Features](#features)
   - [Async Actions](#async-actions)
   - [The `withId` decorator - "mini ORM" feature](#withid)
+  - [`connect` to the view](#withid)
   - [Computed Values](#computed-values)
 - [Utilities](#utilities)
   - [isInstanceOf](#isinstanceof)
@@ -93,7 +94,7 @@ Although redux-app embraces a new syntax it still adheres to [the three principa
 
 #### Async Actions
 
-Async actions and side effects are handled in redux-app by using either the `sequence` decorator or the `noDispatch`.
+Async actions (thunks, sagas, epics...) and side effects are handled in redux-app by using either the `sequence` decorator or the `noDispatch`.
 Both decorators does **exactly the same** and are actually aliases of the same underlying function. What they do is
 to tell redux-app that the decorated method is a plain old javascript method and that it should not be patched (about
 the patch process see [How it works](#how-it-works)). So, to conclude, what these decorators actually do is to tell
@@ -147,8 +148,9 @@ class MyComponent {
 #### withId
 
 The role of the `withId` decorator is double. From one hand, it enables the co-existence of two (or more) instances of the same component,
-each with it's own separate state. From the other hand, it is used to keep two separate components in sync. The 'id' argument of the decorator
-can be anything (string, number, object, etc.).
+each with it's own separate state. From the other hand, it is used to keep two separate components in sync. Every component, when dispatching
+an action attaches it's ID to the action payload. The reducer in it's turn reacts only to actions targeting it's component ID.
+The 'id' argument of the decorator can be anything (string, number, object, etc.).
 
 Example:
 
@@ -173,7 +175,68 @@ export class App {
 }
 ```
 
+#### connect
+
+Connected components are *references to other components*. The connection is achieved using a "smart getter".
+It is smart in that sense that it waits for the target component to be available and than replace itself (i.e. the getter)
+with a simple reference to the target object, thus preventing further unnecessary invocations of the getter.
+
+Example:
+
+```javascript
+@component
+class App {
+    public myComponent = new MyComponent();
+}
+
+@component
+class MyComponent {
+    public message = 'hello!';
+}
+
+const app = new ReduxApp(new App());
+
+// and elsewhere, in a regular class:
+
+class MyView {
+    @connect
+    public myComponentReference: MyComponent;    // <-- points to 'myComponent' of 'app'.
+}
+```
+
+**Note 1:** This feature reflects the property type and therefor only works with typescript.
+
+**Note 2:** For the time being this feature is fully supported only *outside of the ReduxApp tree* (for instance, in your views). It is possible to connect two components inside your ReduxApp tree but this kind of usage is still experimental and may not fully work as expected.
+
+You can pass an optional 'options' argument to the `connect` decorator:
+
+```javascript
+export class ConnectOptions {
+    /**
+     * The name of the ReduxApp instance to connect to.
+     * If not specified will connect to default app.
+     */
+    app?: string;
+    /**
+     * The ID of the target component (assuming the ID was assigned to the component 
+     * by the 'withId' decorator).
+     * If not specified will connect to the first available component of that type.
+     */
+    id?: any;
+    /**
+     * The 'connect' decorator uses a getter to connect to the it's target. By
+     * default the getter is replaced with a standard value (reference) once the
+     * first non-empty value is retrieved. Set this value to true to leave the
+     * getter in place.
+     * Default value: false
+     */
+    live?: boolean;
+}
+```
+
 #### Computed Values
+
+**Important:** This feature is still experimental and is subject to changes in next releases.
 
 It is possible to automatically calculate values from other parts of the components state (similar in concept to redux selectors).
 To do that just declare a getter and decorate it with the `computed` decorator. Behind the scenes redux-app will replace the getter
@@ -262,7 +325,7 @@ You can supply the following options to the `component` decorator.
 class SchemaOptions {
     /**
      * Add the class name of the object that holds the action to the action name.
-     * Format: <class name>.<action name>.
+     * Format: <class name>.<action name>
      * Default value: true.
      */
     actionNamespace?: boolean;
@@ -294,6 +357,10 @@ class Counter {
 ```javascript
 export class AppOptions {
     /**
+     * Name of the newly created app.
+     */
+    name?: string;
+    /**
      * By default each component is assigned (with some optimizations) with it's
      * relevant sub state on each store change. Set this to false to disable
      * this updating process. The store's state will still be updated as usual
@@ -316,6 +383,9 @@ Available global options:
 
 ```javascript
 class GlobalOptions {
+    /**
+     * Default value: LogLevel.Warn
+     */
     logLevel: LogLevel;
     /**
      * When set to 'true' every component will have an additional __originalClassName__ property.
@@ -337,6 +407,7 @@ enum LogLevel {
     None = 0,
     Verbose = 1,
     Debug = 2,
+    Warn = 5,
     /**
      * Emit no logs (same as None)
      */

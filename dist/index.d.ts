@@ -31,10 +31,10 @@ export class ConnectOptions {
     id?: any;
     /**
      * The 'connect' decorator uses a getter to connect to the it's target. By
-     * default the the getter is replaced with a standard value once the first
-     * non-empty value is retrieved. Set this value to false to leave the getter
-     * in place.
-     * Defatul value: false
+     * default the getter is replaced with a standard value (reference) once the
+     * first non-empty value is retrieved. Set this value to true to leave the
+     * getter in place.
+     * Default value: false
      */
     live?: boolean;
 }
