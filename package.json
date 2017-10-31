@@ -35,17 +35,17 @@
   },
   "devDependencies": {
     "@types/chai": "^4.0.4",
-    "@types/mocha": "^2.2.43",
+    "@types/mocha": "^2.2.44",
     "@types/node": "^8.0.47",
     "chai": "^4.1.2",
     "mocha": "^4.0.1",
-    "mocha-webpack": "^0.7.0",
+    "mocha-webpack": "^1.0.1",
     "source-map-support": "^0.5.0",
-    "ts-loader": "^3.1.0",
+    "ts-loader": "^3.1.1",
     "ts-nameof": "^0.10.2",
     "ts-nameof-loader": "^1.0.1",
     "tslint": "^5.8.0",
-    "typescript": "^2.5.3",
+    "typescript": "^2.6.1",
     "webpack": "^3.8.1",
     "webpack-node-externals": "^1.6.0"
   }

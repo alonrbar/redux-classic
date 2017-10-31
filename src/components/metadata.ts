@@ -18,10 +18,10 @@ export class Metadata {
         return setSymbol(component, COMPONENT_META, new Metadata());
     }
 
-    public id: any;    
+    public id: any;
     public originalClass: Function;
     public dispatch: Dispatch<any>;
     public reducer: Reducer<any>;
     public disposables: IDisposable[] = [];
-    public computedGetters: IMap<Getter>;
+    public computedGetters: IMap<Getter> = {};
 }

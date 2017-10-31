@@ -54,9 +54,6 @@ function connectDecorator(target: any, propertyKey: string | symbol, options?: C
     // initial value
     var value = target[propertyKey];
 
-    // remember old descriptor
-    const oldDescriptor = Object.getOwnPropertyDescriptor(target, propertyKey);
-
     // get the property type 
     // (see 'metadata' section of https://www.typescriptlang.org/docs/handbook/decorators.html)
     const type = Reflect.getMetadata("design:type", target, propertyKey);
@@ -70,6 +67,9 @@ function connectDecorator(target: any, propertyKey: string | symbol, options?: C
             `type of it's containing class (${target.constructor.name}).`;
         throw new Error(reflectErrMsg);
     }
+
+    // remember old descriptor
+    const oldDescriptor = Object.getOwnPropertyDescriptor(target, propertyKey);
 
     // and replace it with a new descriptor
     const newDescriptor = {
