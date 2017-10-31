@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.6.0 - 2017-10-31](https://github.com/alonrbar/redux-app/tree/v1.6.0)
+
+### Added
+
+- New decorator: connect.
+- New static method ReduxApp.create (same as invoking the constructor directly, meant to help avoiding lint warnings).
+- withId can be used without the parenthesis.
+
+### Changed
+
+- Set default log level to LogLevel.Warn.
+- Avoid invoking getters unnecessarily when probing for Component methods.
+- Improve updateState logic. Array handling logic in specific.
+- Improve pre-loaded state handling.
+- Fix some logs and reduce amount of verbose messages.
+
 ## [1.5.2 - 2017-10-25](https://github.com/alonrbar/redux-app/tree/v1.5.2)
 
 ### Changed
