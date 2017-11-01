@@ -5,7 +5,7 @@ var nodeExternals = require('webpack-node-externals');
 module.exports = {
     entry: './test/main.ts',
     target: 'node',
-    devtool: 'source-map',
+    devtool: 'inline-cheap-module-source-map',
     output: {
         filename: 'test-bundle.js',
         path: path.resolve('.tmp/test/_compiled'),

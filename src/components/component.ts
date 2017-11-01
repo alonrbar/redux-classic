@@ -3,7 +3,6 @@ import { ComponentId, Computed, Connect } from '../decorators';
 import { getActionName, globalOptions } from '../options';
 import { appsRepository, DEFAULT_APP_NAME } from '../reduxApp';
 import { getMethods, isPrimitive, log, pathString, simpleCombineReducers } from '../utils';
-import { ClassInfo } from './classInfo';
 import { ComponentInfo } from './componentInfo';
 import { CreatorInfo } from './creatorInfo';
 
@@ -52,7 +51,7 @@ export class Component<T extends object = object> {
         // gather the sub-reducers
         const subReducers: ReducersMapObject = {};
         for (let key of Object.keys(obj)) {
-            
+
             if (Connect.getConnectionInfo(obj, key)) {
 
                 // connected components
@@ -187,19 +186,16 @@ export class Component<T extends object = object> {
 
         // component metadata        
         const selfInfo = ComponentInfo.initInfo(component);
-        const creatorInfo = CreatorInfo.getInfo(creator);
-        const classInfo = ClassInfo.getInfo(creator);
+        const creatorInfo = CreatorInfo.getInfo(creator);        
 
         selfInfo.id = ComponentId.getComponentId(parentCreator, path);
-        selfInfo.originalClass = creatorInfo.originalClass;
-        if (classInfo) {
-            selfInfo.connectedProps = classInfo.connectedProps;
-        }
+        selfInfo.originalClass = creatorInfo.originalClass;        
 
         // computed props
         Computed.setupComputedProps(component, creatorInfo, selfInfo);
 
         // connected props
+        Connect.setupConnectedProps(component, creator);
 
         // dispatch
         selfInfo.dispatch = store.dispatch;
@@ -223,12 +219,11 @@ export class Component<T extends object = object> {
         const searchIn = creator || obj;
         for (let key of Object.keys(searchIn)) {
 
-            // const connectionInfo = Connect.getConnectionInfo(obj, key);
-            // if (connectionInfo) {
-            //     obj[key] = connectionInfo.parent[key];
-            //     log.verbose(`[createSubComponents] Property in path '${pathString(path)}.${key}' is connected. Skipping component creation.`);
-            //     continue;
-            // }
+            const connectionInfo = Connect.getConnectionInfo(obj, key);
+            if (connectionInfo) {
+                log.verbose(`[createSubComponents] Property in path '${pathString(path)}.${key}' is connected. Skipping component creation.`);
+                continue;
+            }
 
             var subPath = path.concat([key]);
 

@@ -1,13 +1,12 @@
 import { expect } from 'chai';
 import { component, ReduxApp, connect } from 'src';
-import { Component } from 'src/components';
+import { Connect } from 'src/decorators';
+import { Component } from '../src/components/component';
 
 // tslint:disable:no-unused-expression
 
 describe("playground", () => {
     it("it is a place to run wild", () => {
-
-        const testAppName = 'connect-test-2';
 
         @component
         class MyComponent {
@@ -20,12 +19,12 @@ describe("playground", () => {
 
         @component
         class Page1 {
-            @connect({ app: testAppName })
+            @connect
             public comp1: MyComponent;
         }
 
         class Page2 {
-            @connect({ app: testAppName })
+            @connect
             public comp2: MyComponent;
         }
 
@@ -42,31 +41,22 @@ describe("playground", () => {
             };
         }
 
-        // create the app
-        const plainApp = new App();
-
-        expect(plainApp.warehouse.components.comp.value).to.eql(0);
-        expect(plainApp.page1.comp1).to.be.undefined;
-        expect(plainApp.page2.comp2).to.be.undefined;
-
-        // elevate the app
-        const reduxApp = new ReduxApp(plainApp, { name: testAppName });
-
         debugger;
 
-        // assert connected
-        expect(reduxApp.root.page1.comp1).to.equal(reduxApp.root.warehouse.components.comp);
-        expect(reduxApp.root.page1.comp1).to.be.instanceOf(Component);
-        expect(reduxApp.root.page1.comp1).to.equal(reduxApp.root.page2.comp2);
+        const plainApp = new App();
+        const reduxApp = new ReduxApp(plainApp);
 
-        // validate values
-        expect(reduxApp.root.page1.comp1.value).to.eql(0);
-
-        // assert action works
         reduxApp.root.page1.comp1.increment();
-        expect(reduxApp.root.page1.comp1.value).to.eql(1);
-        expect(reduxApp.root.page2.comp2.value).to.eql(1);
-        expect(reduxApp.root.warehouse.components.comp.value).to.eql(1);
+        reduxApp.root.page2.comp2.increment();
+
+        const state = reduxApp.store.getState();
+        const connectedComponentState = Connect.connectReducer();
+
+        expect(reduxApp.root.page1.comp1).to.be.instanceOf(Component);
+
+        expect(state.warehouse.components.comp).to.not.eql(connectedComponentState);
+        expect(state.page1.comp1).to.be.eql(connectedComponentState);
+        expect(state.page2.comp2).to.be.eql(connectedComponentState);
 
         reduxApp.dispose();
     });
