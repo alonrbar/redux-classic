@@ -488,7 +488,7 @@ describe(nameof(connect), () => {
             };
         }
 
-        const app = new ReduxApp(new App());
+        const app = new ReduxApp(new App(), { name: testAppName });
 
         app.root.page1.comp1.increment();
         app.root.page2.comp2.increment();
