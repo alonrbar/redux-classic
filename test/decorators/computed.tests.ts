@@ -86,4 +86,8 @@ describe(nameof(computed), () => {
 
         app.dispose();
     });
+
+    it("computing from connected components inside the app works", () => {
+
+    });
 });

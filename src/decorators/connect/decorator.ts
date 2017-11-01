@@ -1,29 +1,8 @@
 import 'reflect-metadata';
-import { appsRepository, DEFAULT_APP_NAME } from '../reduxApp';
-import { accessorDescriptor, dataDescriptor, deferredDefineProperty, log } from '../utils';
-import { Component, ComponentInfo } from 'src/components';
-
-export class ConnectOptions {
-    /**
-     * The name of the ReduxApp instance to connect to.
-     * If not specified will connect to default app.
-     */
-    public app?= DEFAULT_APP_NAME;
-    /**
-     * The ID of the target component (assuming the ID was assigned to the
-     * component by the 'withId' decorator).
-     * If not specified will connect to the first available component of that type.
-     */
-    public id?: any;
-    /**
-     * The 'connect' decorator uses a getter to connect to the it's target. By
-     * default the getter is replaced with a standard value (reference) once the
-     * first non-empty value is retrieved. Set this value to true to leave the
-     * getter in place.
-     * Default value: false
-     */
-    public live?= false;
-}
+import { ClassInfo } from '../../components';
+import { appsRepository } from '../../reduxApp';
+import { accessorDescriptor, dataDescriptor, deferredDefineProperty, log } from '../../utils';
+import { ConnectOptions } from './connectOptions';
 
 /**
  * Property decorator. 
@@ -49,19 +28,6 @@ export function connect(targetOrOptions?: any, propertyKeyOrNothing?: string | s
     }
 }
 
-export function isConnectedProperty(propHolder: Component | object, propKey: string | symbol): boolean {
-    if (propHolder instanceof Component) {
-        const info = ComponentInfo.getInfo(propHolder);
-        return info && info.connectedProps[propKey];
-    }
-
-    return false;
-    // } else {
-    //     const connectedProps = getSymbol(propHolder, CONNECT);
-    //     return connectedProps && connectedProps[propKey];
-    // }
-}
-
 function connectDecorator(target: any, propertyKey: string | symbol, options?: ConnectOptions) {
 
     options = Object.assign(new ConnectOptions(), options);
@@ -72,9 +38,11 @@ function connectDecorator(target: any, propertyKey: string | symbol, options?: C
     // mark as connected
     //
     // notes:
-    // 1. we mark to avoid duplicate storage in the store
-    // 2. we don't use the schema since the schema is used to distinguish 
-    
+    // 1. we mark to (among others) avoid duplicate storage in the store.
+    // 2. we don't use CreatorInfo here since it is what defines component
+    //    creators and standard classes may also use the connect decorator.
+    const info = ClassInfo.getOrInitInfo(target);
+    info.connectedProps[propertyKey] = { parent: target };
 
     // get the property type 
     // (see 'metadata' section of https://www.typescriptlang.org/docs/handbook/decorators.html)

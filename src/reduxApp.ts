@@ -1,5 +1,6 @@
 import { createStore, Store, StoreEnhancer } from 'redux';
 import { Component } from './components';
+import { Connect } from './decorators';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
 import { IMap } from './types';
 import { isPrimitive, log, pathString } from './utils';
@@ -109,6 +110,49 @@ export class ReduxApp<T extends object> {
         return this.warehouse.get(type);
     }
 
+    private resolveParameters(params: any[]) {
+        var result: {
+            options?: AppOptions,
+            preLoadedState?: T,
+            enhancer?: StoreEnhancer<T>
+        } = {};
+
+        if (params.length === 0) {
+
+            // no parameters
+            result.options = new AppOptions();
+
+        } else if (params.length === 1) {
+
+            if (typeof params[0] === 'function') {
+
+                // only enhancer
+                result.options = new AppOptions();
+                result.enhancer = params[0];
+
+            } else {
+
+                // only options
+                result.options = Object.assign(new AppOptions(), params[0]);
+
+            }
+        } else if (params.length === 2) {
+
+            // options and pre-loaded state
+            result.options = Object.assign(new AppOptions(), params[0]);
+            result.preLoadedState = JSON.parse(JSON.stringify(params[1]));
+
+        } else {
+
+            // options, pre-loaded state and enhancer
+            result.options = Object.assign(new AppOptions(), params[0]);
+            result.preLoadedState = JSON.parse(JSON.stringify(params[1]));
+            result.enhancer = params[2];
+        }
+
+        return result;
+    }
+
     private getAppName(name: string): string {
         if (name)
             return name;
@@ -198,6 +242,11 @@ export class ReduxApp<T extends object> {
         // assign new state recursively
         var propsAssigned: string[] = [];
         Object.keys(newState).forEach(key => {
+
+            // state of connected components is update on their source
+            if (Connect.getConnectionInfo(obj, key))
+                return;
+
             var subState = newState[key];
             var subObj = obj[key];
 
@@ -258,48 +307,5 @@ export class ReduxApp<T extends object> {
         }
 
         return changeMessage.join(' ');
-    }
-
-    private resolveParameters(params: any[]) {
-        var result: {            
-            options?: AppOptions,            
-            preLoadedState?: T,
-            enhancer?: StoreEnhancer<T>
-        } = {};
-
-        if (params.length === 0) {
-
-            // no parameters
-            result.options = new AppOptions();
-
-        } else if (params.length === 1) {
-
-            if (typeof params[0] === 'function') {
-
-                // only enhancer
-                result.options = new AppOptions();
-                result.enhancer = params[0];
-
-            } else {
-
-                // only options
-                result.options = Object.assign(new AppOptions(), params[0]);
-
-            }
-        } else if (params.length === 2) {
-
-            // options and pre-loaded state
-            result.options = Object.assign(new AppOptions(), params[0]);
-            result.preLoadedState = JSON.parse(JSON.stringify(params[1]));
-
-        } else {
-
-            // options, pre-loaded state and enhancer
-            result.options = Object.assign(new AppOptions(), params[0]);
-            result.preLoadedState = JSON.parse(JSON.stringify(params[1]));
-            result.enhancer = params[2];
-        }
-
-        return result;
-    }
+    }   
 }

@@ -1,8 +1,9 @@
 import { AnyAction, Reducer, ReducersMapObject, Store } from 'redux';
-import { ComponentId, Computed } from '../decorators';
+import { ComponentId, Computed, Connect } from '../decorators';
 import { getActionName, globalOptions } from '../options';
 import { appsRepository, DEFAULT_APP_NAME } from '../reduxApp';
 import { getMethods, isPrimitive, log, pathString, simpleCombineReducers } from '../utils';
+import { ClassInfo } from './classInfo';
 import { ComponentInfo } from './componentInfo';
 import { CreatorInfo } from './creatorInfo';
 
@@ -51,14 +52,24 @@ export class Component<T extends object = object> {
         // gather the sub-reducers
         const subReducers: ReducersMapObject = {};
         for (let key of Object.keys(obj)) {
-            var newSubReducer = Component.getReducerFromTree((obj as any)[key], visited);
-            if (typeof newSubReducer === 'function')
-                subReducers[key] = newSubReducer;
+            
+            if (Connect.getConnectionInfo(obj, key)) {
+
+                // connected components
+                subReducers[key] = Connect.connectReducer;
+
+            } else {
+
+                // other objects
+                var newSubReducer = Component.getReducerFromTree((obj as any)[key], visited);
+                if (typeof newSubReducer === 'function')
+                    subReducers[key] = newSubReducer;
+            }
         }
 
         var resultReducer = rootReducer;
 
-        // combine with sub-reducers
+        // combine reducers
         if (Object.keys(subReducers).length) {
             var combinedSubReducer = simpleCombineReducers(subReducers);
 
@@ -177,9 +188,13 @@ export class Component<T extends object = object> {
         // component metadata        
         const selfInfo = ComponentInfo.initInfo(component);
         const creatorInfo = CreatorInfo.getInfo(creator);
+        const classInfo = ClassInfo.getInfo(creator);
 
         selfInfo.id = ComponentId.getComponentId(parentCreator, path);
         selfInfo.originalClass = creatorInfo.originalClass;
+        if (classInfo) {
+            selfInfo.connectedProps = classInfo.connectedProps;
+        }
 
         // computed props
         Computed.setupComputedProps(component, creatorInfo, selfInfo);
@@ -207,6 +222,13 @@ export class Component<T extends object = object> {
         // traverse object children
         const searchIn = creator || obj;
         for (let key of Object.keys(searchIn)) {
+
+            // const connectionInfo = Connect.getConnectionInfo(obj, key);
+            // if (connectionInfo) {
+            //     obj[key] = connectionInfo.parent[key];
+            //     log.verbose(`[createSubComponents] Property in path '${pathString(path)}.${key}' is connected. Skipping component creation.`);
+            //     continue;
+            // }
 
             var subPath = path.concat([key]);
 

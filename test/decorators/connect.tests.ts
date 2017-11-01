@@ -1,7 +1,7 @@
 import { expect } from 'chai';
-import { connect, component, ReduxApp } from 'src';
+import { component, connect, ReduxApp, withId } from 'src';
 import { Component } from 'src/components';
-import { withId } from '../../src/decorators/withId';
+import { Connect } from 'src/decorators';
 
 // tslint:disable:no-unused-expression
 
@@ -488,7 +488,18 @@ describe(nameof(connect), () => {
             };
         }
 
-        new ReduxApp(new App());
+        const app = new ReduxApp(new App());
+
+        app.root.page1.comp1.increment();
+        app.root.page2.comp2.increment();
+
+        const state = app.store.getState();
+        const connectedComponentState = Connect.connectReducer();
+        expect(state.warehouse.components.comp).to.not.eql(connectedComponentState);
+        expect(state.page1.comp1).to.be.eql(connectedComponentState);
+        expect(state.page2.comp2).to.be.eql(connectedComponentState);
+
+        app.dispose();
     });
 
 });
