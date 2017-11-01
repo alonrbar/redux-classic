@@ -65,7 +65,6 @@ export class Computed {
             var oldValue = state[propKey];
             if (newValue !== oldValue) {
                 log.verbose(`[computeProps] updating the state of '${propKey}'. New value: '${newValue}', Old value: '${oldValue}'.`);
-                delete state[propKey];
                 state[propKey] = newValue;
             }
         }

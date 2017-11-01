@@ -33,11 +33,14 @@ export class ComponentId {
         // https://stackoverflow.com/questions/43950908/typescript-decorator-and-object-defineproperty-weird-behavior.
         //
 
-        const info = CreatorInfo.getInfo(parentCreator);
-
         // no parent
         if (!parentCreator || !path.length)
             return undefined;
+
+        // parent is not a component creator
+        const info = CreatorInfo.getInfo(parentCreator);
+        if (!info)
+            return;
 
         const selfKey = path[path.length - 1];
         const id = info.childIds[selfKey];
