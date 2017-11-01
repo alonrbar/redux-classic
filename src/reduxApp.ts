@@ -42,7 +42,7 @@ export class ReduxApp<T extends object> {
     }
 
     //
-    // instance
+    // instance members
     //
 
     public readonly name: string;
@@ -58,6 +58,10 @@ export class ReduxApp<T extends object> {
     private readonly warehouse: AppWarehouse = new Map<Function, Map<any, any>>();
 
     private subscriptionDisposer: () => void;
+
+    //
+    // constructor
+    //
 
     constructor(appCreator: T, enhancer?: StoreEnhancer<T>);
     constructor(appCreator: T, options: AppOptions, enhancer?: StoreEnhancer<T>);
@@ -91,6 +95,10 @@ export class ReduxApp<T extends object> {
         this.store.replaceReducer(actualReducer);
     }
 
+    //
+    // public methods
+    //
+
     public dispose(): void {
         if (this.subscriptionDisposer) {
             this.subscriptionDisposer();
@@ -109,6 +117,10 @@ export class ReduxApp<T extends object> {
             this.warehouse.set(type, new Map());
         return this.warehouse.get(type);
     }
+
+    //
+    // private utils
+    //
 
     private resolveParameters(params: any[]) {
         var result: {
@@ -164,6 +176,10 @@ export class ReduxApp<T extends object> {
         }
     }
 
+    //
+    // update state
+    //
+
     private updateState(): void {
 
         //
@@ -174,7 +190,7 @@ export class ReduxApp<T extends object> {
         const newState = this.store.getState();
         log.verbose('[updateState] Store before: ', newState);
 
-        const visited = new Set();
+        const visited = new Set();        
         this.updateStateRecursion(this.root, newState, [], visited);
 
         log.verbose('[updateState] Store after: ', newState);
