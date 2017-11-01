@@ -6,7 +6,7 @@ import { Component } from './component';
 // tslint:disable:ban-types
 
 /**
- * Metadata stored on each component instance.
+ * Metadata stored on every component instance.
  */
 export class ComponentInfo {
 
@@ -23,5 +23,6 @@ export class ComponentInfo {
     public dispatch: Dispatch<any>;
     public reducer: Reducer<any>;
     public disposables: IDisposable[] = [];
-    public computedGetters: IMap<Getter> = {};    
+    public computedGetters: IMap<Getter> = {};
+    public connectedProps: IMap<boolean> = {};
 }
