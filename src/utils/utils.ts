@@ -59,3 +59,44 @@ export function pathString(path: string[]): string {
         return 'root';
     }
 }
+
+/**
+ * Copy all properties, including getters, setters and properties with initial undefined value.
+ */
+export function copyProperties(target: object, source: object) {
+    for (let key of Object.getOwnPropertyNames(source)) {
+        var desc = Object.getOwnPropertyDescriptor(source, key);
+        if (desc) {
+            Object.defineProperty(target, key, desc);
+        } else {
+            (target as any)[key] = (source as any)[key];
+        }
+    }
+}
+
+export function getPropertyNames(obj: any) {
+    
+    // undefined properties only exist on the prototype
+    var protoProps = Object.getOwnPropertyNames(Object.getPrototypeOf(obj));
+    var ownProps = Object.getOwnPropertyNames(obj);    
+
+    for (let propKey of protoProps) {
+
+        // ignore constructor
+        if (propKey === 'constructor')
+            continue;
+
+        // ignore methods
+        var desc = Object.getOwnPropertyDescriptor(obj, propKey);
+        if (!desc && typeof obj[propKey] === 'function')
+            continue;
+
+        // avoid duplicates
+        if (ownProps.includes(propKey))
+            continue;
+
+        ownProps.push(propKey);
+    }
+
+    return ownProps;
+}
