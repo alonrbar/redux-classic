@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { appsRepository, DEFAULT_APP_NAME } from '../reduxApp';
 import { accessorDescriptor, dataDescriptor, deferredDefineProperty, log } from '../utils';
+import { Component, ComponentInfo } from 'src/components';
 
 export class ConnectOptions {
     /**
@@ -48,12 +49,32 @@ export function connect(targetOrOptions?: any, propertyKeyOrNothing?: string | s
     }
 }
 
+export function isConnectedProperty(propHolder: Component | object, propKey: string | symbol): boolean {
+    if (propHolder instanceof Component) {
+        const info = ComponentInfo.getInfo(propHolder);
+        return info && info.connectedProps[propKey];
+    }
+
+    return false;
+    // } else {
+    //     const connectedProps = getSymbol(propHolder, CONNECT);
+    //     return connectedProps && connectedProps[propKey];
+    // }
+}
+
 function connectDecorator(target: any, propertyKey: string | symbol, options?: ConnectOptions) {
 
     options = Object.assign(new ConnectOptions(), options);
 
     // initial value
     var value = target[propertyKey];
+
+    // mark as connected
+    //
+    // notes:
+    // 1. we mark to avoid duplicate storage in the store
+    // 2. we don't use the schema since the schema is used to distinguish 
+    
 
     // get the property type 
     // (see 'metadata' section of https://www.typescriptlang.org/docs/handbook/decorators.html)

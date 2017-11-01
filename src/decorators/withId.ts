@@ -1,4 +1,4 @@
-import { Schema } from '../components';
+import { CreatorInfo } from '../components';
 import { AUTO_ID } from '../symbols';
 import { log } from '../utils';
 
@@ -13,8 +13,8 @@ export function withId(targetOrId: any, propertyKeyOrNothing?: string | symbol):
 }
 
 function withIdDecorator(target: object, propertyKey: string | symbol, id?: any) {
-    const schema = Schema.getOrCreateSchema(target);
-    schema.childIds[propertyKey] = id || AUTO_ID;
+    const info = CreatorInfo.getOrInitInfo(target);
+    info.childIds[propertyKey] = id || AUTO_ID;
 }
 
 export class ComponentId {
@@ -33,14 +33,14 @@ export class ComponentId {
         // https://stackoverflow.com/questions/43950908/typescript-decorator-and-object-defineproperty-weird-behavior.
         //
 
-        const schema = Schema.getSchema(parentCreator);
+        const info = CreatorInfo.getInfo(parentCreator);
 
         // no parent
         if (!parentCreator || !path.length)
             return undefined;
 
         const selfKey = path[path.length - 1];
-        const id = schema.childIds[selfKey];
+        const id = info.childIds[selfKey];
 
         // the specific component was not assigned an id
         if (!id)
@@ -50,7 +50,7 @@ export class ComponentId {
         if (id === AUTO_ID) {
             const generatedId = --ComponentId.autoComponentId;  // using negative ids to decrease chance of collision with user assigned ids
             log.verbose('[getComponentId] new component id generated: ' + generatedId);
-            schema.childIds[selfKey] = generatedId;
+            info.childIds[selfKey] = generatedId;
             return generatedId;
         }
 

@@ -451,4 +451,44 @@ describe(nameof(connect), () => {
         reduxApp.dispose();
     });
 
+    it("connected components inside an app are not persisted on the store", () => {
+
+        const testAppName = 'connect-test-6';
+
+        @component
+        class MyComponent {
+            public value = 0;
+
+            public increment() {
+                this.value = this.value + 1;
+            }
+        }
+
+        @component
+        class Page1 {
+            @connect({ app: testAppName })
+            public comp1: MyComponent;
+        }
+
+        class Page2 {
+            @connect({ app: testAppName })
+            public comp2: MyComponent;
+        }
+
+        @component
+        class App {
+
+            public page1 = new Page1();
+            public page2 = new Page2();
+
+            public warehouse = {
+                components: {
+                    comp: new MyComponent()
+                }
+            };
+        }
+
+        new ReduxApp(new App());
+    });
+
 });

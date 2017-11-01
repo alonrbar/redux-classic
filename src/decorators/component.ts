@@ -1,5 +1,5 @@
 import { SchemaOptions, globalOptions } from '../options';
-import { Schema } from '../components';
+import { CreatorInfo } from '../components';
 
 // tslint:disable:ban-types
 
@@ -17,6 +17,6 @@ export function component(ctorOrOptions: Function | SchemaOptions): any {
 }
 
 function componentDecorator(ctor: Function, options?: SchemaOptions) {
-    const schema = Schema.getOrCreateSchema(ctor);
-    schema.options = Object.assign({}, options, new SchemaOptions(), globalOptions.schema);    
+    const info = CreatorInfo.getOrInitInfo(ctor);
+    info.options = Object.assign({}, options, new SchemaOptions(), globalOptions.schema);    
 }

@@ -3,8 +3,8 @@ import { ComponentId, Computed } from '../decorators';
 import { getActionName, globalOptions } from '../options';
 import { appsRepository, DEFAULT_APP_NAME } from '../reduxApp';
 import { getMethods, isPrimitive, log, pathString, simpleCombineReducers } from '../utils';
-import { Metadata } from './metadata';
-import { Schema } from './schema';
+import { ComponentInfo } from './componentInfo';
+import { CreatorInfo } from './creatorInfo';
 
 // tslint:disable:member-ordering variable-name
 
@@ -23,15 +23,7 @@ export class Component<T extends object = object> {
         const component = new ComponentClass(store, creator, parentCreator, path, visited);
 
         // register it on it's containing app
-        const appName = path[0] || DEFAULT_APP_NAME;
-        const app = appsRepository[appName];
-        const selfPropName = path[path.length - 1];
-        const isConnected = Schema.getSchema(creator).connectedProps[selfPropName];
-        if (app && !isConnected) {
-            const warehouse = app.getTypeWarehouse(creator.constructor);
-            const key = Metadata.getMeta(component).id || warehouse.size;
-            warehouse.set(key, component);
-        }
+        Component.registerComponent(component, creator, path);
 
         return component;
     }
@@ -49,9 +41,9 @@ export class Component<T extends object = object> {
 
         // get the root reducer
         var rootReducer: Reducer<any>;
-        const meta = Metadata.getMeta(obj as any);
-        if (meta) {
-            rootReducer = meta.reducer;
+        const info = ComponentInfo.getInfo(obj as any);
+        if (info) {
+            rootReducer = info.reducer;
         } else {
             rootReducer = Component.identityReducer;
         }
@@ -93,12 +85,12 @@ export class Component<T extends object = object> {
     //    
 
     private static getComponentClass(creator: object): typeof Component {
-        var schema = Schema.getSchema(creator);
-        if (!schema.componentClass) {
-            schema.componentClass = Component.createComponentClass(creator);
-            schema.originalClass = creator.constructor;
+        var info = CreatorInfo.getInfo(creator);
+        if (!info.componentClass) {
+            info.componentClass = Component.createComponentClass(creator);
+            info.originalClass = creator.constructor;
         }
-        return schema.componentClass;
+        return info.componentClass;
     }
 
     private static createComponentClass<T extends object>(creator: object) {
@@ -128,7 +120,7 @@ export class Component<T extends object = object> {
         if (!methods)
             return undefined;
 
-        const schema = Schema.getSchema(creator);
+        const creatorInfo = CreatorInfo.getInfo(creator);
         const componentActions: any = {};
         Object.keys(methods).forEach(key => {
             componentActions[key] = function (this: Component<object>, ...payload: any[]): void {
@@ -138,17 +130,17 @@ export class Component<T extends object = object> {
                     throw new Error(`Component method invoked with non-Component as 'this'. Bound 'this' argument is: ${this}`);
 
                 const oldMethod = methods[key];
-                if (schema.noDispatch[key]) {
+                if (creatorInfo.noDispatch[key]) {
 
                     // handle non-dispatch methods (just call the function)
                     oldMethod.call(this, ...payload);
                 } else {
 
                     // handle dispatch methods (use store dispatch)
-                    const meta = Metadata.getMeta(this);
-                    meta.dispatch({
-                        type: getActionName(creator, key, schema.options),
-                        id: (meta ? meta.id : undefined),
+                    const compInfo = ComponentInfo.getInfo(this);
+                    compInfo.dispatch({
+                        type: getActionName(creator, key, creatorInfo.options),
+                        id: compInfo.id,
                         payload: payload
                     });
                 }
@@ -156,6 +148,18 @@ export class Component<T extends object = object> {
         });
 
         return componentActions;
+    }
+
+    private static registerComponent(comp: Component, creator: object, path: string[]): void {
+        const appName = path[0] || DEFAULT_APP_NAME;
+        const app = appsRepository[appName];
+        // const selfPropName = path[path.length - 1];
+        const isConnected = false; // isConnectedProperty(crea)
+        if (app && !isConnected) {
+            const warehouse = app.getTypeWarehouse(creator.constructor);
+            const key = ComponentInfo.getInfo(comp).id || warehouse.size;
+            warehouse.set(key, comp);
+        }
     }
 
     //
@@ -171,22 +175,22 @@ export class Component<T extends object = object> {
         }
 
         // component metadata        
-        const meta = Metadata.createMeta(component);
-        const schema = Schema.getSchema(creator);
+        const selfInfo = ComponentInfo.initInfo(component);
+        const creatorInfo = CreatorInfo.getInfo(creator);
 
-        meta.id = ComponentId.getComponentId(parentCreator, path);
-        meta.originalClass = schema.originalClass;
+        selfInfo.id = ComponentId.getComponentId(parentCreator, path);
+        selfInfo.originalClass = creatorInfo.originalClass;
 
         // computed props
-        Computed.setupComputedProps(component, schema, meta);
+        Computed.setupComputedProps(component, creatorInfo, selfInfo);
 
         // connected props
 
         // dispatch
-        meta.dispatch = store.dispatch;
+        selfInfo.dispatch = store.dispatch;
 
         // reducer
-        meta.reducer = Component.createReducer(component, creator);
+        selfInfo.reducer = Component.createReducer(component, creator);
     }
 
     private static createSubComponents(obj: any, store: Store<object>, creator: object, path: string[], visited: Set<any>): void {
@@ -207,7 +211,7 @@ export class Component<T extends object = object> {
             var subPath = path.concat([key]);
 
             var subCreator = searchIn[key];
-            if (Schema.getSchema(subCreator)) {
+            if (CreatorInfo.getInfo(subCreator)) {
 
                 // child is sub-component
                 obj[key] = Component.create(store, subCreator, creator, subPath, visited);
@@ -223,7 +227,7 @@ export class Component<T extends object = object> {
 
         // method names lookup
         const methods = getMethods(creator);
-        const options = Schema.getSchema(creator).options;
+        const options = CreatorInfo.getInfo(creator).options;
         const methodNames: any = {};
         Object.keys(methods).forEach(methName => {
             var actionName = getActionName(creator, methName, options);
@@ -231,7 +235,7 @@ export class Component<T extends object = object> {
         });
 
         // component id
-        const componentId = Metadata.getMeta(component).id;
+        const componentId = ComponentInfo.getInfo(component).id;
 
         // the reducer
         return (state: object, action: AnyAction) => {
@@ -274,7 +278,7 @@ export class Component<T extends object = object> {
 
     private constructor(store: Store<T>, creator: T, parentCreator?: object, path: string[] = [], visited = new Set()) {
 
-        if (!Schema.getSchema(creator))
+        if (!CreatorInfo.getInfo(creator))
             throw new Error(`Argument '${nameof(creator)}' is not a component creator. Did you forget to use the decorator?`);
 
         Component.createSelf(this, store, creator, parentCreator, path);

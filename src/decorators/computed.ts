@@ -1,5 +1,5 @@
 import { AnyAction, Reducer } from 'redux';
-import { Component, Metadata, Schema } from '../components';
+import { Component, ComponentInfo, CreatorInfo } from '../components';
 import { dataDescriptor, log } from '../utils';
 
 /**
@@ -22,8 +22,8 @@ export function computed(target: any, propertyKey: string | symbol): void {
     Object.defineProperty(target, propertyKey, dataDescriptor);
 
     // store getter for later
-    const schema = Schema.getOrCreateSchema(target);
-    schema.computedGetters[propertyKey] = descriptor.get;
+    const info = CreatorInfo.getOrInitInfo(target);
+    info.computedGetters[propertyKey] = descriptor.get;
 }
 
 export class Computed {
@@ -36,7 +36,7 @@ export class Computed {
         };
     }
 
-    public static setupComputedProps(component: Component, schema: Schema, meta: Metadata): void {
+    public static setupComputedProps(component: Component, schema: CreatorInfo, meta: ComponentInfo): void {
 
         // delete real props
         for (let propKey of Object.keys(schema.computedGetters)) {
@@ -50,14 +50,14 @@ export class Computed {
     private static computeProps(obj: object, state: any): void {
 
         // obj may be a component or any other object
-        const meta = Metadata.getMeta(obj as any);
-        if (!meta)
+        const info = ComponentInfo.getInfo(obj as any);
+        if (!info)
             return;
 
-        for (let propKey of Object.keys(meta.computedGetters)) {
+        for (let propKey of Object.keys(info.computedGetters)) {
 
             // get old value
-            var getter = meta.computedGetters[propKey];
+            var getter = info.computedGetters[propKey];
             log.verbose(`[computeProps] computing new value of '${propKey}'`);
             var newValue = getter.call(state);
 

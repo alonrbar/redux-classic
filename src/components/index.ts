@@ -1,4 +1,5 @@
+export * from './classInfo';
 export * from './component';
-export * from './metadata';
-export * from './schema';
+export * from './componentInfo';
+export * from './creatorInfo';
 export * from './utils';

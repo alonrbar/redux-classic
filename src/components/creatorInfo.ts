@@ -1,5 +1,5 @@
 import { SchemaOptions } from '../options';
-import { COMPONENT_SCHEMA, getSymbol, setSymbol } from '../symbols';
+import { CREATOR_INFO, getSymbol, setSymbol } from '../symbols';
 import { Getter, IMap } from '../types';
 import { getConstructorProp } from '../utils';
 import { Component } from './component';
@@ -7,47 +7,48 @@ import { Component } from './component';
 // tslint:disable:ban-types
 
 /**
- * Metadata used in the creation of the component. Stored on the component
- * creator's constructor (the "component creator" is the class that was
- * decorated with the @component decorator).
+ * Metadata information stored on "component creators" - classes that were
+ * decorated with the @component decorator. Since it is common to all instances
+ * it is stored on the class constructor. It is used for the most part in the
+ * component creation process.
  */
-export class Schema {
+export class CreatorInfo {
 
     //
     // public static
     //
 
-    public static getSchema(obj: object | Function): Schema {
+    public static getInfo(obj: object | Function): CreatorInfo {
         if (!obj)
             return undefined;
 
         if (typeof obj === 'object') {
-            return getConstructorProp(obj, COMPONENT_SCHEMA);
+            return getConstructorProp(obj, CREATOR_INFO);
         } else {
-            return getSymbol(obj, COMPONENT_SCHEMA);
+            return getSymbol(obj, CREATOR_INFO);
         }
     }
 
-    public static getOrCreateSchema(obj: object | Function): Schema {
+    public static getOrInitInfo(obj: object | Function): CreatorInfo {
 
         // get previous
-        var schema = Schema.getSchema(obj);
+        var info = CreatorInfo.getInfo(obj);
 
         // create if no previous
-        if (!schema) {
+        if (!info) {
             const isConstructor = (typeof obj === 'function' ? true : false);
             const target = (isConstructor ? obj : obj.constructor);
-            schema = setSymbol(target, COMPONENT_SCHEMA, new Schema());
+            info = setSymbol(target, CREATOR_INFO, new CreatorInfo());
         }
 
-        return schema;
+        return info;
     }
 
     /**
      * Throws if 'obj' is not a componentSchema.
      */
     public static assertSchema(obj: object, msg?: string): void {
-        if (!Schema.getSchema(obj))
+        if (!CreatorInfo.getInfo(obj))
             throw new Error(msg || 'Invalid argument. Decorated component expected.');
     }
 
@@ -58,8 +59,7 @@ export class Schema {
     public originalClass: Function;
     public componentClass: typeof Component;
     public options: SchemaOptions;
-    public computedGetters: IMap<Getter> = {};
-    public connectedProps: IMap<boolean> = {};
+    public computedGetters: IMap<Getter> = {};    
     public noDispatch: IMap<boolean> = {};
     public childIds: any = {};
 }

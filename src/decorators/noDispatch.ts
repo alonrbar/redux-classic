@@ -1,4 +1,4 @@
-import { Schema } from '../components';
+import { CreatorInfo } from '../components';
 
 /**
  * Method decorator.
@@ -19,6 +19,6 @@ export function sequence(target: object, propertyKey: string | symbol): void {
 }
 
 function noDispatchDecorator(target: object, propertyKey: string | symbol): void {
-    const schema = Schema.getOrCreateSchema(target);
-    schema.noDispatch[propertyKey] = true;
+    const info = CreatorInfo.getOrInitInfo(target);
+    info.noDispatch[propertyKey] = true;
 }

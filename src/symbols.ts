@@ -7,6 +7,16 @@ export function getSymbol(obj: any, symbol: symbol): any {
     return obj[symbol];
 }
 
-export const COMPONENT_META = Symbol('REDUX-APP.COMPONENT_METADATA');
-export const COMPONENT_SCHEMA = Symbol('REDUX-APP.COMPONENT_SCHEMA');
+/**
+ * Stored on component instances.
+ */
+export const COMPONENT_INFO = Symbol('REDUX-APP.COMPONENT_INFO');
+/**
+ * Stored on creators constructor.
+ */
+export const CREATOR_INFO = Symbol('REDUX-APP.CREATOR_INFO');
+/**
+ * Stored on other classes.
+ */
+export const CLASS_INFO = Symbol('REDUX-APP.CLASS_INFO');
 export const AUTO_ID = Symbol('REDUX-APP.AUTO_ID');
