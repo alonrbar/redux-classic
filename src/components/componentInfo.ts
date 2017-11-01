@@ -1,5 +1,4 @@
 import { Dispatch, Reducer } from 'redux';
-import { ConnectionInfo } from '../decorators/connect';
 import { COMPONENT_INFO, getSymbol, setSymbol } from '../symbols';
 import { Getter, IDisposable, IMap } from '../types';
 import { Component } from './component';
@@ -25,5 +24,5 @@ export class ComponentInfo {
     public reducer: Reducer<any>;
     public disposables: IDisposable[] = [];
     public computedGetters: IMap<Getter> = {};
-    public connectedProps: IMap<ConnectionInfo> = {};
+    public connectedProps: IMap<boolean> = {};
 }

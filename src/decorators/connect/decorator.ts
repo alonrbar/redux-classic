@@ -42,7 +42,7 @@ function connectDecorator(target: any, propertyKey: string | symbol, options?: C
     // 2. we don't use CreatorInfo here since it is what defines component
     //    creators and standard classes may also use the connect decorator.
     const info = ClassInfo.getOrInitInfo(target);
-    info.connectedProps[propertyKey] = { parent: target };
+    info.connectedProps[propertyKey] = true;
 
     // get the property type 
     // (see 'metadata' section of https://www.typescriptlang.org/docs/handbook/decorators.html)

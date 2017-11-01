@@ -1,4 +1,3 @@
-import { ConnectionInfo } from '../decorators/connect';
 import { CLASS_INFO, getSymbol, setSymbol } from '../symbols';
 import { IMap } from '../types';
 
@@ -27,5 +26,5 @@ export class ClassInfo {
         return info;
     }
 
-    public connectedProps: IMap<ConnectionInfo> = {};
+    public connectedProps: IMap<boolean> = {};
 }

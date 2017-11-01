@@ -1,4 +1,3 @@
-export * from './connectionInfo';
 export * from './connectOptions';
-export * from './connectUtil';
+export * from './connect';
 export * from './decorator';
