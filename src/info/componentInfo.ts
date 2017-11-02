@@ -11,6 +11,9 @@ import { Getter, IDisposable, IMap } from '../types';
 export class ComponentInfo {
 
     public static getInfo(component: Component): ComponentInfo {
+        if (!component)
+            return undefined;
+
         return getSymbol(component, COMPONENT_INFO);
     }
 

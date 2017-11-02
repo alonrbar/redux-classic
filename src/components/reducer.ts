@@ -6,11 +6,17 @@ import { getMethods, isPrimitive, log, simpleCombineReducers } from '../utils';
 import { ReduxAppAction } from './actions';
 import { Component } from './component';
 
+type StateTransformer = (state: any, obj: any, context: any) => any;
+
 // tslint:disable:member-ordering
 
 export class ComponentReducer {
 
     private static readonly identityReducer = (state: any) => state;
+
+    //
+    // public methods
+    //
 
     public static createReducer(component: Component, creator: object): Reducer<object> {
 
@@ -31,7 +37,7 @@ export class ComponentReducer {
 
             log.verbose(`[reducer] Reducer of: ${creator.constructor.name}, action: ${action.type}`);
 
-            // initial state
+            // initial state (redundant, handled in 'prepareState')
             if (state === undefined) {
                 log.verbose('[reducer] State is undefined, returning initial value');
                 return component;
@@ -61,7 +67,25 @@ export class ComponentReducer {
         };
     }
 
-    public static combineReducerTree(obj: any, visited: Set<any> = new Set()): Reducer<any> {
+    public static combineReducerTree(root: any): Reducer<any> {
+
+        const reducer = ComponentReducer.combineReducerRecursion(root, new Set());
+
+        return (state: any, action: ReduxAppAction) => {
+            const start = Date.now();
+
+            const preState = ComponentReducer.prepareState(state, root);
+            const newState = reducer(preState, action);
+            const postState = ComponentReducer.finalizeState(newState, root);
+
+            const end = Date.now();
+            log.debug(`[rootReducer] Reducer tree processed in ${end - start}ms.`);
+
+            return postState;
+        };
+    }
+
+    public static combineReducerRecursion(obj: any, visited: Set<any>): Reducer<any> {
 
         // no need to search inside primitives
         if (isPrimitive(obj))
@@ -85,18 +109,14 @@ export class ComponentReducer {
         const subReducers: ReducersMapObject = {};
         for (let key of Object.keys(obj)) {
 
-            if (Connect.isConnectedProperty(obj, key)) {
+            // connected components are modified only by their source
+            if (Connect.isConnectedProperty(obj, key))
+                continue;
 
-                // connected components
-                subReducers[key] = Connect.connectReducer;
-
-            } else {
-
-                // other objects
-                var newSubReducer = ComponentReducer.combineReducerTree((obj as any)[key], visited);
-                if (typeof newSubReducer === 'function')
-                    subReducers[key] = newSubReducer;
-            }
+            // other objects
+            var newSubReducer = ComponentReducer.combineReducerRecursion((obj as any)[key], visited);
+            if (typeof newSubReducer === 'function')
+                subReducers[key] = newSubReducer;
         }
 
         var resultReducer = rootReducer;
@@ -120,6 +140,62 @@ export class ComponentReducer {
             };
         }
 
-        return Computed.wrapReducer(resultReducer, obj);
+        return resultReducer;
+    }
+
+    //
+    // private methods
+    //
+
+    private static prepareState(rootState: any, root: any): any {
+        return ComponentReducer.transformDeep(rootState, root, (subState, subObj) => {
+            var newSubState = ComponentReducer.stateInitializer(subState, subObj);
+            newSubState = Computed.restoreComputedProps(newSubState, subObj);
+            return newSubState;
+        }, new Set());
+    }
+
+    private static finalizeState(rootState: any, root: any): any {
+        return ComponentReducer.transformDeep(rootState, root, (subState, subObj) => {
+            var newSubState = Computed.removeComputedProps(subState, subObj);
+            return newSubState;
+        }, new Set());
+    }
+
+    private static transformDeep(target: any, source: any, callback: StateTransformer, visited: Set<any>): any {
+
+        // not traversing primitives
+        if (isPrimitive(target) || isPrimitive(source))
+            return target;
+
+        // prevent endless loops on circular references
+        if (visited.has(source))
+            return source;
+        visited.add(source);
+
+        // transform children
+        Object.keys(target).forEach(key => {
+
+            // state of connected components is update on their source
+            if (Connect.isConnectedProperty(source, key))
+                return;
+
+            // transform child
+            var subState = target[key];
+            var subObj = source[key];
+            var newSubState = ComponentReducer.transformDeep(subState, subObj, callback, visited);
+
+            // assign only if changed
+            if (newSubState !== subState) {
+                target[key] = newSubState;
+            }
+        });
+
+        // invoke on self
+        return callback(target, source, context);
+    }
+
+    private static stateInitializer(state: any, obj: any): any {
+        return (state !== undefined ? state : obj);
     }
 }

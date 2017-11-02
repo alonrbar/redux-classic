@@ -1,6 +1,6 @@
 import { createStore, Store, StoreEnhancer } from 'redux';
 import { Component, ComponentReducer } from './components';
-import { Connect } from './decorators';
+import { Computed, Connect } from './decorators';
 import { ComponentInfo } from './info';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
 import { IMap } from './types';
@@ -201,12 +201,17 @@ export class ReduxApp<T extends object> {
         // method which copies the resulted values back to the components.
         //
 
+        const start = Date.now();
+
         const newState = this.store.getState();
         log.verbose('[updateState] Store before: ', newState);
 
-        const visited = new Set();        
+        const visited = new Set();
         this.updateStateRecursion(this.root, newState, [this.name], visited);
 
+        const end = Date.now();
+
+        log.debug(`[updateState] Component tree updated in ${end - start}ms.`);
         log.verbose('[updateState] Store after: ', newState);
     }
 
@@ -285,10 +290,13 @@ export class ReduxApp<T extends object> {
 
             // assign only if changed, in case anyone is monitoring assignments
             if (newSubObj !== subObj) {
-                obj[key] = newSubObj;
+                obj[key] = newSubObj;                
                 propsAssigned.push(key);
             }
         });
+
+        // calculate and assign computed props
+        Computed.computeProps(obj);
 
         // log
         if (propsDeleted.length || propsAssigned.length) {

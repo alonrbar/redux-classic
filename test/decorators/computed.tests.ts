@@ -1,5 +1,6 @@
-import { computed, component, ReduxApp } from 'src';
 import { expect } from 'chai';
+import { component, computed, ReduxApp } from 'src';
+import { Computed } from 'src/decorators';
 
 // tslint:disable:no-unused-expression
 
@@ -19,16 +20,17 @@ describe(nameof(computed), () => {
         }
     }
 
-    it("persists initial value on the store", () => {
+    it("computes initial value", () => {
 
         const app = new ReduxApp(new ComputedGreeter());
-
-        expect(app.store.getState().welcomeString).to.equal('hello undefined');
-
-        app.dispose();
+        try {
+            expect(app.root.welcomeString).to.equal('hello undefined');
+        } finally {
+            app.dispose();
+        }
     });
 
-    it("persists initial value on the store (nested)", () => {
+    it("computes nested initial value", () => {
 
         @component
         class Root {
@@ -43,26 +45,31 @@ describe(nameof(computed), () => {
 
         const app = new ReduxApp(new Root());
 
-        expect(app.store.getState().first.second.third.welcomeString).to.equal('hello undefined');
-
-        app.dispose();
+        try {
+            expect(app.root.first.second.third.welcomeString).to.equal('hello undefined');
+        } finally {
+            app.dispose();
+        }
     });
 
-    it("persists the computed value on the store", () => {
+    it("computes a value", () => {
 
         const app = new ReduxApp(new ComputedGreeter());
+        try {
 
-        // assert before
-        expect(app.store.getState().welcomeString).to.equal('hello undefined');
+            // assert before
+            expect(app.root.welcomeString).to.equal('hello undefined');
 
-        // assert after
-        app.root.setName('Alon');
-        expect(app.store.getState().welcomeString).to.equal('hello Alon');
+            // assert after
+            app.root.setName('Alon');
+            expect(app.root.welcomeString).to.equal('hello Alon');
 
-        app.dispose();
+        } finally {
+            app.dispose();
+        }
     });
 
-    it("persists the computed value on the store (nested)", () => {
+    it("computes a nested value", () => {
 
         @component
         class Root {
@@ -76,18 +83,51 @@ describe(nameof(computed), () => {
         }
 
         const app = new ReduxApp(new Root());
+        try {
 
-        // assert before
-        expect(app.store.getState().first.second.third.welcomeString).to.equal('hello undefined');
+            // assert before
+            expect(app.root.first.second.third.welcomeString).to.equal('hello undefined');
 
-        // assert after
-        app.root.first.second.third.setName('Alon');
-        expect(app.store.getState().first.second.third.welcomeString).to.equal('hello Alon');
+            // assert after
+            app.root.first.second.third.setName('Alon');
+            expect(app.root.first.second.third.welcomeString).to.equal('hello Alon');
 
-        app.dispose();
+        } finally {
+            app.dispose();
+        }
     });
 
     it("computing from connected components inside the app works", () => {
+        throw new Error("TODO");
+    });
 
+    it("computed values are not stored in the store", () => {
+
+        @component
+        class Root {
+            public first = {
+                second: new Second()
+            };
+        }
+
+        class Second {
+            public third = new ComputedGreeter();
+        }
+
+        const app = new ReduxApp(new Root());
+        try {
+
+            // assert before
+            expect(app.root.first.second.third.welcomeString).to.equal('hello undefined');
+            expect(app.store.getState().first.second.third.welcomeString).to.equal(Computed.placeholder);
+
+            // assert after
+            app.root.first.second.third.setName('Alon');
+            expect(app.root.first.second.third.welcomeString).to.equal('hello Alon');
+            expect(app.store.getState().first.second.third.welcomeString).to.equal(Computed.placeholder);
+
+        } finally {
+            app.dispose();
+        }
     });
 });

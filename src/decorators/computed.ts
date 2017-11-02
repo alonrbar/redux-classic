@@ -1,4 +1,3 @@
-import { AnyAction, Reducer } from 'redux';
 import { Component } from '../components';
 import { ComponentInfo, CreatorInfo } from '../info';
 import { dataDescriptor, log } from '../utils';
@@ -29,29 +28,61 @@ export function computed(target: any, propertyKey: string | symbol): void {
 
 export class Computed {
 
-    public static wrapReducer(reducer: Reducer<any>, obj: object): Reducer<any> {
-        return (state: any, action: AnyAction) => {
-            const newState = reducer(state, action);
-            Computed.computeProps(obj, newState);
-            return newState;
-        };
-    }
+    public static readonly placeholder = '<computed>';
 
-    public static setupComputedProps(component: Component, schema: CreatorInfo, meta: ComponentInfo): void {
+    public static setupComputedProps(component: Component, creatorInfo: CreatorInfo, compInfo: ComponentInfo): void {
 
         // delete real props
-        for (let propKey of Object.keys(schema.computedGetters)) {
+        for (let propKey of Object.keys(creatorInfo.computedGetters)) {
             delete (component as any)[propKey];
         }
 
         // store getters
-        meta.computedGetters = schema.computedGetters;
+        compInfo.computedGetters = creatorInfo.computedGetters;
     }
 
-    private static computeProps(obj: object, state: any): void {
+    /**
+     * Returns a shallow clone of 'state' with it's computed props replaced with
+     * Computed.placeholder.
+     */
+    public static removeComputedProps(state: any, obj: any): any {
 
         // obj may be a component or any other object
-        const info = ComponentInfo.getInfo(obj as any);
+        const info = ComponentInfo.getInfo(obj);
+        if (!info)
+            return state;
+
+        const newState = Object.assign({}, state);
+        for (let propKey of Object.keys(info.computedGetters)) {
+            newState[propKey] = Computed.placeholder;
+        }
+        return newState;
+    }
+
+    /**
+     * Returns a shallow clone of 'state' with it's computed props assigned from 'obj'.
+     */
+    public static restoreComputedProps(state: any, obj: any): any {
+
+        // obj may be a component or any other object
+        const info = ComponentInfo.getInfo(obj);
+        if (!info)
+            return state;
+
+        const newState = Object.assign({}, state);
+        for (let propKey of Object.keys(info.computedGetters)) {
+            newState[propKey] = obj[propKey];
+        }
+        return newState;
+    }
+
+    /**
+     * Replace each computed property of 'obj' with it's current computed value.
+     */
+    public static computeProps(obj: any): void {
+
+        // obj may be a component or any other object
+        const info = ComponentInfo.getInfo(obj);
         if (!info)
             return;
 
@@ -60,13 +91,13 @@ export class Computed {
             // get old value
             var getter = info.computedGetters[propKey];
             log.verbose(`[computeProps] computing new value of '${propKey}'`);
-            var newValue = getter.call(state);
+            var newValue = getter.call(obj);
 
             // update if necessary
-            var oldValue = state[propKey];
+            var oldValue = obj[propKey];
             if (newValue !== oldValue) {
                 log.verbose(`[computeProps] updating the state of '${propKey}'. New value: '${newValue}', Old value: '${oldValue}'.`);
-                state[propKey] = newValue;
+                obj[propKey] = newValue;
             }
         }
     }
