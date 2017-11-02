@@ -12,6 +12,55 @@ export class ComponentReducer {
 
     private static readonly identityReducer = (state: any) => state;
 
+    public static createReducer(component: Component, creator: object): Reducer<object> {
+
+        // method names lookup
+        const methods = getMethods(creator);
+        const options = CreatorInfo.getInfo(creator).options;
+        const methodNames: any = {};
+        Object.keys(methods).forEach(methName => {
+            var actionName = getActionName(creator, methName, options);
+            methodNames[actionName] = methName;
+        });
+
+        // component id
+        const componentId = ComponentInfo.getInfo(component).id;
+
+        // the reducer
+        return (state: object, action: ReduxAppAction) => {
+
+            log.verbose(`[reducer] Reducer of: ${creator.constructor.name}, action: ${action.type}`);
+
+            // initial state
+            if (state === undefined) {
+                log.verbose('[reducer] State is undefined, returning initial value');
+                return component;
+            }
+
+            // check component id
+            if (componentId !== action.id) {
+                log.verbose(`[reducer] Component id and action.id don't match (${componentId} !== ${action.id})`);
+                return state;
+            }
+
+            // check if should use this reducer
+            const methodName = methodNames[action.type];
+            const actionReducer = methods[methodName];
+            if (!actionReducer) {
+                log.verbose('[reducer] No matching action in this reducer, returning previous state');
+                return state;
+            }
+
+            // call the action-reducer with the new state as the 'this' argument
+            var newState = Object.assign({}, state);
+            actionReducer.call(newState, ...action.payload);
+
+            // return new state
+            log.verbose('[reducer] Reducer invoked, returning new state');
+            return newState;
+        };
+    }
+
     public static getReducerFromTree(obj: any, visited: Set<any> = new Set()): Reducer<any> {
 
         // no need to search inside primitives
@@ -72,54 +121,5 @@ export class ComponentReducer {
         }
 
         return Computed.wrapReducer(resultReducer, obj);
-    }
-
-    public static createReducer(component: Component, creator: object): Reducer<object> {
-
-        // method names lookup
-        const methods = getMethods(creator);
-        const options = CreatorInfo.getInfo(creator).options;
-        const methodNames: any = {};
-        Object.keys(methods).forEach(methName => {
-            var actionName = getActionName(creator, methName, options);
-            methodNames[actionName] = methName;
-        });
-
-        // component id
-        const componentId = ComponentInfo.getInfo(component).id;
-
-        // the reducer
-        return (state: object, action: ReduxAppAction) => {
-
-            log.verbose(`[reducer] Reducer of: ${creator.constructor.name}, action: ${action.type}`);
-
-            // initial state
-            if (state === undefined) {
-                log.verbose('[reducer] State is undefined, returning initial value');
-                return component;
-            }
-
-            // check component id
-            if (componentId !== action.id) {
-                log.verbose(`[reducer] Component id and action.id don't match (${componentId} !== ${action.id})`);
-                return state;
-            }
-
-            // check if should use this reducer
-            const methodName = methodNames[action.type];
-            const actionReducer = methods[methodName];
-            if (!actionReducer) {
-                log.verbose('[reducer] No matching action in this reducer, returning previous state');
-                return state;
-            }
-
-            // call the action-reducer with the new state as the 'this' argument
-            var newState = Object.assign({}, state);
-            actionReducer.call(newState, ...action.payload);
-
-            // return new state
-            log.verbose('[reducer] Reducer invoked, returning new state');
-            return newState;
-        };
     }
 }
