@@ -61,7 +61,7 @@ export class ComponentReducer {
         };
     }
 
-    public static getReducerFromTree(obj: any, visited: Set<any> = new Set()): Reducer<any> {
+    public static combineReducerTree(obj: any, visited: Set<any> = new Set()): Reducer<any> {
 
         // no need to search inside primitives
         if (isPrimitive(obj))
@@ -93,7 +93,7 @@ export class ComponentReducer {
             } else {
 
                 // other objects
-                var newSubReducer = ComponentReducer.getReducerFromTree((obj as any)[key], visited);
+                var newSubReducer = ComponentReducer.combineReducerTree((obj as any)[key], visited);
                 if (typeof newSubReducer === 'function')
                     subReducers[key] = newSubReducer;
             }

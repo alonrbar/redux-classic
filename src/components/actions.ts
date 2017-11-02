@@ -11,18 +11,17 @@ export interface ReduxAppAction extends Action {
     payload: any[];
 }
 
-export class ComponentActions implements IMap<Method> {
+export class ComponentActions {
 
-    [key: string]: Method;
-
-    constructor(creator: object) {
+    public static createActions(creator: object): IMap<Method> {
         const methods = getMethods(creator);
         if (!methods)
             return undefined;
 
         const creatorInfo = CreatorInfo.getInfo(creator);
+        const componentActions: any = {};
         Object.keys(methods).forEach(key => {
-            this[key] = function (this: Component<object>, ...payload: any[]): void {
+            componentActions[key] = function (this: Component<object>, ...payload: any[]): void {
 
                 // verify 'this' arg
                 if (!(this instanceof Component))
@@ -39,12 +38,14 @@ export class ComponentActions implements IMap<Method> {
                     const compInfo = ComponentInfo.getInfo(this);
                     const action: ReduxAppAction = {
                         type: getActionName(creator, key, creatorInfo.options),
-                        id: compInfo.id,
+                        id: (compInfo ? compInfo.id : undefined),
                         payload: payload
                     };
                     compInfo.dispatch(action);
                 }
             };
         });
+
+        return componentActions;
     }
 }

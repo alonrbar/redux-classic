@@ -107,7 +107,7 @@ export class ReduxApp<T extends object> {
         }
 
         // update the store
-        const actualReducer = ComponentReducer.getReducerFromTree(rootComponent);
+        const actualReducer = ComponentReducer.combineReducerTree(rootComponent);
         this.store.replaceReducer(actualReducer);
     }
 

@@ -51,7 +51,7 @@ export class Component<T extends object = object> {
         }
 
         // patch it's prototype
-        const actions = new ComponentActions(creator);
+        const actions = ComponentActions.createActions(creator);
         Object.assign(ComponentClass.prototype, actions);
 
         return ComponentClass;
