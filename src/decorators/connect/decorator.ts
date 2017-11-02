@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { ClassInfo } from '../../components';
+import { ClassInfo } from '../../info';
 import { appsRepository } from '../../reduxApp';
 import { accessorDescriptor, dataDescriptor, deferredDefineProperty, log } from '../../utils';
 import { ConnectOptions } from './connectOptions';

@@ -1,4 +1,4 @@
-import { CreatorInfo } from '../components';
+import { CreatorInfo } from '../info';
 
 /**
  * Method decorator.

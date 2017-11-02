@@ -1,4 +1,4 @@
-import { CreatorInfo } from '../components';
+import { CreatorInfo } from '../info';
 import { AUTO_ID } from '../symbols';
 import { log } from '../utils';
 

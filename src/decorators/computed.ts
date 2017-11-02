@@ -1,5 +1,6 @@
 import { AnyAction, Reducer } from 'redux';
-import { Component, ComponentInfo, CreatorInfo } from '../components';
+import { Component } from '../components';
+import { ComponentInfo, CreatorInfo } from '../info';
 import { dataDescriptor, log } from '../utils';
 
 /**

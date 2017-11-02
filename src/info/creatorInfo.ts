@@ -1,8 +1,8 @@
+import { Component } from '../components';
 import { SchemaOptions } from '../options';
 import { CREATOR_INFO, getSymbol, setSymbol } from '../symbols';
 import { Getter, IMap } from '../types';
 import { getConstructorProp } from '../utils';
-import { Component } from './component';
 
 // tslint:disable:ban-types
 
@@ -42,15 +42,7 @@ export class CreatorInfo {
         }
 
         return info;
-    }
-
-    /**
-     * Throws if 'obj' is not a componentSchema.
-     */
-    public static assertSchema(obj: object, msg?: string): void {
-        if (!CreatorInfo.getInfo(obj))
-            throw new Error(msg || 'Invalid argument. Decorated component expected.');
-    }
+    }    
 
     //
     // instance members

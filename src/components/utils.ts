@@ -1,4 +1,4 @@
-import { ComponentInfo } from './componentInfo';
+import { ComponentInfo } from '../info';
 
 // tslint:disable-next-line:ban-types
 export function isInstanceOf(obj: any, type: Function): boolean {

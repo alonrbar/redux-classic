@@ -1,5 +1,5 @@
-import { SchemaOptions, globalOptions } from '../options';
-import { CreatorInfo } from '../components';
+import { CreatorInfo } from '../info';
+import { globalOptions, SchemaOptions } from '../options';
 
 // tslint:disable:ban-types
 

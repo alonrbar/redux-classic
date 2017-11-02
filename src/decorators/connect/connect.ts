@@ -1,12 +1,11 @@
-import { ClassInfo } from '../../components/classInfo';
-import { Component } from '../../components/component';
-import { ComponentInfo } from '../../components/componentInfo';
+import { Component } from '../../components';
+import { ClassInfo, ComponentInfo } from '../../info';
 
 export class Connect {
 
     public static readonly connectReducer = () => '<connected>';
 
-    public static getConnectionInfo(propHolder: Component | object, propKey: string | symbol): boolean {
+    public static isConnectedProperty(propHolder: Component | object, propKey: string | symbol): boolean {
         if (propHolder instanceof Component) {
             const compInfo = ComponentInfo.getInfo(propHolder);
             return compInfo && compInfo.connectedProps[propKey];
@@ -16,7 +15,7 @@ export class Connect {
         }
     }
 
-    public static setupConnectedProps(target: Component, source: object) {        
+    public static setupConnectedProps(target: Component, source: object) {
         
         const sourceInfo = ClassInfo.getInfo(source);
         if (sourceInfo) {

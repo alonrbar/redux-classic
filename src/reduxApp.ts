@@ -1,6 +1,7 @@
 import { createStore, Store, StoreEnhancer } from 'redux';
-import { Component } from './components';
+import { Component, ComponentReducer } from './components';
 import { Connect } from './decorators';
+import { ComponentInfo } from './info';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
 import { IMap } from './types';
 import { isPrimitive, log, pathString } from './utils';
@@ -39,6 +40,21 @@ export class ReduxApp<T extends object> {
     public static createApp<T extends object>(appCreator: T, options: AppOptions, preloadedState: any, enhancer?: StoreEnhancer<T>): ReduxApp<T>;
     public static createApp<T extends object>(appCreator: T, ...params: any[]): ReduxApp<T> {
         return new ReduxApp(appCreator, ...params);
+    }
+
+    /**
+     * INTERNAL: Should not appear on the public d.ts file.
+     */
+    public static registerComponent(comp: Component, creator: object, path: string[]): void {
+        const appName = path[0] || DEFAULT_APP_NAME;
+        const app = appsRepository[appName];
+        const componentPropName = path[path.length - 1];
+        const isConnected = Connect.isConnectedProperty(comp, componentPropName);
+        if (app && !isConnected) {
+            const warehouse = app.getTypeWarehouse(creator.constructor);
+            const key = ComponentInfo.getInfo(comp).id || warehouse.size;
+            warehouse.set(key, comp);
+        }
     }
 
     //
@@ -91,7 +107,7 @@ export class ReduxApp<T extends object> {
         }
 
         // update the store
-        const actualReducer = Component.getReducerFromTree(rootComponent);
+        const actualReducer = ComponentReducer.getReducerFromTree(rootComponent);
         this.store.replaceReducer(actualReducer);
     }
 
@@ -191,7 +207,7 @@ export class ReduxApp<T extends object> {
         log.verbose('[updateState] Store before: ', newState);
 
         const visited = new Set();        
-        this.updateStateRecursion(this.root, newState, [], visited);
+        this.updateStateRecursion(this.root, newState, [this.name], visited);
 
         log.verbose('[updateState] Store after: ', newState);
     }
@@ -260,7 +276,7 @@ export class ReduxApp<T extends object> {
         Object.keys(newState).forEach(key => {
 
             // state of connected components is update on their source
-            if (Connect.getConnectionInfo(obj, key))
+            if (Connect.isConnectedProperty(obj, key))
                 return;
 
             var subState = newState[key];

@@ -1,7 +1,7 @@
 import { Dispatch, Reducer } from 'redux';
+import { Component } from '../components';
 import { COMPONENT_INFO, getSymbol, setSymbol } from '../symbols';
 import { Getter, IDisposable, IMap } from '../types';
-import { Component } from './component';
 
 // tslint:disable:ban-types
 
