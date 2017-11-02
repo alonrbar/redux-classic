@@ -67,25 +67,28 @@ export class ComponentReducer {
         };
     }
 
-    public static combineReducerTree(root: any): Reducer<any> {
+    public static combineReducersTree(root: any): Reducer<any> {
 
-        const reducer = ComponentReducer.combineReducerRecursion(root, new Set());
+        const reducer = ComponentReducer.combineReducersRecursion(root, new Set());
 
         return (state: any, action: ReduxAppAction) => {
             const start = Date.now();
 
-            const preState = ComponentReducer.prepareState(state, root);
-            const newState = reducer(preState, action);
-            const postState = ComponentReducer.finalizeState(newState, root);
+            var newState = reducer(state, action);
+            newState = ComponentReducer.finalizeState(newState, root);
 
             const end = Date.now();
             log.debug(`[rootReducer] Reducer tree processed in ${end - start}ms.`);
 
-            return postState;
+            return newState;
         };
     }
 
-    public static combineReducerRecursion(obj: any, visited: Set<any>): Reducer<any> {
+    //
+    // private methods
+    //
+
+    private static combineReducersRecursion(obj: any, visited: Set<any>): Reducer<any> {
 
         // no need to search inside primitives
         if (isPrimitive(obj))
@@ -114,7 +117,7 @@ export class ComponentReducer {
                 continue;
 
             // other objects
-            var newSubReducer = ComponentReducer.combineReducerRecursion((obj as any)[key], visited);
+            var newSubReducer = ComponentReducer.combineReducersRecursion((obj as any)[key], visited);
             if (typeof newSubReducer === 'function')
                 subReducers[key] = newSubReducer;
         }
@@ -141,23 +144,15 @@ export class ComponentReducer {
         }
 
         return resultReducer;
-    }
-
-    //
-    // private methods
-    //
-
-    private static prepareState(rootState: any, root: any): any {
-        return ComponentReducer.transformDeep(rootState, root, (subState, subObj) => {
-            var newSubState = ComponentReducer.stateInitializer(subState, subObj);
-            newSubState = Computed.restoreComputedProps(newSubState, subObj);
-            return newSubState;
-        }, new Set());
-    }
+    }    
 
     private static finalizeState(rootState: any, root: any): any {
         return ComponentReducer.transformDeep(rootState, root, (subState, subObj) => {
+
+            // replace computed and connected props with placeholders
             var newSubState = Computed.removeComputedProps(subState, subObj);
+            newSubState = Connect.removeConnectedProps(newSubState, subObj);
+
             return newSubState;
         }, new Set());
     }
@@ -193,9 +188,5 @@ export class ComponentReducer {
 
         // invoke on self
         return callback(target, source);
-    }
-
-    private static stateInitializer(state: any, obj: any): any {
-        return (state !== undefined ? state : obj);
     }
 }

@@ -1,7 +1,7 @@
 import { Component } from '../components';
 import { SchemaOptions } from '../options';
 import { CREATOR_INFO, getSymbol, setSymbol } from '../symbols';
-import { Getter, IMap } from '../types';
+import { IMap } from '../types';
 import { getConstructorProp } from '../utils';
 
 // tslint:disable:ban-types
@@ -51,7 +51,6 @@ export class CreatorInfo {
     public originalClass: Function;
     public componentClass: typeof Component;
     public options: SchemaOptions;
-    public computedGetters: IMap<Getter> = {};    
     public noDispatch: IMap<boolean> = {};
     public childIds: any = {};
 }

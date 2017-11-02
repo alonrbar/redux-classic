@@ -1,6 +1,5 @@
-import { Component } from '../components';
-import { ComponentInfo, CreatorInfo } from '../info';
-import { dataDescriptor, log } from '../utils';
+import { ClassInfo } from '../info';
+import { dataDescriptor, deferredDefineProperty, log } from '../utils';
 
 /**
  * Property decorator.
@@ -15,40 +14,24 @@ export function computed(target: any, propertyKey: string | symbol): void {
     if (descriptor.set)
         throw new Error(`Failed to decorate '${propertyKey}'. Decorated property should not have a setter.`);
 
-    // delete the accessor descriptor
-    delete target[propertyKey];
-
-    // and replace it with a data descriptor
-    Object.defineProperty(target, propertyKey, dataDescriptor);
-
     // store getter for later
-    const info = CreatorInfo.getOrInitInfo(target);
+    const info = ClassInfo.getOrInitInfo(target);
     info.computedGetters[propertyKey] = descriptor.get;
+
+    // and replace it with a simple data descriptor
+    return deferredDefineProperty(target, propertyKey, dataDescriptor);
 }
 
 export class Computed {
 
     public static readonly placeholder = '<computed>';
 
-    public static setupComputedProps(component: Component, creatorInfo: CreatorInfo, compInfo: ComponentInfo): void {
-
-        // delete real props
-        for (let propKey of Object.keys(creatorInfo.computedGetters)) {
-            delete (component as any)[propKey];
-        }
-
-        // store getters
-        compInfo.computedGetters = creatorInfo.computedGetters;
-    }
-
     /**
      * Returns a shallow clone of 'state' with it's computed props replaced with
      * Computed.placeholder.
      */
     public static removeComputedProps(state: any, obj: any): any {
-
-        // obj may be a component or any other object
-        const info = ComponentInfo.getInfo(obj);
+        const info = ClassInfo.getInfo(obj);
         if (!info)
             return state;
 
@@ -60,29 +43,12 @@ export class Computed {
     }
 
     /**
-     * Returns a shallow clone of 'state' with it's computed props assigned from 'obj'.
-     */
-    public static restoreComputedProps(state: any, obj: any): any {
-
-        // obj may be a component or any other object
-        const info = ComponentInfo.getInfo(obj);
-        if (!info)
-            return state;
-
-        const newState = Object.assign({}, state);
-        for (let propKey of Object.keys(info.computedGetters)) {
-            newState[propKey] = obj[propKey];
-        }
-        return newState;
-    }
-
-    /**
      * Replace each computed property of 'obj' with it's current computed value.
      */
     public static computeProps(obj: any): void {
 
         // obj may be a component or any other object
-        const info = ComponentInfo.getInfo(obj);
+        const info = ClassInfo.getInfo(obj);
         if (!info)
             return;
 

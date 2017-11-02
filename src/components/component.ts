@@ -1,6 +1,6 @@
 import { Store } from 'redux';
-import { ComponentId, Computed, Connect } from '../decorators';
-import { ComponentInfo, CreatorInfo } from '../info';
+import { ComponentId, Connect } from '../decorators';
+import { ClassInfo, ComponentInfo, CreatorInfo } from '../info';
 import { globalOptions } from '../options';
 import { ReduxApp } from '../reduxApp';
 import { isPrimitive, log, pathString } from '../utils';
@@ -65,18 +65,20 @@ export class Component<T extends object = object> {
             Object.defineProperty(component, key, desc);
         }
 
-        // component metadata        
+        // init component info        
         const selfInfo = ComponentInfo.initInfo(component);
-        const creatorInfo = CreatorInfo.getInfo(creator);        
+        const selfClassInfo = ClassInfo.getOrInitInfo(component);
+
+        // copy info from creator
+        const creatorInfo = CreatorInfo.getInfo(creator);
+        const creatorClassInfo = ClassInfo.getInfo(creator) || new ClassInfo();
 
         selfInfo.id = ComponentId.getComponentId(parentCreator, path);
         selfInfo.originalClass = creatorInfo.originalClass;        
-
-        // computed props
-        Computed.setupComputedProps(component, creatorInfo, selfInfo);
+        selfClassInfo.computedGetters = creatorClassInfo.computedGetters;
 
         // connected props
-        Connect.setupConnectedProps(component, creator);
+        Connect.setupConnectedProps(component, selfClassInfo, creator, creatorClassInfo);
 
         // dispatch
         selfInfo.dispatch = store.dispatch;

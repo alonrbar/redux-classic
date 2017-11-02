@@ -512,12 +512,12 @@ describe(nameof(connect), () => {
         @component
         class Page1 {
             @connect({ app: testAppName })
-            public comp1: MyComponent;
+            public linkToSource1: MyComponent;
         }
 
         class Page2 {
             @connect({ app: testAppName })
-            public comp2: MyComponent;
+            public linkToSource2: MyComponent;
         }
 
         @component
@@ -528,21 +528,19 @@ describe(nameof(connect), () => {
 
             public warehouse = {
                 components: {
-                    comp: new MyComponent()
+                    source: new MyComponent()
                 }
             };
         }
 
         const app = new ReduxApp(new App(), { name: testAppName });
 
-        app.root.page1.comp1.increment();
-        app.root.page2.comp2.increment();
+        app.root.page1.linkToSource1.increment();
+        app.root.page2.linkToSource2.increment();
 
-        const state = app.store.getState();
-        const connectedComponentState = Connect.connectReducer();
-        expect(state.warehouse.components.comp).to.not.eql(connectedComponentState);
-        expect(state.page1.comp1).to.be.eql(connectedComponentState);
-        expect(state.page2.comp2).to.be.eql(connectedComponentState);
+        expect(app.store.getState().warehouse.components.source).to.not.eql(Connect.placeholder, 'source replaced');
+        expect(app.store.getState().page1.linkToSource1).to.be.eql(Connect.placeholder, 'connected prop 1 not replaced');
+        expect(app.store.getState().page2.linkToSource2).to.be.eql(Connect.placeholder, 'connected prop 2 not replaced');
 
         app.dispose();
     });

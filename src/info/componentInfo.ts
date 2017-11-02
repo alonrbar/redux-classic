@@ -1,7 +1,6 @@
 import { Dispatch, Reducer } from 'redux';
 import { Component } from '../components';
 import { COMPONENT_INFO, getSymbol, setSymbol } from '../symbols';
-import { Getter, IDisposable, IMap } from '../types';
 
 // tslint:disable:ban-types
 
@@ -25,7 +24,4 @@ export class ComponentInfo {
     public originalClass: Function;
     public dispatch: Dispatch<any>;
     public reducer: Reducer<any>;
-    public disposables: IDisposable[] = [];
-    public computedGetters: IMap<Getter> = {};
-    public connectedProps: IMap<boolean> = {};
 }

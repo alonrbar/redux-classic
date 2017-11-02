@@ -1,5 +1,5 @@
 import { CLASS_INFO, getSymbol, setSymbol } from '../symbols';
-import { IMap } from '../types';
+import { Getter, IMap } from '../types';
 
 /**
  * Metadata stored on instances of regular classes for various redux-app needs.
@@ -26,5 +26,6 @@ export class ClassInfo {
         return info;
     }
 
+    public computedGetters: IMap<Getter> = {};
     public connectedProps: IMap<boolean> = {};
 }
