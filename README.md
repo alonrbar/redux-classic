@@ -177,11 +177,20 @@ export class App {
 
 #### connect
 
-Connected components are *references to other components*. The connection is achieved using a "smart getter".
-It is smart in that sense that it waits for the target component to be available and than replace itself (i.e. the getter)
-with a simple reference to the target object, thus preventing further unnecessary invocations of the getter.
+One of the most useful features of redux-app is the ability to `connect` components. Connected components are *references* to other components.
+The connection is achieved using a "smart getter".
+It is smart in that sense that it waits for the target component to be available and than replace itself
+(i.e. the getter) with a simple reference to the target object, thus preventing further unnecessary invocations of the getter.
+
+You can use IDs to connect to a specific component or omit the ID to connect to the first instance that redux-app finds (useful if you have only one source instance...).
+
+You can connect a view to parts of the app tree, as shown in the next example. You can also connect two, or more, components to a single source inside your app tree. To see a working example of the latter checkout the [examples](https://github.com/alonrbar/redux-app-examples) repository.
+
+**Remember**: When connecting components there should always be at least one non-connected instance of that component in your ReduxApp tree (a.k.a. the "source" component).
 
 Example:
+
+_working example can be found on the [redux-app-examples](https://github.com/alonrbar/redux-app-examples) page_
 
 ```javascript
 @component
@@ -203,10 +212,6 @@ class MyView {
     public myComponentReference: MyComponent;    // <-- points to 'myComponent' of 'app'.
 }
 ```
-
-**Note 1:** This feature reflects the property type and therefor only works with typescript.
-
-**Note 2:** For the time being this feature is fully supported only *outside of the ReduxApp tree* (as the example above demonstrates). It is possible to connect two components inside your ReduxApp tree but this kind of usage is still experimental and may not fully work as expected.
 
 You can pass an optional 'options' argument to the `connect` decorator:
 
@@ -236,13 +241,15 @@ export class ConnectOptions {
 
 #### Computed Values
 
-**Important:** This feature is still experimental and is subject to changes in next releases.
-
 It is possible to automatically calculate values from other parts of the components state (similar in concept to redux selectors).
 To do that just declare a getter and decorate it with the `computed` decorator. Behind the scenes redux-app will replace the getter
 with regular values and will take care of updating it after each change to the relevant state.
 
+**Note:** As everything else, computed value getters should also be pure and should not mutate other parts of the state.
+
 Example:
+
+_working example can be found on the [redux-app-examples](https://github.com/alonrbar/redux-app-examples) page_
 
 ```javascript
 @component

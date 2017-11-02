@@ -21,6 +21,10 @@ export class ComponentId {
 
     private static autoComponentId = 0;
 
+    public static nextAvailableId(): any {
+        return --ComponentId.autoComponentId; // using negative ids to decrease chance of collision with user assigned ids
+    }
+
     public static getComponentId(parentCreator: object, path: string[]): any {
 
         //
@@ -28,9 +32,8 @@ export class ComponentId {
         // assigned to it once the component itself has been constructed. The
         // differed assigned resolves situations where the component is created
         // inside it's parent constructor or injected via DI. This could have
-        // been solved with custom getter and setter but there typescript has an
-        // issue with defining properties inside decorators, see:
-        // https://stackoverflow.com/questions/43950908/typescript-decorator-and-object-defineproperty-weird-behavior.
+        // been solved with custom getter and setter but decided to go with this
+        // approach here.
         //
 
         // no parent
@@ -51,7 +54,7 @@ export class ComponentId {
 
         // auto id
         if (id === AUTO_ID) {
-            const generatedId = --ComponentId.autoComponentId;  // using negative ids to decrease chance of collision with user assigned ids
+            const generatedId = ComponentId.nextAvailableId();
             log.verbose('[getComponentId] new component id generated: ' + generatedId);
             info.childIds[selfKey] = generatedId;
             return generatedId;

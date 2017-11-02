@@ -1,6 +1,6 @@
 import { createStore, Store, StoreEnhancer } from 'redux';
 import { Component, ComponentReducer } from './components';
-import { Computed, Connect } from './decorators';
+import { ComponentId, Computed, Connect } from './decorators';
 import { ComponentInfo } from './info';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
 import { IMap } from './types';
@@ -50,7 +50,7 @@ export class ReduxApp<T extends object> {
         const app = appsRepository[appName];
         if (app) {  // this check exists for test reason only - in some unit tests we create orphan components that are not part of any app...
             const warehouse = app.getTypeWarehouse(creator.constructor);
-            const key = ComponentInfo.getInfo(comp).id || warehouse.size;
+            const key = ComponentInfo.getInfo(comp).id || ComponentId.nextAvailableId();
             warehouse.set(key, comp);
         }
     }
