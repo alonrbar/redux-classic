@@ -48,9 +48,7 @@ export class ReduxApp<T extends object> {
     public static registerComponent(comp: Component, creator: object, path: string[]): void {
         const appName = path[0] || DEFAULT_APP_NAME;
         const app = appsRepository[appName];
-        const componentPropName = path[path.length - 1];
-        const isConnected = Connect.isConnectedProperty(comp, componentPropName);
-        if (app && !isConnected) {
+        if (app) {  // this check exists for test reason only - in some unit tests we create orphan components that are not part of any app...
             const warehouse = app.getTypeWarehouse(creator.constructor);
             const key = ComponentInfo.getInfo(comp).id || warehouse.size;
             warehouse.set(key, comp);

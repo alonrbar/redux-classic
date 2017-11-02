@@ -7,6 +7,51 @@ import { Connect } from 'src/decorators';
 
 describe(nameof(connect), () => {
 
+    it("creates only one source component for multiple connected components", () => {
+
+        @component
+        class App {
+            public source = new MyComponent();
+            public partOfApp = new PartOfApp();
+        }        
+
+        @component
+        class MyComponent {
+        }
+
+        @component
+        class PartOfApp {
+            @connect
+            public linkToSource: MyComponent;
+        }
+
+        class Page {
+            @connect
+            public linkToSource: MyComponent;
+        }
+
+        // create some view model
+        const page = new Page();
+
+        expect(page.linkToSource).to.be.undefined;
+
+        // create the app
+        const app = new ReduxApp(new App());
+
+        // assert number of sources
+        const warehouse = app.getTypeWarehouse(MyComponent);
+        expect(warehouse.size).to.eql(1);
+
+        // assert reference
+        expect(app.root.partOfApp.linkToSource).to.equal(app.root.source);
+        expect(page.linkToSource).to.equal(app.root.source);
+
+        // assert no getter side effects
+        expect(warehouse.size).to.eql(1);
+
+        app.dispose();
+    });
+
     it("creates a connection between a component inside the default app and a component outside of it", () => {
 
         @component
