@@ -6,7 +6,7 @@ import { getMethods, isPrimitive, log, simpleCombineReducers } from '../utils';
 import { ReduxAppAction } from './actions';
 import { Component } from './component';
 
-type StateTransformer = (state: any, obj: any, context: any) => any;
+type StateTransformer = (state: any, obj: any) => any;
 
 // tslint:disable:member-ordering
 
@@ -192,7 +192,7 @@ export class ComponentReducer {
         });
 
         // invoke on self
-        return callback(target, source, context);
+        return callback(target, source);
     }
 
     private static stateInitializer(state: any, obj: any): any {
