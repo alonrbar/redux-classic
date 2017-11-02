@@ -1,9 +1,9 @@
 import { Component } from '../../components';
-import { ClassInfo } from '../../info';
+import { ClassInfo, ComponentInfo } from '../../info';
 
 export class Connect {
 
-    public static readonly placeholder = '<connected>';
+    public static readonly placeholderPrefix = '<connected';
 
     public static isConnectedProperty(propHolder: Component | object, propKey: string | symbol): boolean {
         const compInfo = ClassInfo.getInfo(propHolder);
@@ -38,7 +38,16 @@ export class Connect {
 
         const newState = Object.assign({}, state);
         for (let propKey of Object.keys(info.connectedProps)) {
-            newState[propKey] = Connect.placeholder;
+            
+            var sourceInfoString = '';
+            
+            var sourceInfo = ComponentInfo.getInfo(obj[propKey]);            
+            if (sourceInfo) {
+                var sourceIdString = (sourceInfo.id !== undefined ? '.' + sourceInfo.id : '');
+                sourceInfoString = '.' + sourceInfo.originalClass.name + sourceIdString;
+            }
+
+            newState[propKey] = Connect.placeholderPrefix + sourceInfoString + '>';
         }
         return newState;
     }

@@ -13,7 +13,7 @@ describe(nameof(connect), () => {
         class App {
             public source = new MyComponent();
             public partOfApp = new PartOfApp();
-        }        
+        }
 
         @component
         class MyComponent {
@@ -534,15 +534,19 @@ describe(nameof(connect), () => {
         }
 
         const app = new ReduxApp(new App(), { name: testAppName });
+        try {
 
-        app.root.page1.linkToSource1.increment();
-        app.root.page2.linkToSource2.increment();
+            app.root.page1.linkToSource1.increment();
+            app.root.page2.linkToSource2.increment();
 
-        expect(app.store.getState().warehouse.components.source).to.not.eql(Connect.placeholder, 'source replaced');
-        expect(app.store.getState().page1.linkToSource1).to.be.eql(Connect.placeholder, 'connected prop 1 not replaced');
-        expect(app.store.getState().page2.linkToSource2).to.be.eql(Connect.placeholder, 'connected prop 2 not replaced');
+            expect(app.store.getState().warehouse.components.source.toString()).to.not.contain(Connect.placeholderPrefix, 'source replaced');
+            expect(app.store.getState().page1.linkToSource1.toString().startsWith(Connect.placeholderPrefix)).to.be.true;
+            expect(app.store.getState().page2.linkToSource2.toString().startsWith(Connect.placeholderPrefix)).to.be.true;
 
-        app.dispose();
+        } finally {
+
+            app.dispose();
+        }
     });
 
 });
