@@ -1,0 +1,38 @@
+{% assign text = include.text %}
+{% assign url = include.url %}
+{% assign trimmedUrl = url | remove_first: '/' |  %}
+{% assign urlWithSlash = '/' | append: trimmedUrl | append: '/' %}
+
+{% comment %} is active page {% endcomment %}
+
+{% assign isActive = false %}
+{% if page.url == url %}
+    {% assign isActive = true %}
+{% elsif page.url == urlWithSlash %}
+    {% assign isActive = true %}
+{% endif %}
+
+{% assign activeClass = '' %}
+{% if isActive %}
+    {% assign activeClass = ' class="active"' %}
+{% endif %}
+
+{% comment %} internal or external link {% endcomment %}
+
+{% assign isExternalLink = false %}
+{% if url contains 'http://' %}
+    {% assign isExternalLink = true %}
+{% endif %}
+{% if url contains 'https://' %}
+    {% assign isExternalLink = true %}
+{% endif %}
+
+{% if isExternalLink %}
+  {% capture finalUrl %}{{ url }}{% endcapture %}
+{% else %}
+  {% capture finalUrl %}{{ url | relative_url }}{% endcapture %}
+{% endif %}
+
+{% comment %} output the link {% endcomment %}
+
+<a{{activeClass}} href="{{ finalUrl }}">{{ text }}</a> 
