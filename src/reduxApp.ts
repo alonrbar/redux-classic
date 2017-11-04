@@ -83,7 +83,7 @@ export class ReduxApp<T extends object> {
     constructor(appCreator: T, ...params: any[]) {
 
         // handle different overloads
-        var { options, preLoadedState, enhancer } = this.resolveParameters(params);
+        var { options, preLoadedState, enhancer } = this.resolveParameters(appCreator, params);
 
         // assign name and register self
         this.name = this.getAppName(options.name);
@@ -136,7 +136,7 @@ export class ReduxApp<T extends object> {
     // private utils
     //
 
-    private resolveParameters(params: any[]) {
+    private resolveParameters(appCreator: any, params: any[]) {
         var result: {
             options?: AppOptions,
             preLoadedState?: T,
@@ -147,6 +147,7 @@ export class ReduxApp<T extends object> {
 
             // no parameters
             result.options = new AppOptions();
+            result.preLoadedState = appCreator;
 
         } else if (params.length === 1) {
 
@@ -155,24 +156,26 @@ export class ReduxApp<T extends object> {
                 // only enhancer
                 result.options = new AppOptions();
                 result.enhancer = params[0];
+                result.preLoadedState = appCreator;
 
             } else {
 
                 // only options
                 result.options = Object.assign(new AppOptions(), params[0]);
+                result.preLoadedState = appCreator;
 
             }
         } else if (params.length === 2) {
 
             // options and pre-loaded state
             result.options = Object.assign(new AppOptions(), params[0]);
-            result.preLoadedState = JSON.parse(JSON.stringify(params[1]));
+            result.preLoadedState = params[1];
 
         } else {
 
             // options, pre-loaded state and enhancer
             result.options = Object.assign(new AppOptions(), params[0]);
-            result.preLoadedState = JSON.parse(JSON.stringify(params[1]));
+            result.preLoadedState = params[1];
             result.enhancer = params[2];
         }
 
