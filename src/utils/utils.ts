@@ -45,3 +45,8 @@ export function pathString(path: string[]): string {
         return 'root';
     }
 }
+
+export function toPlainObject(obj: any): any {
+    const json = JSON.stringify(obj, (key: any, value: any) => value === undefined ? null : value);
+    return JSON.parse(json);
+}

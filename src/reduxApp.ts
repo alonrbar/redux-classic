@@ -4,7 +4,7 @@ import { ComponentId, Computed, Connect } from './decorators';
 import { ComponentInfo } from './info';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
 import { IMap } from './types';
-import { isPrimitive, log, pathString } from './utils';
+import { isPrimitive, log, pathString, toPlainObject } from './utils';
 
 // tslint:disable:ban-types
 
@@ -206,7 +206,8 @@ export class ReduxApp<T extends object> {
 
         const start = Date.now();
 
-        const newState = this.store.getState();
+        var newState = this.store.getState();
+        newState = toPlainObject(newState);
         log.verbose('[updateState] Store before: ', newState);
 
         const visited = new Set();
