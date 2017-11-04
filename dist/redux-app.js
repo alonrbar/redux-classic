@@ -308,14 +308,16 @@ var ReduxApp = (function () {
     ReduxApp.prototype.updateState = function () {
         var start = Date.now();
         var newState = this.store.getState();
+        newState = utils_1.toPlainObject(newState);
         utils_1.log.verbose('[updateState] Store before: ', newState);
         var visited = new Set();
-        this.updateStateRecursion(this.root, newState, [this.name], visited);
+        var changedComponents = new Set();
+        this.updateStateRecursion(this.root, newState, [this.name], visited, changedComponents);
         var end = Date.now();
         utils_1.log.debug("[updateState] Component tree updated in " + (end - start) + "ms.");
         utils_1.log.verbose('[updateState] Store after: ', newState);
     };
-    ReduxApp.prototype.updateStateRecursion = function (obj, newState, path, visited) {
+    ReduxApp.prototype.updateStateRecursion = function (obj, newState, path, visited, changedComponents) {
         if (obj === newState)
             return newState;
         if (utils_1.isPrimitive(obj) || utils_1.isPrimitive(newState))
@@ -328,18 +330,17 @@ var ReduxApp = (function () {
         if ((targetType === newStateType) || newStateType === Object) {
             var changeMessage;
             if (Array.isArray(obj) && Array.isArray(newState)) {
-                changeMessage = this.updateArray(obj, newState, path, visited);
+                changeMessage = this.updateArray(obj, newState, path, visited, changedComponents);
             }
             else {
-                changeMessage = this.updateObject(obj, newState, path, visited);
+                changeMessage = this.updateObject(obj, newState, path, visited, changedComponents);
             }
         }
         else {
             return newState;
         }
         if (changeMessage && changeMessage.length) {
-            utils_1.log.debug("[updateState] App state in path '" + utils_1.pathString(path) + "' changed.");
-            utils_1.log.debug("[updateState] " + changeMessage);
+            utils_1.log.debug("[updateState] Change in '" + utils_1.pathString(path) + "'. " + changeMessage);
             utils_1.log.verbose("[updateState] New state: ", obj);
         }
         else {
@@ -347,7 +348,7 @@ var ReduxApp = (function () {
         }
         return obj;
     };
-    ReduxApp.prototype.updateObject = function (obj, newState, path, visited) {
+    ReduxApp.prototype.updateObject = function (obj, newState, path, visited, changedComponents) {
         var _this = this;
         var propsDeleted = [];
         Object.keys(obj).forEach(function (key) {
@@ -362,23 +363,26 @@ var ReduxApp = (function () {
                 return;
             var subState = newState[key];
             var subObj = obj[key];
-            var newSubObj = _this.updateStateRecursion(subObj, subState, path.concat(key), visited);
+            var newSubObj = _this.updateStateRecursion(subObj, subState, path.concat(key), visited, changedComponents);
             if (newSubObj !== subObj) {
                 obj[key] = newSubObj;
                 propsAssigned.push(key);
             }
         });
         decorators_1.Computed.computeProps(obj);
-        if (propsDeleted.length || propsAssigned.length) {
-            var propsDeleteMessage = "Props deleted: " + (propsDeleted.length ? propsDeleted.join(', ') : '<none>') + ".";
-            var propsAssignedMessage = "Props assigned: " + (propsAssigned.length ? propsAssigned.join(', ') : '<none>') + ".";
-            return propsAssignedMessage + ' ' + propsDeleteMessage;
+        if (propsAssigned.length || propsDeleted.length) {
+            if (obj instanceof components_1.Component && !changedComponents.has(obj))
+                changedComponents.add(obj);
+            var propsAssignedMessage = propsAssigned.length ? "Props assigned: " + propsAssigned.join(', ') + "." : '';
+            var propsDeleteMessage = propsDeleted.length ? "Props deleted: " + propsDeleted.join(', ') + "." : '';
+            var space = (propsAssigned.length && propsDeleted.length) ? ' ' : '';
+            return propsAssignedMessage + space + propsDeleteMessage;
         }
         else {
             return null;
         }
     };
-    ReduxApp.prototype.updateArray = function (arr, newState, path, visited) {
+    ReduxApp.prototype.updateArray = function (arr, newState, path, visited, changedComponents) {
         var changeMessage = [];
         var prevLength = arr.length;
         var newLength = newState.length;
@@ -386,7 +390,7 @@ var ReduxApp = (function () {
         for (var i = 0; i < Math.min(prevLength, newLength); i++) {
             var subState = newState[i];
             var subObj = arr[i];
-            var newSubObj = this.updateStateRecursion(subObj, subState, path.concat(i.toString()), visited);
+            var newSubObj = this.updateStateRecursion(subObj, subState, path.concat(i.toString()), visited, changedComponents);
             if (newSubObj !== subObj) {
                 arr[i] = newSubObj;
                 itemsAssigned.push(i);
@@ -1021,13 +1025,18 @@ function getConstructorProp(obj, key) {
 exports.getConstructorProp = getConstructorProp;
 function pathString(path) {
     if (path.length) {
-        return "root." + path.join('.');
+        return "" + path.join('.');
     }
     else {
         return 'root';
     }
 }
 exports.pathString = pathString;
+function toPlainObject(obj) {
+    var json = JSON.stringify(obj, function (key, value) { return value === undefined ? null : value; });
+    return JSON.parse(json);
+}
+exports.toPlainObject = toPlainObject;
 
 
 /***/ }),

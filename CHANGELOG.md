@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.7.1 - 2017-11-5](https://github.com/alonrbar/redux-app/tree/v1.7.1)
+
+### Fix
+
+- Fix time travel.
+- Fix and shorten some log messages.
+
 ## [1.7.0 - 2017-11-4](https://github.com/alonrbar/redux-app/tree/v1.7.0)
 
 ### Added
