@@ -40,7 +40,7 @@ export function getConstructorProp(obj: object, key: symbol | string): any {
 
 export function pathString(path: string[]): string {
     if (path.length) {
-        return `root.${path.join('.')}`;
+        return `${path.join('.')}`;
     } else {
         return 'root';
     }

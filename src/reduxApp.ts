@@ -210,15 +210,18 @@ export class ReduxApp<T extends object> {
         log.verbose('[updateState] Store before: ', newState);
 
         const visited = new Set();
-        this.updateStateRecursion(this.root, newState, [this.name], visited);
+        const changedComponents = new Set();
+        this.updateStateRecursion(this.root, newState, [this.name], visited, changedComponents);
 
         const end = Date.now();
 
         log.debug(`[updateState] Component tree updated in ${end - start}ms.`);
         log.verbose('[updateState] Store after: ', newState);
+
+        // TODO: notify changes
     }
 
-    private updateStateRecursion(obj: any, newState: any, path: string[], visited: Set<any>): any {
+    private updateStateRecursion(obj: any, newState: any, path: string[], visited: Set<any>, changedComponents: Set<Component>): any {
 
         // same object
         if (obj === newState)
@@ -244,9 +247,9 @@ export class ReduxApp<T extends object> {
             // 2. new state is a plain object (this is the reason we update recursively, to keep methods while updating props)
             var changeMessage: string;
             if (Array.isArray(obj) && Array.isArray(newState)) {
-                changeMessage = this.updateArray(obj, newState, path, visited);
+                changeMessage = this.updateArray(obj, newState, path, visited, changedComponents);
             } else {
-                changeMessage = this.updateObject(obj, newState, path, visited);
+                changeMessage = this.updateObject(obj, newState, path, visited, changedComponents);
             }
         } else {
 
@@ -256,8 +259,7 @@ export class ReduxApp<T extends object> {
 
         // log
         if (changeMessage && changeMessage.length) {
-            log.debug(`[updateState] App state in path '${pathString(path)}' changed.`);
-            log.debug(`[updateState] ${changeMessage}`);
+            log.debug(`[updateState] Change in '${pathString(path)}'. ${changeMessage}`);
             log.verbose(`[updateState] New state: `, obj);
         } else {
             log.verbose(`[updateState] No change in path '${pathString(path)}'.`);
@@ -266,7 +268,7 @@ export class ReduxApp<T extends object> {
         return obj;
     }
 
-    private updateObject(obj: any, newState: any, path: string[], visited: Set<any>): string {
+    private updateObject(obj: any, newState: any, path: string[], visited: Set<any>, changedComponents: Set<Component>): string {
 
         // delete anything not in the new state
         var propsDeleted: string[] = [];
@@ -289,11 +291,11 @@ export class ReduxApp<T extends object> {
             var subObj = obj[key];
 
             // must update recursively, otherwise we may lose children types (and methods...)
-            const newSubObj = this.updateStateRecursion(subObj, subState, path.concat(key), visited);
+            const newSubObj = this.updateStateRecursion(subObj, subState, path.concat(key), visited, changedComponents);
 
             // assign only if changed, in case anyone is monitoring assignments
             if (newSubObj !== subObj) {
-                obj[key] = newSubObj;                
+                obj[key] = newSubObj;
                 propsAssigned.push(key);
             }
         });
@@ -301,17 +303,25 @@ export class ReduxApp<T extends object> {
         // calculate and assign computed props
         Computed.computeProps(obj);
 
-        // log
-        if (propsDeleted.length || propsAssigned.length) {
-            const propsDeleteMessage = `Props deleted: ${propsDeleted.length ? propsDeleted.join(', ') : '<none>'}.`;
-            const propsAssignedMessage = `Props assigned: ${propsAssigned.length ? propsAssigned.join(', ') : '<none>'}.`;
-            return propsAssignedMessage + ' ' + propsDeleteMessage;
+        // handle changes
+        if (propsAssigned.length || propsDeleted.length) {
+        
+            // notify
+            if (obj instanceof Component && !changedComponents.has(obj))
+                changedComponents.add(obj);
+
+            // log
+            const propsAssignedMessage = propsAssigned.length ? `Props assigned: ${propsAssigned.join(', ')}.` : '';
+            const propsDeleteMessage = propsDeleted.length ? `Props deleted: ${propsDeleted.join(', ')}.` : '';
+            const space = (propsAssigned.length && propsDeleted.length) ? ' ' : '';
+            return propsAssignedMessage + space + propsDeleteMessage;
+
         } else {
             return null;
         }
     }
 
-    private updateArray(arr: any[], newState: any[], path: string[], visited: Set<any>): string {
+    private updateArray(arr: any[], newState: any[], path: string[], visited: Set<any>, changedComponents: Set<Component>): string {
 
         var changeMessage: string[] = [];
 
@@ -323,7 +333,7 @@ export class ReduxApp<T extends object> {
         for (let i = 0; i < Math.min(prevLength, newLength); i++) {
             var subState = newState[i];
             var subObj = arr[i];
-            const newSubObj = this.updateStateRecursion(subObj, subState, path.concat(i.toString()), visited);
+            const newSubObj = this.updateStateRecursion(subObj, subState, path.concat(i.toString()), visited, changedComponents);
             if (newSubObj !== subObj) {
                 arr[i] = newSubObj;
                 itemsAssigned.push(i);
@@ -348,5 +358,5 @@ export class ReduxApp<T extends object> {
         }
 
         return changeMessage.join(' ');
-    }   
+    }
 }
