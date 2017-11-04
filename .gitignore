@@ -1,5 +1,3 @@
-/.vscode
 /.tmp
 /node_modules
-/test/playground.ts
 npm-debug.log
