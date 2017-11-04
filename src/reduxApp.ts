@@ -207,7 +207,8 @@ export class ReduxApp<T extends object> {
         const start = Date.now();
 
         var newState = this.store.getState();
-        newState = toPlainObject(newState);
+        if (globalOptions.convertToPlainObject)
+            newState = toPlainObject(newState);
         log.verbose('[updateState] Store before: ', newState);
 
         const visited = new Set();
@@ -306,7 +307,7 @@ export class ReduxApp<T extends object> {
 
         // handle changes
         if (propsAssigned.length || propsDeleted.length) {
-        
+
             // notify
             if (obj instanceof Component && !changedComponents.has(obj))
                 changedComponents.add(obj);

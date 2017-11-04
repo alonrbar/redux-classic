@@ -42,7 +42,7 @@ export function getActionName(creator: object, methodName: string, options: Sche
 
 export class AppOptions {
     /**
-     * Name of the newly created app.
+     * Name of the newly created app.     
      */
     public name?: string;
     /**
@@ -52,7 +52,7 @@ export class AppOptions {
      * and can always be retrieved using store.getState().
      * Default value: true.
      */
-    public updateState? = true;
+    public updateState? = true;    
 }
 
 //
@@ -84,6 +84,18 @@ export class GlobalOptions {
      * Default value: false.
      */
     public emitClassNames = false;
+    /**
+     * Some frameworks and libraries (Aurelia for instance) make their
+     * adjustments to objects that are part of the view (adding properties that
+     * would help it observe for changes). This causes issues with time-travel
+     * debugging. To eliminate these issues we convert the state objects to
+     * plain JS objects just before updating the application's component tree.
+     * This may come with a performance cost. Therefor if your framework of
+     * choice does not causes these issues, or you just don't care about time
+     * travel debugging, and you don't want to pay to performance cost you can
+     * set this option to false.
+     */
+    public convertToPlainObject? = true;
     /**
      * Global defaults.
      * Options supplied explicitly via the decorator will override options specified here.
