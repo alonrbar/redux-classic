@@ -64,9 +64,6 @@ _Reading the source tip #1: There are two main classes in redux-app. The first i
 
 ## Documentation
 
-- [Important Notice](#important-notice)
-- [Examples](https://github.com/alonrbar/redux-app-examples)
-- [How it works](#how-it-works)
 - [Stay Pure](#stay-pure)
 - [Features](#features)
   - [Async Actions](#async-actions)
@@ -182,7 +179,7 @@ The connection is achieved using a "smart getter".
 It is smart in that sense that it waits for the target component to be available and than replace itself
 (i.e. the getter) with a simple reference to the target object, thus preventing further unnecessary invocations of the getter.
 
-You can use IDs to connect to a specific component or omit the ID to connect to the first instance that redux-app finds (useful if you have only one source instance...).
+You can use IDs to connect to a specific component or omit the ID to connect to the first instance that redux-app finds.
 
 You can connect a view to parts of the app tree, as shown in the next example. You can also connect two, or more, components to a single source inside your app tree. To see a working example of the latter checkout the [examples](https://github.com/alonrbar/redux-app-examples) repository.
 

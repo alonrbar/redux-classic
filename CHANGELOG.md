@@ -1,10 +1,9 @@
 # Change Log
 
-## [1.7.0 - 2017-11-2](https://github.com/alonrbar/redux-app/tree/v1.7.0)
+## [1.7.0 - 2017-11-4](https://github.com/alonrbar/redux-app/tree/v1.7.0)
 
 ### Added
 
-- Docs folder.
 - Connection of components inside the app tree is now stable.
 - The 'computed' decorator is now stable.
 - Can use the 'computed' decorator on non-components (although must still be used inside the app tree).
