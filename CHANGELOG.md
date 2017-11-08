@@ -1,10 +1,10 @@
 # Change Log
 
-## [1.7.2 - 2017-11-?](https://github.com/alonrbar/redux-app/tree/v1.7.2)
+## [1.7.2 - 2017-11-2](https://github.com/alonrbar/redux-app/tree/v1.7.2)
 
 ### Added
 
-- Document the convertToPlainObject global option.
+- Expose and document the convertToPlainObject global option.
 
 ### Changed
 
