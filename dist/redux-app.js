@@ -70,722 +70,38 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 11);
+/******/ 	return __webpack_require__(__webpack_require__.s = 0);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-function __export(m) {
-    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
-}
-Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(13));
-__export(__webpack_require__(14));
-__export(__webpack_require__(15));
+module.exports = __webpack_require__(1);
 
 
 /***/ }),
 /* 1 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
-function __export(m) {
-    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
-}
-Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(16));
-__export(__webpack_require__(17));
-__export(__webpack_require__(19));
-__export(__webpack_require__(20));
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var snakecase = __webpack_require__(18);
-var SchemaOptions = (function () {
-    function SchemaOptions() {
-        this.actionNamespace = true;
-        this.uppercaseActions = true;
-    }
-    return SchemaOptions;
-}());
-exports.SchemaOptions = SchemaOptions;
-function getActionName(creator, methodName, options) {
-    var actionName = methodName;
-    var actionNamespace = creator.constructor.name;
-    if (options.uppercaseActions) {
-        actionName = snakecase(actionName).toUpperCase();
-        actionNamespace = snakecase(actionNamespace).toUpperCase();
-    }
-    if (options.actionNamespace) {
-        actionName = actionNamespace + '.' + actionName;
-    }
-    return actionName;
-}
-exports.getActionName = getActionName;
-var AppOptions = (function () {
-    function AppOptions() {
-        this.updateState = true;
-    }
-    return AppOptions;
-}());
-exports.AppOptions = AppOptions;
-var LogLevel;
-(function (LogLevel) {
-    LogLevel[LogLevel["None"] = 0] = "None";
-    LogLevel[LogLevel["Verbose"] = 1] = "Verbose";
-    LogLevel[LogLevel["Debug"] = 2] = "Debug";
-    LogLevel[LogLevel["Warn"] = 5] = "Warn";
-    LogLevel[LogLevel["Silent"] = 10] = "Silent";
-})(LogLevel = exports.LogLevel || (exports.LogLevel = {}));
-var GlobalOptions = (function () {
-    function GlobalOptions() {
-        this.logLevel = LogLevel.Warn;
-        this.emitClassNames = false;
-        this.schema = new SchemaOptions();
-    }
-    return GlobalOptions;
-}());
-exports.GlobalOptions = GlobalOptions;
-exports.globalOptions = new GlobalOptions();
-
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
+// CONCATENATED MODULE: ./src/symbols.ts
 function setSymbol(obj, symbol, value) {
     return obj[symbol] = value;
 }
-exports.setSymbol = setSymbol;
 function getSymbol(obj, symbol) {
     return obj[symbol];
 }
-exports.getSymbol = getSymbol;
-exports.COMPONENT_INFO = Symbol('REDUX-APP.COMPONENT_INFO');
-exports.CREATOR_INFO = Symbol('REDUX-APP.CREATOR_INFO');
-exports.CLASS_INFO = Symbol('REDUX-APP.CLASS_INFO');
-exports.AUTO_ID = Symbol('REDUX-APP.AUTO_ID');
+var COMPONENT_INFO = Symbol('REDUX-APP.COMPONENT_INFO');
+var CREATOR_INFO = Symbol('REDUX-APP.CREATOR_INFO');
+var CLASS_INFO = Symbol('REDUX-APP.CLASS_INFO');
+var AUTO_ID = Symbol('REDUX-APP.AUTO_ID');
 
+// CONCATENATED MODULE: ./src/info/classInfo.ts
 
-/***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-function __export(m) {
-    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
-}
-Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(21));
-__export(__webpack_require__(26));
-__export(__webpack_require__(27));
-__export(__webpack_require__(28));
-__export(__webpack_require__(29));
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var redux_1 = __webpack_require__(22);
-var components_1 = __webpack_require__(6);
-var decorators_1 = __webpack_require__(4);
-var info_1 = __webpack_require__(0);
-var options_1 = __webpack_require__(2);
-var utils_1 = __webpack_require__(1);
-exports.DEFAULT_APP_NAME = 'default';
-exports.appsRepository = {};
-var appsCount = 0;
-var ReduxApp = (function () {
-    function ReduxApp(appCreator) {
-        var params = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            params[_i - 1] = arguments[_i];
-        }
-        var _this = this;
-        this.warehouse = new Map();
-        var _a = this.resolveParameters(appCreator, params), options = _a.options, preLoadedState = _a.preLoadedState, enhancer = _a.enhancer;
-        this.name = this.getAppName(options.name);
-        if (exports.appsRepository[this.name])
-            throw new Error("An app with name '" + this.name + "' already exists.");
-        exports.appsRepository[this.name] = this;
-        var initialReducer = function (state) { return state; };
-        this.store = redux_1.createStore(initialReducer, preLoadedState, enhancer);
-        var rootComponent = components_1.Component.create(this.store, appCreator, null, [this.name]);
-        this.root = rootComponent;
-        if (options.updateState) {
-            this.subscriptionDisposer = this.store.subscribe(function () { return _this.updateState(); });
-        }
-        var actualReducer = components_1.ComponentReducer.combineReducersTree(rootComponent);
-        this.store.replaceReducer(actualReducer);
-    }
-    ReduxApp.createApp = function (appCreator) {
-        var params = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            params[_i - 1] = arguments[_i];
-        }
-        return new (ReduxApp.bind.apply(ReduxApp, [void 0, appCreator].concat(params)))();
-    };
-    ReduxApp.registerComponent = function (comp, creator, path) {
-        var appName = path[0] || exports.DEFAULT_APP_NAME;
-        var app = exports.appsRepository[appName];
-        if (app) {
-            var warehouse = app.getTypeWarehouse(creator.constructor);
-            var key = info_1.ComponentInfo.getInfo(comp).id || decorators_1.ComponentId.nextAvailableId();
-            warehouse.set(key, comp);
-        }
-    };
-    ReduxApp.prototype.dispose = function () {
-        if (this.subscriptionDisposer) {
-            this.subscriptionDisposer();
-            this.subscriptionDisposer = null;
-        }
-        if (exports.appsRepository[this.name]) {
-            delete exports.appsRepository[this.name];
-        }
-    };
-    ReduxApp.prototype.getTypeWarehouse = function (type) {
-        if (!this.warehouse.has(type))
-            this.warehouse.set(type, new Map());
-        return this.warehouse.get(type);
-    };
-    ReduxApp.prototype.resolveParameters = function (appCreator, params) {
-        var result = {};
-        if (params.length === 0) {
-            result.options = new options_1.AppOptions();
-            result.preLoadedState = appCreator;
-        }
-        else if (params.length === 1) {
-            if (typeof params[0] === 'function') {
-                result.options = new options_1.AppOptions();
-                result.enhancer = params[0];
-                result.preLoadedState = appCreator;
-            }
-            else {
-                result.options = Object.assign(new options_1.AppOptions(), params[0]);
-                result.preLoadedState = appCreator;
-            }
-        }
-        else if (params.length === 2) {
-            result.options = Object.assign(new options_1.AppOptions(), params[0]);
-            result.preLoadedState = params[1];
-        }
-        else {
-            result.options = Object.assign(new options_1.AppOptions(), params[0]);
-            result.preLoadedState = params[1];
-            result.enhancer = params[2];
-        }
-        return result;
-    };
-    ReduxApp.prototype.getAppName = function (name) {
-        if (name)
-            return name;
-        if (!Object.keys(exports.appsRepository).length) {
-            return exports.DEFAULT_APP_NAME;
-        }
-        else {
-            return exports.DEFAULT_APP_NAME + '_' + (++appsCount);
-        }
-    };
-    ReduxApp.prototype.updateState = function () {
-        var start = Date.now();
-        var newState = this.store.getState();
-        newState = utils_1.toPlainObject(newState);
-        utils_1.log.verbose('[updateState] Store before: ', newState);
-        var visited = new Set();
-        var changedComponents = new Set();
-        this.updateStateRecursion(this.root, newState, [this.name], visited, changedComponents);
-        var end = Date.now();
-        utils_1.log.debug("[updateState] Component tree updated in " + (end - start) + "ms.");
-        utils_1.log.verbose('[updateState] Store after: ', newState);
-    };
-    ReduxApp.prototype.updateStateRecursion = function (obj, newState, path, visited, changedComponents) {
-        if (obj === newState)
-            return newState;
-        if (utils_1.isPrimitive(obj) || utils_1.isPrimitive(newState))
-            return newState;
-        if (visited.has(obj))
-            return obj;
-        visited.add(obj);
-        var targetType = obj.constructor;
-        var newStateType = newState.constructor;
-        if ((targetType === newStateType) || newStateType === Object) {
-            var changeMessage;
-            if (Array.isArray(obj) && Array.isArray(newState)) {
-                changeMessage = this.updateArray(obj, newState, path, visited, changedComponents);
-            }
-            else {
-                changeMessage = this.updateObject(obj, newState, path, visited, changedComponents);
-            }
-        }
-        else {
-            return newState;
-        }
-        if (changeMessage && changeMessage.length) {
-            utils_1.log.debug("[updateState] Change in '" + utils_1.pathString(path) + "'. " + changeMessage);
-            utils_1.log.verbose("[updateState] New state: ", obj);
-        }
-        else {
-            utils_1.log.verbose("[updateState] No change in path '" + utils_1.pathString(path) + "'.");
-        }
-        return obj;
-    };
-    ReduxApp.prototype.updateObject = function (obj, newState, path, visited, changedComponents) {
-        var _this = this;
-        var propsDeleted = [];
-        Object.keys(obj).forEach(function (key) {
-            if (!newState.hasOwnProperty(key)) {
-                delete obj[key];
-                propsDeleted.push(key);
-            }
-        });
-        var propsAssigned = [];
-        Object.keys(newState).forEach(function (key) {
-            if (decorators_1.Connect.isConnectedProperty(obj, key))
-                return;
-            var subState = newState[key];
-            var subObj = obj[key];
-            var newSubObj = _this.updateStateRecursion(subObj, subState, path.concat(key), visited, changedComponents);
-            if (newSubObj !== subObj) {
-                obj[key] = newSubObj;
-                propsAssigned.push(key);
-            }
-        });
-        decorators_1.Computed.computeProps(obj);
-        if (propsAssigned.length || propsDeleted.length) {
-            if (obj instanceof components_1.Component && !changedComponents.has(obj))
-                changedComponents.add(obj);
-            var propsAssignedMessage = propsAssigned.length ? "Props assigned: " + propsAssigned.join(', ') + "." : '';
-            var propsDeleteMessage = propsDeleted.length ? "Props deleted: " + propsDeleted.join(', ') + "." : '';
-            var space = (propsAssigned.length && propsDeleted.length) ? ' ' : '';
-            return propsAssignedMessage + space + propsDeleteMessage;
-        }
-        else {
-            return null;
-        }
-    };
-    ReduxApp.prototype.updateArray = function (arr, newState, path, visited, changedComponents) {
-        var changeMessage = [];
-        var prevLength = arr.length;
-        var newLength = newState.length;
-        var itemsAssigned = [];
-        for (var i = 0; i < Math.min(prevLength, newLength); i++) {
-            var subState = newState[i];
-            var subObj = arr[i];
-            var newSubObj = this.updateStateRecursion(subObj, subState, path.concat(i.toString()), visited, changedComponents);
-            if (newSubObj !== subObj) {
-                arr[i] = newSubObj;
-                itemsAssigned.push(i);
-            }
-        }
-        if (itemsAssigned.length)
-            changeMessage.push("Assigned item(s) at indexes " + itemsAssigned.join(', ') + ".");
-        if (newLength > prevLength) {
-            var newItems = newState.slice(prevLength);
-            Array.prototype.push.apply(arr, newItems);
-            changeMessage.push("Added " + (newLength - prevLength) + " item(s) at index " + prevLength + ".");
-        }
-        else if (prevLength > newLength) {
-            arr.splice(newLength);
-            changeMessage.push("Removed " + (prevLength - newLength) + " item(s) at index " + newLength + ".");
-        }
-        return changeMessage.join(' ');
-    };
-    ReduxApp.options = options_1.globalOptions;
-    return ReduxApp;
-}());
-exports.ReduxApp = ReduxApp;
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-function __export(m) {
-    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
-}
-Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(7));
-__export(__webpack_require__(8));
-__export(__webpack_require__(10));
-__export(__webpack_require__(30));
-
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var info_1 = __webpack_require__(0);
-var options_1 = __webpack_require__(2);
-var utils_1 = __webpack_require__(1);
-var component_1 = __webpack_require__(8);
-var ComponentActions = (function () {
-    function ComponentActions() {
-    }
-    ComponentActions.createActions = function (creator) {
-        var methods = utils_1.getMethods(creator);
-        if (!methods)
-            return undefined;
-        var creatorInfo = info_1.CreatorInfo.getInfo(creator);
-        var componentActions = {};
-        Object.keys(methods).forEach(function (key) {
-            componentActions[key] = function () {
-                var payload = [];
-                for (var _i = 0; _i < arguments.length; _i++) {
-                    payload[_i] = arguments[_i];
-                }
-                if (!(this instanceof component_1.Component))
-                    throw new Error("Component method invoked with non-Component as 'this'. Bound 'this' argument is: " + this);
-                var oldMethod = methods[key];
-                if (creatorInfo.noDispatch[key]) {
-                    oldMethod.call.apply(oldMethod, [this].concat(payload));
-                }
-                else {
-                    var compInfo = info_1.ComponentInfo.getInfo(this);
-                    var action = {
-                        type: options_1.getActionName(creator, key, creatorInfo.options),
-                        id: (compInfo ? compInfo.id : undefined),
-                        payload: payload
-                    };
-                    compInfo.dispatch(action);
-                }
-            };
-        });
-        return componentActions;
-    };
-    return ComponentActions;
-}());
-exports.ComponentActions = ComponentActions;
-
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var decorators_1 = __webpack_require__(4);
-var info_1 = __webpack_require__(0);
-var options_1 = __webpack_require__(2);
-var reduxApp_1 = __webpack_require__(5);
-var utils_1 = __webpack_require__(1);
-var actions_1 = __webpack_require__(7);
-var reducer_1 = __webpack_require__(10);
-var Component = (function () {
-    function Component(store, creator, parentCreator, path, visited) {
-        if (path === void 0) { path = []; }
-        if (visited === void 0) { visited = new Set(); }
-        if (!info_1.CreatorInfo.getInfo(creator))
-            throw new Error("Argument '" + "creator" + "' is not a component creator. Did you forget to use the decorator?");
-        Component.createSelf(this, store, creator, parentCreator, path);
-        Component.createSubComponents(this, store, creator, path, visited);
-        utils_1.log.debug("[Component] New " + creator.constructor.name + " component created. path: " + utils_1.pathString(path));
-    }
-    Component.create = function (store, creator, parentCreator, path, visited) {
-        if (path === void 0) { path = []; }
-        if (visited === void 0) { visited = new Set(); }
-        var ComponentClass = Component.getComponentClass(creator);
-        var component = new ComponentClass(store, creator, parentCreator, path, visited);
-        reduxApp_1.ReduxApp.registerComponent(component, creator, path);
-        return component;
-    };
-    Component.getComponentClass = function (creator) {
-        var info = info_1.CreatorInfo.getInfo(creator);
-        if (!info.componentClass) {
-            info.componentClass = Component.createComponentClass(creator);
-            info.originalClass = creator.constructor;
-        }
-        return info.componentClass;
-    };
-    Component.createComponentClass = function (creator) {
-        var ComponentClass = (function (_super) {
-            __extends(ComponentClass, _super);
-            function ComponentClass(store, creatorArg) {
-                var params = [];
-                for (var _i = 2; _i < arguments.length; _i++) {
-                    params[_i - 2] = arguments[_i];
-                }
-                var _this = _super.apply(this, [store, creatorArg].concat(params)) || this;
-                _this.__originalClassName__ = creator.constructor.name;
-                if (!options_1.globalOptions.emitClassNames)
-                    delete _this.__originalClassName__;
-                return _this;
-            }
-            return ComponentClass;
-        }(Component));
-        var actions = actions_1.ComponentActions.createActions(creator);
-        Object.assign(ComponentClass.prototype, actions);
-        return ComponentClass;
-    };
-    Component.createSelf = function (component, store, creator, parentCreator, path) {
-        for (var _i = 0, _a = Object.getOwnPropertyNames(creator); _i < _a.length; _i++) {
-            var key = _a[_i];
-            var desc = Object.getOwnPropertyDescriptor(creator, key);
-            Object.defineProperty(component, key, desc);
-        }
-        var selfInfo = info_1.ComponentInfo.initInfo(component);
-        var selfClassInfo = info_1.ClassInfo.getOrInitInfo(component);
-        var creatorInfo = info_1.CreatorInfo.getInfo(creator);
-        var creatorClassInfo = info_1.ClassInfo.getInfo(creator) || new info_1.ClassInfo();
-        selfInfo.id = decorators_1.ComponentId.getComponentId(parentCreator, path);
-        selfInfo.originalClass = creatorInfo.originalClass;
-        selfClassInfo.computedGetters = creatorClassInfo.computedGetters;
-        decorators_1.Connect.setupConnectedProps(component, selfClassInfo, creator, creatorClassInfo);
-        selfInfo.dispatch = store.dispatch;
-        selfInfo.reducer = reducer_1.ComponentReducer.createReducer(component, creator);
-    };
-    Component.createSubComponents = function (obj, store, creator, path, visited) {
-        if (utils_1.isPrimitive(obj))
-            return;
-        if (visited.has(obj))
-            return;
-        visited.add(obj);
-        var searchIn = creator || obj;
-        for (var _i = 0, _a = Object.keys(searchIn); _i < _a.length; _i++) {
-            var key = _a[_i];
-            var connectionInfo = decorators_1.Connect.isConnectedProperty(obj, key);
-            if (connectionInfo) {
-                utils_1.log.verbose("[createSubComponents] Property in path '" + utils_1.pathString(path) + "." + key + "' is connected. Skipping component creation.");
-                continue;
-            }
-            var subPath = path.concat([key]);
-            var subCreator = searchIn[key];
-            if (info_1.CreatorInfo.getInfo(subCreator)) {
-                obj[key] = Component.create(store, subCreator, creator, subPath, visited);
-            }
-            else {
-                Component.createSubComponents(obj[key], store, null, subPath, visited);
-            }
-        }
-    };
-    return Component;
-}());
-exports.Component = Component;
-
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var reduxApp_1 = __webpack_require__(5);
-var ConnectOptions = (function () {
-    function ConnectOptions() {
-        this.app = reduxApp_1.DEFAULT_APP_NAME;
-        this.live = false;
-    }
-    return ConnectOptions;
-}());
-exports.ConnectOptions = ConnectOptions;
-
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __assign = (this && this.__assign) || Object.assign || function(t) {
-    for (var s, i = 1, n = arguments.length; i < n; i++) {
-        s = arguments[i];
-        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-            t[p] = s[p];
-    }
-    return t;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-var decorators_1 = __webpack_require__(4);
-var info_1 = __webpack_require__(0);
-var options_1 = __webpack_require__(2);
-var utils_1 = __webpack_require__(1);
-var ComponentReducer = (function () {
-    function ComponentReducer() {
-    }
-    ComponentReducer.createReducer = function (component, creator) {
-        var methods = utils_1.getMethods(creator);
-        var options = info_1.CreatorInfo.getInfo(creator).options;
-        var methodNames = {};
-        Object.keys(methods).forEach(function (methName) {
-            var actionName = options_1.getActionName(creator, methName, options);
-            methodNames[actionName] = methName;
-        });
-        var componentId = info_1.ComponentInfo.getInfo(component).id;
-        return function (state, action) {
-            utils_1.log.verbose("[reducer] Reducer of: " + creator.constructor.name + ", action: " + action.type);
-            if (state === undefined) {
-                utils_1.log.verbose('[reducer] State is undefined, returning initial value');
-                return component;
-            }
-            if (componentId !== action.id) {
-                utils_1.log.verbose("[reducer] Component id and action.id don't match (" + componentId + " !== " + action.id + ")");
-                return state;
-            }
-            var methodName = methodNames[action.type];
-            var actionReducer = methods[methodName];
-            if (!actionReducer) {
-                utils_1.log.verbose('[reducer] No matching action in this reducer, returning previous state');
-                return state;
-            }
-            var newState = Object.assign({}, state);
-            actionReducer.call.apply(actionReducer, [newState].concat(action.payload));
-            utils_1.log.verbose('[reducer] Reducer invoked, returning new state');
-            return newState;
-        };
-    };
-    ComponentReducer.combineReducersTree = function (root) {
-        var reducer = ComponentReducer.combineReducersRecursion(root, new Set());
-        return function (state, action) {
-            var start = Date.now();
-            var newState = reducer(state, action);
-            newState = ComponentReducer.finalizeState(newState, root);
-            var end = Date.now();
-            utils_1.log.debug("[rootReducer] Reducer tree processed in " + (end - start) + "ms.");
-            return newState;
-        };
-    };
-    ComponentReducer.combineReducersRecursion = function (obj, visited) {
-        if (utils_1.isPrimitive(obj))
-            return undefined;
-        if (visited.has(obj))
-            return undefined;
-        visited.add(obj);
-        var rootReducer;
-        var info = info_1.ComponentInfo.getInfo(obj);
-        if (info) {
-            rootReducer = info.reducer;
-        }
-        else {
-            rootReducer = ComponentReducer.identityReducer;
-        }
-        var subReducers = {};
-        for (var _i = 0, _a = Object.keys(obj); _i < _a.length; _i++) {
-            var key = _a[_i];
-            if (decorators_1.Connect.isConnectedProperty(obj, key))
-                continue;
-            var newSubReducer = ComponentReducer.combineReducersRecursion(obj[key], visited);
-            if (typeof newSubReducer === 'function')
-                subReducers[key] = newSubReducer;
-        }
-        var resultReducer = rootReducer;
-        if (Object.keys(subReducers).length) {
-            var combinedSubReducer = utils_1.simpleCombineReducers(subReducers);
-            resultReducer = function (state, action) {
-                var thisState = rootReducer(state, action);
-                var subStates = combinedSubReducer(thisState, action);
-                var combinedState = __assign({}, thisState, subStates);
-                return combinedState;
-            };
-        }
-        return resultReducer;
-    };
-    ComponentReducer.finalizeState = function (rootState, root) {
-        return ComponentReducer.transformDeep(rootState, root, function (subState, subObj) {
-            var newSubState = decorators_1.Computed.removeComputedProps(subState, subObj);
-            newSubState = decorators_1.Connect.removeConnectedProps(newSubState, subObj);
-            return newSubState;
-        }, new Set());
-    };
-    ComponentReducer.transformDeep = function (target, source, callback, visited) {
-        if (utils_1.isPrimitive(target) || utils_1.isPrimitive(source))
-            return target;
-        if (visited.has(source))
-            return source;
-        visited.add(source);
-        Object.keys(target).forEach(function (key) {
-            if (decorators_1.Connect.isConnectedProperty(source, key))
-                return;
-            var subState = target[key];
-            var subObj = source[key];
-            var newSubState = ComponentReducer.transformDeep(subState, subObj, callback, visited);
-            if (newSubState !== subState) {
-                target[key] = newSubState;
-            }
-        });
-        return callback(target, source);
-    };
-    ComponentReducer.identityReducer = function (state) { return state; };
-    return ComponentReducer;
-}());
-exports.ComponentReducer = ComponentReducer;
-
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(12);
-
-
-/***/ }),
-/* 12 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var components_1 = __webpack_require__(6);
-exports.isInstanceOf = components_1.isInstanceOf;
-var decorators_1 = __webpack_require__(4);
-exports.component = decorators_1.component;
-exports.connect = decorators_1.connect;
-exports.computed = decorators_1.computed;
-exports.noDispatch = decorators_1.noDispatch;
-exports.sequence = decorators_1.sequence;
-exports.withId = decorators_1.withId;
-var options_1 = __webpack_require__(2);
-exports.SchemaOptions = options_1.SchemaOptions;
-exports.AppOptions = options_1.AppOptions;
-exports.GlobalOptions = options_1.GlobalOptions;
-exports.LogLevel = options_1.LogLevel;
-var reduxApp_1 = __webpack_require__(5);
-exports.ReduxApp = reduxApp_1.ReduxApp;
-
-
-/***/ }),
-/* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var symbols_1 = __webpack_require__(3);
-var ClassInfo = (function () {
+var classInfo_ClassInfo = (function () {
     function ClassInfo() {
         this.computedGetters = {};
         this.connectedProps = {};
@@ -793,95 +109,43 @@ var ClassInfo = (function () {
     ClassInfo.getInfo = function (obj) {
         if (!obj)
             return undefined;
-        return symbols_1.getSymbol(obj, symbols_1.CLASS_INFO);
+        return getSymbol(obj, CLASS_INFO);
     };
     ClassInfo.getOrInitInfo = function (obj) {
         var info = ClassInfo.getInfo(obj);
         if (!info) {
-            info = symbols_1.setSymbol(obj, symbols_1.CLASS_INFO, new ClassInfo());
+            info = setSymbol(obj, CLASS_INFO, new ClassInfo());
         }
         return info;
     };
     return ClassInfo;
 }());
-exports.ClassInfo = ClassInfo;
 
 
-/***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
+// CONCATENATED MODULE: ./src/info/componentInfo.ts
 
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var symbols_1 = __webpack_require__(3);
-var ComponentInfo = (function () {
+var componentInfo_ComponentInfo = (function () {
     function ComponentInfo() {
     }
     ComponentInfo.getInfo = function (component) {
         if (!component)
             return undefined;
-        return symbols_1.getSymbol(component, symbols_1.COMPONENT_INFO);
+        return getSymbol(component, COMPONENT_INFO);
     };
     ComponentInfo.initInfo = function (component) {
-        return symbols_1.setSymbol(component, symbols_1.COMPONENT_INFO, new ComponentInfo());
+        return setSymbol(component, COMPONENT_INFO, new ComponentInfo());
     };
     return ComponentInfo;
 }());
-exports.ComponentInfo = ComponentInfo;
 
 
-/***/ }),
-/* 15 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var symbols_1 = __webpack_require__(3);
-var utils_1 = __webpack_require__(1);
-var CreatorInfo = (function () {
-    function CreatorInfo() {
-        this.noDispatch = {};
-        this.childIds = {};
-    }
-    CreatorInfo.getInfo = function (obj) {
-        if (!obj)
-            return undefined;
-        if (typeof obj === 'object') {
-            return utils_1.getConstructorProp(obj, symbols_1.CREATOR_INFO);
-        }
-        else {
-            return symbols_1.getSymbol(obj, symbols_1.CREATOR_INFO);
-        }
-    };
-    CreatorInfo.getOrInitInfo = function (obj) {
-        var info = CreatorInfo.getInfo(obj);
-        if (!info) {
-            var isConstructor = (typeof obj === 'function' ? true : false);
-            var target = (isConstructor ? obj : obj.constructor);
-            info = symbols_1.setSymbol(target, symbols_1.CREATOR_INFO, new CreatorInfo());
-        }
-        return info;
-    };
-    return CreatorInfo;
-}());
-exports.CreatorInfo = CreatorInfo;
-
-
-/***/ }),
-/* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.dataDescriptor = {
+// CONCATENATED MODULE: ./src/utils/defineProperty.ts
+var dataDescriptor = {
     writable: true,
     configurable: true,
     enumerable: true
 };
-exports.accessorDescriptor = {
+var accessorDescriptor = {
     configurable: true,
     enumerable: true
 };
@@ -902,18 +166,59 @@ function deferredDefineProperty(target, propertyKey, descriptor) {
         configurable: true
     });
 }
-exports.deferredDefineProperty = deferredDefineProperty;
 
+// CONCATENATED MODULE: ./src/options.ts
+var snakecase = __webpack_require__(2);
+var SchemaOptions = (function () {
+    function SchemaOptions() {
+        this.actionNamespace = true;
+        this.uppercaseActions = true;
+    }
+    return SchemaOptions;
+}());
 
-/***/ }),
-/* 17 */
-/***/ (function(module, exports, __webpack_require__) {
+function getActionName(creator, methodName, options) {
+    var actionName = methodName;
+    var actionNamespace = creator.constructor.name;
+    if (options.uppercaseActions) {
+        actionName = snakecase(actionName).toUpperCase();
+        actionNamespace = snakecase(actionNamespace).toUpperCase();
+    }
+    if (options.actionNamespace) {
+        actionName = actionNamespace + '.' + actionName;
+    }
+    return actionName;
+}
+var AppOptions = (function () {
+    function AppOptions() {
+        this.updateState = true;
+    }
+    return AppOptions;
+}());
 
-"use strict";
+var LogLevel;
+(function (LogLevel) {
+    LogLevel[LogLevel["None"] = 0] = "None";
+    LogLevel[LogLevel["Verbose"] = 1] = "Verbose";
+    LogLevel[LogLevel["Debug"] = 2] = "Debug";
+    LogLevel[LogLevel["Warn"] = 5] = "Warn";
+    LogLevel[LogLevel["Silent"] = 10] = "Silent";
+})(LogLevel || (LogLevel = {}));
+var GlobalOptions = (function () {
+    function GlobalOptions() {
+        this.logLevel = LogLevel.Warn;
+        this.emitClassNames = false;
+        this.convertToPlainObject = true;
+        this.schema = new SchemaOptions();
+    }
+    return GlobalOptions;
+}());
 
-Object.defineProperty(exports, "__esModule", { value: true });
-var options_1 = __webpack_require__(2);
-var Log = (function () {
+var globalOptions = new GlobalOptions();
+
+// CONCATENATED MODULE: ./src/utils/log.ts
+
+var log_Log = (function () {
     function Log() {
     }
     Log.prototype.verbose = function (message) {
@@ -921,7 +226,7 @@ var Log = (function () {
         for (var _i = 1; _i < arguments.length; _i++) {
             optionalParams[_i - 1] = arguments[_i];
         }
-        if (!this.shouldLog(options_1.LogLevel.Verbose))
+        if (!this.shouldLog(LogLevel.Verbose))
             return;
         console.debug.apply(console, ['VERBOSE [redux-app] ' + message].concat(optionalParams));
     };
@@ -930,7 +235,7 @@ var Log = (function () {
         for (var _i = 1; _i < arguments.length; _i++) {
             optionalParams[_i - 1] = arguments[_i];
         }
-        if (!this.shouldLog(options_1.LogLevel.Debug))
+        if (!this.shouldLog(LogLevel.Debug))
             return;
         console.log.apply(console, ['DEBUG [redux-app] ' + message].concat(optionalParams));
     };
@@ -939,35 +244,22 @@ var Log = (function () {
         for (var _i = 1; _i < arguments.length; _i++) {
             optionalParams[_i - 1] = arguments[_i];
         }
-        if (!this.shouldLog(options_1.LogLevel.Warn))
+        if (!this.shouldLog(LogLevel.Warn))
             return;
         console.warn.apply(console, ['WARN [redux-app] ' + message].concat(optionalParams));
     };
     Log.prototype.shouldLog = function (level) {
-        if (options_1.globalOptions.logLevel === options_1.LogLevel.None)
+        if (globalOptions.logLevel === LogLevel.None)
             return false;
-        if (options_1.globalOptions.logLevel > level)
+        if (globalOptions.logLevel > level)
             return false;
         return true;
     };
     return Log;
 }());
-exports.log = new Log();
+var log = new log_Log();
 
-
-/***/ }),
-/* 18 */
-/***/ (function(module, exports) {
-
-module.exports = require("lodash.snakecase");
-
-/***/ }),
-/* 19 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
+// CONCATENATED MODULE: ./src/utils/simpleCombineReducers.ts
 function simpleCombineReducers(reducers) {
     var reducerKeys = Object.keys(reducers);
     return function combination(state, action) {
@@ -985,23 +277,14 @@ function simpleCombineReducers(reducers) {
         return hasChanged ? nextState : state;
     };
 }
-exports.simpleCombineReducers = simpleCombineReducers;
 
-
-/***/ }),
-/* 20 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
+// CONCATENATED MODULE: ./src/utils/utils.ts
 function isPrimitive(val) {
     if (!val)
         return true;
     var type = typeof val;
     return type !== 'object' && type !== 'function';
 }
-exports.isPrimitive = isPrimitive;
 function getMethods(obj) {
     if (!obj)
         return undefined;
@@ -1018,61 +301,295 @@ function getMethods(obj) {
     }
     return methods;
 }
-exports.getMethods = getMethods;
 function getConstructorProp(obj, key) {
     return obj && obj.constructor && obj.constructor[key];
 }
-exports.getConstructorProp = getConstructorProp;
 function pathString(path) {
-    if (path.length) {
-        return "" + path.join('.');
-    }
-    else {
-        return 'root';
-    }
+    var str = "" + path.slice(1).join('.');
+    var dot = (path.length > 1 ? '.' : '');
+    return 'root' + dot + str;
 }
-exports.pathString = pathString;
 function toPlainObject(obj) {
     var json = JSON.stringify(obj, function (key, value) { return value === undefined ? null : value; });
     return JSON.parse(json);
 }
-exports.toPlainObject = toPlainObject;
+
+// CONCATENATED MODULE: ./src/utils/index.ts
 
 
-/***/ }),
-/* 21 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-function __export(m) {
-    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
-}
-Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(9));
-__export(__webpack_require__(23));
-__export(__webpack_require__(24));
 
 
-/***/ }),
-/* 22 */
-/***/ (function(module, exports) {
 
-module.exports = require("redux");
+// CONCATENATED MODULE: ./src/info/creatorInfo.ts
 
-/***/ }),
-/* 23 */
-/***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
+var creatorInfo_CreatorInfo = (function () {
+    function CreatorInfo() {
+        this.noDispatch = {};
+        this.childIds = {};
+    }
+    CreatorInfo.getInfo = function (obj) {
+        if (!obj)
+            return undefined;
+        if (typeof obj === 'object') {
+            return getConstructorProp(obj, CREATOR_INFO);
+        }
+        else {
+            return getSymbol(obj, CREATOR_INFO);
+        }
+    };
+    CreatorInfo.getOrInitInfo = function (obj) {
+        var info = CreatorInfo.getInfo(obj);
+        if (!info) {
+            var isConstructor = (typeof obj === 'function' ? true : false);
+            var target = (isConstructor ? obj : obj.constructor);
+            info = setSymbol(target, CREATOR_INFO, new CreatorInfo());
+        }
+        return info;
+    };
+    return CreatorInfo;
+}());
 
-Object.defineProperty(exports, "__esModule", { value: true });
-var info_1 = __webpack_require__(0);
-var Connect = (function () {
+
+// CONCATENATED MODULE: ./src/info/index.ts
+
+
+
+
+// EXTERNAL MODULE: external "redux"
+var external__redux_ = __webpack_require__(3);
+var external__redux__default = /*#__PURE__*/__webpack_require__.n(external__redux_);
+
+// CONCATENATED MODULE: ./src/reduxApp.ts
+
+
+
+
+
+
+var DEFAULT_APP_NAME = 'default';
+var appsRepository = {};
+var appsCount = 0;
+var reduxApp_ReduxApp = (function () {
+    function ReduxApp(appCreator) {
+        var params = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            params[_i - 1] = arguments[_i];
+        }
+        var _this = this;
+        this.warehouse = new Map();
+        var _a = this.resolveParameters(appCreator, params), options = _a.options, preLoadedState = _a.preLoadedState, enhancer = _a.enhancer;
+        this.name = this.getAppName(options.name);
+        if (appsRepository[this.name])
+            throw new Error("An app with name '" + this.name + "' already exists.");
+        appsRepository[this.name] = this;
+        var initialReducer = function (state) { return state; };
+        this.store = Object(external__redux_["createStore"])(initialReducer, preLoadedState, enhancer);
+        var rootComponent = component_Component.create(this.store, appCreator, null, [this.name]);
+        this.root = rootComponent;
+        if (options.updateState) {
+            this.subscriptionDisposer = this.store.subscribe(function () { return _this.updateState(); });
+        }
+        var actualReducer = reducer_ComponentReducer.combineReducersTree(rootComponent);
+        this.store.replaceReducer(actualReducer);
+    }
+    ReduxApp.createApp = function (appCreator) {
+        var params = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            params[_i - 1] = arguments[_i];
+        }
+        return new (ReduxApp.bind.apply(ReduxApp, [void 0, appCreator].concat(params)))();
+    };
+    ReduxApp.registerComponent = function (comp, creator, path) {
+        var appName = path[0] || DEFAULT_APP_NAME;
+        var app = appsRepository[appName];
+        if (app) {
+            var warehouse = app.getTypeWarehouse(creator.constructor);
+            var key = componentInfo_ComponentInfo.getInfo(comp).id || withId_ComponentId.nextAvailableId();
+            warehouse.set(key, comp);
+        }
+    };
+    ReduxApp.prototype.dispose = function () {
+        if (this.subscriptionDisposer) {
+            this.subscriptionDisposer();
+            this.subscriptionDisposer = null;
+        }
+        if (appsRepository[this.name]) {
+            delete appsRepository[this.name];
+        }
+    };
+    ReduxApp.prototype.getTypeWarehouse = function (type) {
+        if (!this.warehouse.has(type))
+            this.warehouse.set(type, new Map());
+        return this.warehouse.get(type);
+    };
+    ReduxApp.prototype.resolveParameters = function (appCreator, params) {
+        var result = {};
+        if (params.length === 0) {
+            result.options = new AppOptions();
+            result.preLoadedState = appCreator;
+        }
+        else if (params.length === 1) {
+            if (typeof params[0] === 'function') {
+                result.options = new AppOptions();
+                result.enhancer = params[0];
+                result.preLoadedState = appCreator;
+            }
+            else {
+                result.options = Object.assign(new AppOptions(), params[0]);
+                result.preLoadedState = appCreator;
+            }
+        }
+        else if (params.length === 2) {
+            result.options = Object.assign(new AppOptions(), params[0]);
+            result.preLoadedState = params[1];
+        }
+        else {
+            result.options = Object.assign(new AppOptions(), params[0]);
+            result.preLoadedState = params[1];
+            result.enhancer = params[2];
+        }
+        return result;
+    };
+    ReduxApp.prototype.getAppName = function (name) {
+        if (name)
+            return name;
+        if (!Object.keys(appsRepository).length) {
+            return DEFAULT_APP_NAME;
+        }
+        else {
+            return DEFAULT_APP_NAME + '_' + (++appsCount);
+        }
+    };
+    ReduxApp.prototype.updateState = function () {
+        var start = Date.now();
+        var newState = this.store.getState();
+        if (globalOptions.convertToPlainObject)
+            newState = toPlainObject(newState);
+        log.verbose('[updateState] Store before: ', newState);
+        var visited = new Set();
+        var changedComponents = new Set();
+        this.updateStateRecursion(this.root, newState, [this.name], visited, changedComponents);
+        var end = Date.now();
+        log.debug("[updateState] Component tree updated in " + (end - start) + "ms.");
+        log.verbose('[updateState] Store after: ', newState);
+    };
+    ReduxApp.prototype.updateStateRecursion = function (obj, newState, path, visited, changedPaths) {
+        if (obj === newState)
+            return newState;
+        if (isPrimitive(obj) || isPrimitive(newState))
+            return newState;
+        if (visited.has(obj))
+            return obj;
+        visited.add(obj);
+        var targetType = obj.constructor;
+        var newStateType = newState.constructor;
+        if ((targetType === newStateType) || newStateType === Object) {
+            var changeMessage;
+            if (Array.isArray(obj) && Array.isArray(newState)) {
+                changeMessage = this.updateArray(obj, newState, path, visited, changedPaths);
+            }
+            else {
+                changeMessage = this.updateObject(obj, newState, path, visited, changedPaths);
+            }
+        }
+        else {
+            return newState;
+        }
+        var pathStr = pathString(path);
+        if (changeMessage && changeMessage.length) {
+            if (obj instanceof component_Component && !changedPaths.has(pathStr))
+                changedPaths.add(pathStr);
+            log.debug("[updateState] Change in '" + pathStr + "'. " + changeMessage);
+            log.verbose("[updateState] New state: ", obj);
+        }
+        else {
+            log.verbose("[updateState] No change in path '" + pathStr + "'.");
+        }
+        return obj;
+    };
+    ReduxApp.prototype.updateObject = function (obj, newState, path, visited, changedPaths) {
+        var _this = this;
+        var propsDeleted = [];
+        Object.keys(obj).forEach(function (key) {
+            if (!newState.hasOwnProperty(key)) {
+                delete obj[key];
+                propsDeleted.push(key);
+            }
+        });
+        var propsAssigned = [];
+        Object.keys(newState).forEach(function (key) {
+            if (connect_Connect.isConnectedProperty(obj, key))
+                return;
+            var subState = newState[key];
+            var subObj = obj[key];
+            var newSubObj = _this.updateStateRecursion(subObj, subState, path.concat(key), visited, changedPaths);
+            if (newSubObj !== subObj) {
+                obj[key] = newSubObj;
+                propsAssigned.push(key);
+            }
+        });
+        computed_Computed.computeProps(obj);
+        if (propsAssigned.length || propsDeleted.length) {
+            var propsAssignedMessage = propsAssigned.length ? "Props assigned: " + propsAssigned.join(', ') + "." : '';
+            var propsDeleteMessage = propsDeleted.length ? "Props deleted: " + propsDeleted.join(', ') + "." : '';
+            var space = (propsAssigned.length && propsDeleted.length) ? ' ' : '';
+            return propsAssignedMessage + space + propsDeleteMessage;
+        }
+        else {
+            return null;
+        }
+    };
+    ReduxApp.prototype.updateArray = function (arr, newState, path, visited, changedPaths) {
+        var changeMessage = [];
+        var prevLength = arr.length;
+        var newLength = newState.length;
+        var itemsAssigned = [];
+        for (var i = 0; i < Math.min(prevLength, newLength); i++) {
+            var subState = newState[i];
+            var subObj = arr[i];
+            var newSubObj = this.updateStateRecursion(subObj, subState, path.concat(i.toString()), visited, changedPaths);
+            if (newSubObj !== subObj) {
+                arr[i] = newSubObj;
+                itemsAssigned.push(i);
+            }
+        }
+        if (itemsAssigned.length)
+            changeMessage.push("Assigned item(s) at indexes " + itemsAssigned.join(', ') + ".");
+        if (newLength > prevLength) {
+            var newItems = newState.slice(prevLength);
+            Array.prototype.push.apply(arr, newItems);
+            changeMessage.push("Added " + (newLength - prevLength) + " item(s) at index " + prevLength + ".");
+        }
+        else if (prevLength > newLength) {
+            arr.splice(newLength);
+            changeMessage.push("Removed " + (prevLength - newLength) + " item(s) at index " + newLength + ".");
+        }
+        return changeMessage.join(' ');
+    };
+    ReduxApp.options = globalOptions;
+    return ReduxApp;
+}());
+
+
+// CONCATENATED MODULE: ./src/decorators/connect/connectOptions.ts
+
+var connectOptions_ConnectOptions = (function () {
+    function ConnectOptions() {
+        this.app = DEFAULT_APP_NAME;
+        this.live = false;
+    }
+    return ConnectOptions;
+}());
+
+
+// CONCATENATED MODULE: ./src/decorators/connect/connect.ts
+
+var connect_Connect = (function () {
     function Connect() {
     }
     Connect.isConnectedProperty = function (propHolder, propKey) {
-        var compInfo = info_1.ClassInfo.getInfo(propHolder);
+        var compInfo = classInfo_ClassInfo.getInfo(propHolder);
         return compInfo && compInfo.connectedProps[propKey];
     };
     Connect.setupConnectedProps = function (target, targetInfo, source, sourceInfo) {
@@ -1087,14 +604,14 @@ var Connect = (function () {
         targetInfo.connectedProps = sourceInfo.connectedProps;
     };
     Connect.removeConnectedProps = function (state, obj) {
-        var info = info_1.ClassInfo.getInfo(obj);
+        var info = classInfo_ClassInfo.getInfo(obj);
         if (!info)
             return state;
         var newState = Object.assign({}, state);
         for (var _i = 0, _a = Object.keys(info.connectedProps); _i < _a.length; _i++) {
             var propKey = _a[_i];
             var sourceInfoString = '';
-            var sourceInfo = info_1.ComponentInfo.getInfo(obj[propKey]);
+            var sourceInfo = componentInfo_ComponentInfo.getInfo(obj[propKey]);
             if (sourceInfo) {
                 var sourceIdString = (sourceInfo.id !== undefined ? '.' + sourceInfo.id : '');
                 sourceInfoString = '.' + sourceInfo.originalClass.name + sourceIdString;
@@ -1106,21 +623,18 @@ var Connect = (function () {
     Connect.placeholderPrefix = '<connected';
     return Connect;
 }());
-exports.Connect = Connect;
 
 
-/***/ }),
-/* 24 */
-/***/ (function(module, exports, __webpack_require__) {
+// EXTERNAL MODULE: external "reflect-metadata"
+var external__reflect_metadata_ = __webpack_require__(4);
+var external__reflect_metadata__default = /*#__PURE__*/__webpack_require__.n(external__reflect_metadata_);
 
-"use strict";
+// CONCATENATED MODULE: ./src/decorators/connect/decorator.ts
 
-Object.defineProperty(exports, "__esModule", { value: true });
-__webpack_require__(25);
-var info_1 = __webpack_require__(0);
-var reduxApp_1 = __webpack_require__(5);
-var utils_1 = __webpack_require__(1);
-var connectOptions_1 = __webpack_require__(9);
+
+
+
+
 function connect(targetOrOptions, propertyKeyOrNothing) {
     if (propertyKeyOrNothing) {
         connectDecorator.call(undefined, targetOrOptions, propertyKeyOrNothing);
@@ -1129,11 +643,10 @@ function connect(targetOrOptions, propertyKeyOrNothing) {
         return function (target, propertyKey) { return connectDecorator(target, propertyKey, targetOrOptions); };
     }
 }
-exports.connect = connect;
 function connectDecorator(target, propertyKey, options) {
-    options = Object.assign(new connectOptions_1.ConnectOptions(), options);
+    options = Object.assign(new connectOptions_ConnectOptions(), options);
     var value = target[propertyKey];
-    var info = info_1.ClassInfo.getOrInitInfo(target);
+    var info = classInfo_ClassInfo.getOrInitInfo(target);
     info.connectedProps[propertyKey] = true;
     var type = Reflect.getMetadata("design:type", target, propertyKey);
     if (!type) {
@@ -1149,9 +662,9 @@ function connectDecorator(target, propertyKey, options) {
     var oldDescriptor = Object.getOwnPropertyDescriptor(target, propertyKey);
     var newDescriptor = {
         get: function () {
-            var app = reduxApp_1.appsRepository[options.app];
+            var app = appsRepository[options.app];
             if (!app) {
-                utils_1.log.debug("[connect] Application '" + options.app + "' does not exist. Property " + propertyKey + " is not connected.");
+                log.debug("[connect] Application '" + options.app + "' does not exist. Property " + propertyKey + " is not connected.");
                 if (oldDescriptor && oldDescriptor.get) {
                     return oldDescriptor.get();
                 }
@@ -1168,16 +681,16 @@ function connectDecorator(target, propertyKey, options) {
                 result = warehouse.values().next().value;
             }
             if (result && !options.live) {
-                Object.defineProperty(this, propertyKey, utils_1.dataDescriptor);
+                Object.defineProperty(this, propertyKey, dataDescriptor);
                 value = this[propertyKey] = result;
-                utils_1.log.debug("[connect] Property '" + propertyKey + "' connected. Type: " + type.name + ".");
+                log.debug("[connect] Property '" + propertyKey + "' connected. Type: " + type.name + ".");
             }
             return result;
         },
         set: function (newValue) {
-            var app = reduxApp_1.appsRepository[options.app];
+            var app = appsRepository[options.app];
             if (app) {
-                utils_1.log.warn("[connect] Connected component '" + propertyKey + "' value assigned. Component disconnected.");
+                log.warn("[connect] Connected component '" + propertyKey + "' value assigned. Component disconnected.");
             }
             if (oldDescriptor && oldDescriptor.set) {
                 return oldDescriptor.set(newValue);
@@ -1187,26 +700,18 @@ function connectDecorator(target, propertyKey, options) {
             }
         }
     };
-    return utils_1.deferredDefineProperty(target, propertyKey, Object.assign({}, utils_1.accessorDescriptor, newDescriptor));
+    return deferredDefineProperty(target, propertyKey, Object.assign({}, accessorDescriptor, newDescriptor));
 }
 
+// CONCATENATED MODULE: ./src/decorators/connect/index.ts
 
-/***/ }),
-/* 25 */
-/***/ (function(module, exports) {
 
-module.exports = require("reflect-metadata");
 
-/***/ }),
-/* 26 */
-/***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
+// CONCATENATED MODULE: ./src/decorators/component.ts
 
-Object.defineProperty(exports, "__esModule", { value: true });
-var info_1 = __webpack_require__(0);
-var options_1 = __webpack_require__(2);
-function component(ctorOrOptions) {
+
+function component_component(ctorOrOptions) {
     if (typeof ctorOrOptions === 'function') {
         componentDecorator.call(undefined, ctorOrOptions);
     }
@@ -1214,38 +719,29 @@ function component(ctorOrOptions) {
         return function (ctor) { return componentDecorator(ctor, ctorOrOptions); };
     }
 }
-exports.component = component;
 function componentDecorator(ctor, options) {
-    var info = info_1.CreatorInfo.getOrInitInfo(ctor);
-    info.options = Object.assign({}, options, new options_1.SchemaOptions(), options_1.globalOptions.schema);
+    var info = creatorInfo_CreatorInfo.getOrInitInfo(ctor);
+    info.options = Object.assign({}, options, new SchemaOptions(), globalOptions.schema);
 }
 
+// CONCATENATED MODULE: ./src/decorators/computed.ts
 
-/***/ }),
-/* 27 */
-/***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var info_1 = __webpack_require__(0);
-var utils_1 = __webpack_require__(1);
 function computed(target, propertyKey) {
     var descriptor = Object.getOwnPropertyDescriptor(target, propertyKey);
     if (typeof descriptor.get !== 'function')
         throw new Error("Failed to decorate '" + propertyKey + "'. The 'computed' decorator should only be used on getters.");
     if (descriptor.set)
         throw new Error("Failed to decorate '" + propertyKey + "'. Decorated property should not have a setter.");
-    var info = info_1.ClassInfo.getOrInitInfo(target);
+    var info = classInfo_ClassInfo.getOrInitInfo(target);
     info.computedGetters[propertyKey] = descriptor.get;
-    return utils_1.deferredDefineProperty(target, propertyKey, utils_1.dataDescriptor);
+    return deferredDefineProperty(target, propertyKey, dataDescriptor);
 }
-exports.computed = computed;
-var Computed = (function () {
+var computed_Computed = (function () {
     function Computed() {
     }
     Computed.removeComputedProps = function (state, obj) {
-        var info = info_1.ClassInfo.getInfo(obj);
+        var info = classInfo_ClassInfo.getInfo(obj);
         if (!info)
             return state;
         var newState = Object.assign({}, state);
@@ -1256,17 +752,17 @@ var Computed = (function () {
         return newState;
     };
     Computed.computeProps = function (obj) {
-        var info = info_1.ClassInfo.getInfo(obj);
+        var info = classInfo_ClassInfo.getInfo(obj);
         if (!info)
             return;
         for (var _i = 0, _a = Object.keys(info.computedGetters); _i < _a.length; _i++) {
             var propKey = _a[_i];
             var getter = info.computedGetters[propKey];
-            utils_1.log.verbose("[computeProps] computing new value of '" + propKey + "'");
+            log.verbose("[computeProps] computing new value of '" + propKey + "'");
             var newValue = getter.call(obj);
             var oldValue = obj[propKey];
             if (newValue !== oldValue) {
-                utils_1.log.verbose("[computeProps] updating the state of '" + propKey + "'. New value: '" + newValue + "', Old value: '" + oldValue + "'.");
+                log.verbose("[computeProps] updating the state of '" + propKey + "'. New value: '" + newValue + "', Old value: '" + oldValue + "'.");
                 obj[propKey] = newValue;
             }
         }
@@ -1274,41 +770,25 @@ var Computed = (function () {
     Computed.placeholder = '<computed>';
     return Computed;
 }());
-exports.Computed = Computed;
 
 
-/***/ }),
-/* 28 */
-/***/ (function(module, exports, __webpack_require__) {
+// CONCATENATED MODULE: ./src/decorators/noDispatch.ts
 
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var info_1 = __webpack_require__(0);
 function noDispatch(target, propertyKey) {
     noDispatchDecorator(target, propertyKey);
 }
-exports.noDispatch = noDispatch;
 function sequence(target, propertyKey) {
     noDispatchDecorator(target, propertyKey);
 }
-exports.sequence = sequence;
 function noDispatchDecorator(target, propertyKey) {
-    var info = info_1.CreatorInfo.getOrInitInfo(target);
+    var info = creatorInfo_CreatorInfo.getOrInitInfo(target);
     info.noDispatch[propertyKey] = true;
 }
 
+// CONCATENATED MODULE: ./src/decorators/withId.ts
 
-/***/ }),
-/* 29 */
-/***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
 
-Object.defineProperty(exports, "__esModule", { value: true });
-var info_1 = __webpack_require__(0);
-var symbols_1 = __webpack_require__(3);
-var utils_1 = __webpack_require__(1);
 function withId(targetOrId, propertyKeyOrNothing) {
     if (propertyKeyOrNothing) {
         withIdDecorator.call(undefined, targetOrId, propertyKeyOrNothing);
@@ -1317,12 +797,11 @@ function withId(targetOrId, propertyKeyOrNothing) {
         return function (target, propertyKey) { return withIdDecorator(target, propertyKey, targetOrId); };
     }
 }
-exports.withId = withId;
 function withIdDecorator(target, propertyKey, id) {
-    var info = info_1.CreatorInfo.getOrInitInfo(target);
-    info.childIds[propertyKey] = id || symbols_1.AUTO_ID;
+    var info = creatorInfo_CreatorInfo.getOrInitInfo(target);
+    info.childIds[propertyKey] = id || AUTO_ID;
 }
-var ComponentId = (function () {
+var withId_ComponentId = (function () {
     function ComponentId() {
     }
     ComponentId.nextAvailableId = function () {
@@ -1331,16 +810,16 @@ var ComponentId = (function () {
     ComponentId.getComponentId = function (parentCreator, path) {
         if (!parentCreator || !path.length)
             return undefined;
-        var info = info_1.CreatorInfo.getInfo(parentCreator);
+        var info = creatorInfo_CreatorInfo.getInfo(parentCreator);
         if (!info)
             return;
         var selfKey = path[path.length - 1];
         var id = info.childIds[selfKey];
         if (!id)
             return undefined;
-        if (id === symbols_1.AUTO_ID) {
+        if (id === AUTO_ID) {
             var generatedId = ComponentId.nextAvailableId();
-            utils_1.log.verbose('[getComponentId] new component id generated: ' + generatedId);
+            log.verbose('[getComponentId] new component id generated: ' + generatedId);
             info.childIds[selfKey] = generatedId;
             return generatedId;
         }
@@ -1349,25 +828,341 @@ var ComponentId = (function () {
     ComponentId.autoComponentId = 0;
     return ComponentId;
 }());
-exports.ComponentId = ComponentId;
 
 
-/***/ }),
-/* 30 */
-/***/ (function(module, exports, __webpack_require__) {
+// CONCATENATED MODULE: ./src/decorators/index.ts
 
-"use strict";
 
-Object.defineProperty(exports, "__esModule", { value: true });
-var info_1 = __webpack_require__(0);
+
+
+
+
+// CONCATENATED MODULE: ./src/components/reducer.ts
+var __assign = (this && this.__assign) || Object.assign || function(t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+        s = arguments[i];
+        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+            t[p] = s[p];
+    }
+    return t;
+};
+
+
+
+
+var reducer_ComponentReducer = (function () {
+    function ComponentReducer() {
+    }
+    ComponentReducer.createReducer = function (component, creator) {
+        var methods = getMethods(creator);
+        var options = creatorInfo_CreatorInfo.getInfo(creator).options;
+        var methodNames = {};
+        Object.keys(methods).forEach(function (methName) {
+            var actionName = getActionName(creator, methName, options);
+            methodNames[actionName] = methName;
+        });
+        var componentId = componentInfo_ComponentInfo.getInfo(component).id;
+        return function (state, action) {
+            log.verbose("[reducer] Reducer of: " + creator.constructor.name + ", action: " + action.type);
+            if (state === undefined) {
+                log.verbose('[reducer] State is undefined, returning initial value');
+                return component;
+            }
+            if (componentId !== action.id) {
+                log.verbose("[reducer] Component id and action.id don't match (" + componentId + " !== " + action.id + ")");
+                return state;
+            }
+            var methodName = methodNames[action.type];
+            var actionReducer = methods[methodName];
+            if (!actionReducer) {
+                log.verbose('[reducer] No matching action in this reducer, returning previous state');
+                return state;
+            }
+            var newState = Object.assign({}, state);
+            actionReducer.call.apply(actionReducer, [newState].concat(action.payload));
+            log.verbose('[reducer] Reducer invoked, returning new state');
+            return newState;
+        };
+    };
+    ComponentReducer.combineReducersTree = function (root) {
+        var reducer = ComponentReducer.combineReducersRecursion(root, new Set());
+        return function (state, action) {
+            var start = Date.now();
+            var newState = reducer(state, action);
+            newState = ComponentReducer.finalizeState(newState, root);
+            var end = Date.now();
+            log.debug("[rootReducer] Reducer tree processed in " + (end - start) + "ms.");
+            return newState;
+        };
+    };
+    ComponentReducer.combineReducersRecursion = function (obj, visited) {
+        if (isPrimitive(obj))
+            return undefined;
+        if (visited.has(obj))
+            return undefined;
+        visited.add(obj);
+        var rootReducer;
+        var info = componentInfo_ComponentInfo.getInfo(obj);
+        if (info) {
+            rootReducer = info.reducer;
+        }
+        else {
+            rootReducer = ComponentReducer.identityReducer;
+        }
+        var subReducers = {};
+        for (var _i = 0, _a = Object.keys(obj); _i < _a.length; _i++) {
+            var key = _a[_i];
+            if (connect_Connect.isConnectedProperty(obj, key))
+                continue;
+            var newSubReducer = ComponentReducer.combineReducersRecursion(obj[key], visited);
+            if (typeof newSubReducer === 'function')
+                subReducers[key] = newSubReducer;
+        }
+        var resultReducer = rootReducer;
+        if (Object.keys(subReducers).length) {
+            var combinedSubReducer = simpleCombineReducers(subReducers);
+            resultReducer = function (state, action) {
+                var thisState = rootReducer(state, action);
+                var subStates = combinedSubReducer(thisState, action);
+                var combinedState = __assign({}, thisState, subStates);
+                return combinedState;
+            };
+        }
+        return resultReducer;
+    };
+    ComponentReducer.finalizeState = function (rootState, root) {
+        return ComponentReducer.transformDeep(rootState, root, function (subState, subObj) {
+            var newSubState = computed_Computed.removeComputedProps(subState, subObj);
+            newSubState = connect_Connect.removeConnectedProps(newSubState, subObj);
+            return newSubState;
+        }, new Set());
+    };
+    ComponentReducer.transformDeep = function (target, source, callback, visited) {
+        if (isPrimitive(target) || isPrimitive(source))
+            return target;
+        if (visited.has(source))
+            return source;
+        visited.add(source);
+        Object.keys(target).forEach(function (key) {
+            if (connect_Connect.isConnectedProperty(source, key))
+                return;
+            var subState = target[key];
+            var subObj = source[key];
+            var newSubState = ComponentReducer.transformDeep(subState, subObj, callback, visited);
+            if (newSubState !== subState) {
+                target[key] = newSubState;
+            }
+        });
+        return callback(target, source);
+    };
+    ComponentReducer.identityReducer = function (state) { return state; };
+    return ComponentReducer;
+}());
+
+
+// CONCATENATED MODULE: ./src/components/component.ts
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+
+
+
+
+
+
+
+var component_Component = (function () {
+    function Component(store, creator, parentCreator, path, visited) {
+        if (path === void 0) { path = []; }
+        if (visited === void 0) { visited = new Set(); }
+        if (!creatorInfo_CreatorInfo.getInfo(creator))
+            throw new Error("Argument '" + "creator" + "' is not a component creator. Did you forget to use the decorator?");
+        Component.createSelf(this, store, creator, parentCreator, path);
+        Component.createSubComponents(this, store, creator, path, visited);
+        log.debug("[Component] New " + creator.constructor.name + " component created. path: " + pathString(path));
+    }
+    Component.create = function (store, creator, parentCreator, path, visited) {
+        if (path === void 0) { path = []; }
+        if (visited === void 0) { visited = new Set(); }
+        var ComponentClass = Component.getComponentClass(creator);
+        var component = new ComponentClass(store, creator, parentCreator, path, visited);
+        reduxApp_ReduxApp.registerComponent(component, creator, path);
+        return component;
+    };
+    Component.getComponentClass = function (creator) {
+        var info = creatorInfo_CreatorInfo.getInfo(creator);
+        if (!info.componentClass) {
+            info.componentClass = Component.createComponentClass(creator);
+            info.originalClass = creator.constructor;
+        }
+        return info.componentClass;
+    };
+    Component.createComponentClass = function (creator) {
+        var ComponentClass = (function (_super) {
+            __extends(ComponentClass, _super);
+            function ComponentClass(store, creatorArg) {
+                var params = [];
+                for (var _i = 2; _i < arguments.length; _i++) {
+                    params[_i - 2] = arguments[_i];
+                }
+                var _this = _super.apply(this, [store, creatorArg].concat(params)) || this;
+                _this.__originalClassName__ = creator.constructor.name;
+                if (!globalOptions.emitClassNames)
+                    delete _this.__originalClassName__;
+                return _this;
+            }
+            return ComponentClass;
+        }(Component));
+        var actions = actions_ComponentActions.createActions(creator);
+        Object.assign(ComponentClass.prototype, actions);
+        return ComponentClass;
+    };
+    Component.createSelf = function (component, store, creator, parentCreator, path) {
+        for (var _i = 0, _a = Object.getOwnPropertyNames(creator); _i < _a.length; _i++) {
+            var key = _a[_i];
+            var desc = Object.getOwnPropertyDescriptor(creator, key);
+            Object.defineProperty(component, key, desc);
+        }
+        var selfInfo = componentInfo_ComponentInfo.initInfo(component);
+        var selfClassInfo = classInfo_ClassInfo.getOrInitInfo(component);
+        var creatorInfo = creatorInfo_CreatorInfo.getInfo(creator);
+        var creatorClassInfo = classInfo_ClassInfo.getInfo(creator) || new classInfo_ClassInfo();
+        selfInfo.id = withId_ComponentId.getComponentId(parentCreator, path);
+        selfInfo.originalClass = creatorInfo.originalClass;
+        selfClassInfo.computedGetters = creatorClassInfo.computedGetters;
+        connect_Connect.setupConnectedProps(component, selfClassInfo, creator, creatorClassInfo);
+        selfInfo.dispatch = store.dispatch;
+        selfInfo.reducer = reducer_ComponentReducer.createReducer(component, creator);
+    };
+    Component.createSubComponents = function (obj, store, creator, path, visited) {
+        if (isPrimitive(obj))
+            return;
+        if (visited.has(obj))
+            return;
+        visited.add(obj);
+        var searchIn = creator || obj;
+        for (var _i = 0, _a = Object.keys(searchIn); _i < _a.length; _i++) {
+            var key = _a[_i];
+            var connectionInfo = connect_Connect.isConnectedProperty(obj, key);
+            if (connectionInfo) {
+                log.verbose("[createSubComponents] Property in path '" + pathString(path) + "." + key + "' is connected. Skipping component creation.");
+                continue;
+            }
+            var subPath = path.concat([key]);
+            var subCreator = searchIn[key];
+            if (creatorInfo_CreatorInfo.getInfo(subCreator)) {
+                obj[key] = Component.create(store, subCreator, creator, subPath, visited);
+            }
+            else {
+                Component.createSubComponents(obj[key], store, null, subPath, visited);
+            }
+        }
+    };
+    return Component;
+}());
+
+
+// CONCATENATED MODULE: ./src/components/actions.ts
+
+
+
+
+var actions_ComponentActions = (function () {
+    function ComponentActions() {
+    }
+    ComponentActions.createActions = function (creator) {
+        var methods = getMethods(creator);
+        if (!methods)
+            return undefined;
+        var creatorInfo = creatorInfo_CreatorInfo.getInfo(creator);
+        var componentActions = {};
+        Object.keys(methods).forEach(function (key) {
+            componentActions[key] = function () {
+                var payload = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    payload[_i] = arguments[_i];
+                }
+                if (!(this instanceof component_Component))
+                    throw new Error("Component method invoked with non-Component as 'this'. Bound 'this' argument is: " + this);
+                var oldMethod = methods[key];
+                if (creatorInfo.noDispatch[key]) {
+                    oldMethod.call.apply(oldMethod, [this].concat(payload));
+                }
+                else {
+                    var compInfo = componentInfo_ComponentInfo.getInfo(this);
+                    var action = {
+                        type: getActionName(creator, key, creatorInfo.options),
+                        id: (compInfo ? compInfo.id : undefined),
+                        payload: payload
+                    };
+                    compInfo.dispatch(action);
+                }
+            };
+        });
+        return componentActions;
+    };
+    return ComponentActions;
+}());
+
+
+// CONCATENATED MODULE: ./src/components/utils.ts
+
 function isInstanceOf(obj, type) {
     if (obj instanceof type)
         return true;
-    var info = info_1.ComponentInfo.getInfo(obj);
+    var info = componentInfo_ComponentInfo.getInfo(obj);
     return !!(info && info.originalClass === type);
 }
-exports.isInstanceOf = isInstanceOf;
 
+// CONCATENATED MODULE: ./src/components/index.ts
+
+
+
+
+
+// CONCATENATED MODULE: ./src/index.ts
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "isInstanceOf", function() { return isInstanceOf; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "component", function() { return component_component; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "connect", function() { return connect; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "computed", function() { return computed; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "noDispatch", function() { return noDispatch; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "sequence", function() { return sequence; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "withId", function() { return withId; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "SchemaOptions", function() { return SchemaOptions; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "AppOptions", function() { return AppOptions; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "GlobalOptions", function() { return GlobalOptions; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "LogLevel", function() { return LogLevel; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "ReduxApp", function() { return reduxApp_ReduxApp; });
+
+
+
+
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports) {
+
+module.exports = require("lodash.snakecase");
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports) {
+
+module.exports = require("redux");
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports) {
+
+module.exports = require("reflect-metadata");
 
 /***/ })
 /******/ ]);
