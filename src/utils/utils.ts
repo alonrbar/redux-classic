@@ -39,11 +39,9 @@ export function getConstructorProp(obj: object, key: symbol | string): any {
 }
 
 export function pathString(path: string[]): string {
-    if (path.length) {
-        return `${path.join('.')}`;
-    } else {
-        return 'root';
-    }
+    const str = `${path.slice(1).join('.')}`;
+    const dot = (path.length > 1 ? '.' : '');
+    return 'root' + dot + str;
 }
 
 export function toPlainObject(obj: any): any {
