@@ -172,8 +172,9 @@ export class GlobalOptions {
      * choice does not causes these issues, or you just don't care about time
      * travel debugging, and you don't want to pay to performance cost you can
      * set this option to false.
+     * Default value: true.
      */
-    public convertToPlainObject? = true;
+    convertToPlainObject?: boolean;
     /**
      * Global defaults.
      * Options supplied explicitly via the decorator will override options specified here.

@@ -1,5 +1,15 @@
 # Change Log
 
+## [1.7.2 - 2017-11-?](https://github.com/alonrbar/redux-app/tree/v1.7.2)
+
+### Added
+
+- Document the convertToPlainObject global option.
+
+### Changed
+
+- Use wepback's ModuleConcatenationPlugin to reduce library footprint and increase loading efficiency.
+
 ## [1.7.1 - 2017-11-5](https://github.com/alonrbar/redux-app/tree/v1.7.1)
 
 ### Fix
