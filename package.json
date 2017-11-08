@@ -23,6 +23,10 @@
   },
   "main": "dist/redux-app.js",
   "typings": "dist/index.d.ts",
+  "files": [
+    "dist", 
+    "src"
+  ],
   "scripts": {
     "release": "webpack && webpack --config webpack.config.dev.js",
     "dev": "webpack --config webpack.config.dev.js --watch",
