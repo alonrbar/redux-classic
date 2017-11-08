@@ -50,7 +50,7 @@ That's why we write `this.value = this.value + 1` and not `this.value++`.
 
 ## More Examples
 
-More examples can be found here [redux-app-examples](https://github.com/alonrbar/redux-app-examples).
+More examples, including usage with [Angular](https://angular.io) or [Aurelia](http://aurelia.io), can be found here [redux-app-examples](https://github.com/alonrbar/redux-app-examples).
 
 ## How it works
 
