@@ -22,6 +22,7 @@ module.exports = {
         modules: [path.resolve("./src"), "node_modules"]
     },
     plugins: [
+        new webpack.optimize.ModuleConcatenationPlugin(),
         new webpack.optimize.UglifyJsPlugin()
     ]
 };

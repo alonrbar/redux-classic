@@ -23,6 +23,7 @@ module.exports = {
         modules: [path.resolve("."), path.resolve("./src"), path.resolve("./test"), "node_modules"]
     },
     plugins: [
-        new webpack.LoaderOptionsPlugin({ debug: true })
+        new webpack.LoaderOptionsPlugin({ debug: true }),
+        new webpack.optimize.ModuleConcatenationPlugin()        
     ]
 };
