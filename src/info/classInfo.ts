@@ -2,7 +2,7 @@ import { CLASS_INFO, getSymbol, setSymbol } from '../symbols';
 import { Getter, IMap } from '../types';
 
 /**
- * Metadata stored on instances of regular classes for various redux-app needs.
+ * Metadata stored on instances of regular and/or component classes.
  */
 export class ClassInfo {
 
