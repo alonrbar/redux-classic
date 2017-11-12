@@ -17,7 +17,12 @@ export class SchemaOptions {
      * 'INCREMENT_COUNTER'.
      * Default value: true.
      */
-    public uppercaseActions? = true;    
+    public uppercaseActions? = true;
+    /**
+     * Inherit methods from base component classes.
+     * Default value: true.
+     */
+    public inheritMethods?= true;
 }
 
 export function getActionName(creator: object, methodName: string, options: SchemaOptions): string {
