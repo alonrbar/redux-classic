@@ -1,5 +1,7 @@
 import { IMap, Method } from '../types';
 
+// tslint:disable:ban-types
+
 /**
  * Return true if 'val' is primitive. For the sake of this test 'null' and
  * 'undefined' are considered primitives.
@@ -36,6 +38,22 @@ export function getMethods(obj: object): IMap<Method> {
 
 export function getConstructorProp(obj: object, key: symbol | string): any {
     return obj && obj.constructor && (obj.constructor as any)[key];
+}
+
+export function getType(obj: object): Function {
+    return Object.getPrototypeOf(obj).constructor;
+}
+
+export function getParentType(obj: object | Function) {
+    var type: Function;
+    if (typeof obj === 'object') {
+        type = getType(obj);
+        
+    } else if (typeof obj === 'function') {
+        type = obj;
+    }
+
+    return Object.getPrototypeOf(type.prototype).constructor;
 }
 
 export function pathString(path: string[]): string {
