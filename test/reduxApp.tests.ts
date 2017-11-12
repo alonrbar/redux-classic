@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { component, ReduxApp, withId } from 'src';
+import { component, ReduxApp } from 'src';
 import { Component } from 'src/components';
 
 // tslint:disable:no-unused-expression
@@ -279,97 +279,78 @@ describe(nameof(ReduxApp), () => {
             app.dispose();
         });
 
-        it("updates arrays and contained components correctly", () => {
+        it("adds, removes and updates objects in an array", () => {
 
             @component
             class App {
-                public parents = [new ParentComponent()];
-            }
-
-            @component
-            class ParentComponent {
-                public arr: Component1[] = [];
+                public items: Item[] = [];
 
                 public push() {
-                    this.arr = this.arr.concat(new Component1());
+                    this.items = this.items.concat(new Item());
                 }
 
                 public pop() {
-                    this.arr = this.arr.slice(0, this.arr.length - 1);
+                    this.items = this.items.slice(0, this.items.length - 1);
                 }
 
-                public assign() {
-                    const newComp = new Component1();
-                    newComp.value = 5;
-                    this.arr = this.arr.map((val, index) => index === 0 ? newComp : val);
-                }
-
-                public updateOdds() {
-                    this.arr.forEach((item, index) => {
-                        if (index % 2 === 1) {
-                            item.increment();
-                            item.child.setMessage('hello_' + item.value);
+                public incrementIndex(index: number) {
+                    this.items = this.items.map((item, i) => {
+                        if (i === index) {
+                            const { value, ...otherProps} = item;
+                            return {
+                                value: value + 1,
+                                ...otherProps
+                            };
+                        } else {
+                            return item;
                         }
                     });
                 }
+
+                public updateFirstItem(newValue: number) {
+                    const newItem = new Item();
+                    newItem.value = newValue;
+                    this.items = this.items.map((item, index) => index === 0 ? newItem : item);
+                }
             }
 
-            @component
-            class Component1 {
+            class Item {
                 public value = 0;
-
-                @withId
-                public child = new Component2();
-
-                public increment() {
-                    this.value = this.value + 1;
-                }
-            }
-
-            @component
-            class Component2 {
-                public message = 'hello';
-                public setMessage(newMessage: string): void {
-                    this.message = newMessage;
-                }
             }
 
             const app = new ReduxApp(new App());
 
             // push
 
-            expect(app.root.parents[0].arr.length).to.eql(0);
+            expect(app.root.items.length).to.eql(0);
 
-            app.root.parents[0].push();
-            app.root.parents[0].push();
+            app.root.push();
+            app.root.push();
+            app.root.push();
+            app.root.push();
+            app.root.push();
 
-            expect(app.root.parents[0].arr.length).to.eql(2);
+            expect(app.root.items.length).to.eql(5);
 
-            // dispatch
+            // update
 
-            expect(app.root.parents[0].arr[0].child.message).to.eql('hello');
-            expect(app.root.parents[0].arr[1].child.message).to.eql('hello');
-
-            app.root.parents[0].updateOdds();
-
-            expect(app.root.parents[0].arr[0].child.message).to.eql('hello');
-            expect(app.root.parents[0].arr[1].child.message).to.eql('hello_1');
+            app.root.incrementIndex(3);
+            expect(app.root.items[4].value).to.eql(0);
+            expect(app.root.items[3].value).to.eql(1);
+            expect(app.root.items[2].value).to.eql(0);
 
             // pop
 
-            app.root.parents[0].pop();
+            app.root.pop();
+            expect(app.root.items.length).to.eql(4);
+            expect(app.root.items[3].value).to.eql(1);
+            expect(app.root.items[2].value).to.eql(0);
 
-            expect(app.root.parents[0].arr.length).to.eql(1);
-            expect(app.root.parents[0].arr[0].child.message).to.eql('hello');
+            // update
 
-            // assign
-
-            app.root.parents[0].push();
-            app.root.parents[0].assign();
-
-            expect(app.root.parents[0].arr.length).to.eql(2);
-            expect(app.root.parents[0].arr[0].value).to.eql(5);
-            expect(app.root.parents[0].arr[1].value).to.eql(0);
+            expect(app.root.items[0].value).to.eql(0);
+            app.root.updateFirstItem(5);
+            expect(app.root.items[0].value).to.eql(5);
         });
     });
 });

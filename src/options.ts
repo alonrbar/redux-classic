@@ -85,15 +85,43 @@ export class GlobalOptions {
      */
     public emitClassNames = false;
     /**
-     * Some frameworks and libraries (Aurelia for instance) make their
-     * adjustments to objects that are part of the view (adding properties that
-     * would help it observe for changes). This causes issues with time-travel
-     * debugging. To eliminate these issues we convert the state objects to
-     * plain JS objects just before updating the application's component tree.
-     * This may come with a performance cost. Therefor if your framework of
-     * choice does not causes these issues, or you just don't care about time
-     * travel debugging, and you don't want to pay to performance cost you can
-     * set this option to false.
+     * From the original redux FAQ: 
+     * ----------------------------
+     * 
+     * Q: Can I put functions, promises, or other non-serializable items in my
+     * store state? 
+     * 
+     * A: It is highly recommended that you only put plain serializable objects,
+     * arrays, and primitives into your store. It's technically possible to
+     * insert non-serializable items into the store, but doing so can break the
+     * ability to persist and rehydrate the contents of a store, as well as
+     * interfere with time-travel debugging.
+     *
+     * If you are okay with things like persistence and time-travel debugging
+     * potentially not working as intended, then you are totally welcome to put
+     * non-serializable items into your Redux store. Ultimately, it's your
+     * application, and how you implement it is up to you. As with many other
+     * things about Redux, just be sure you understand what tradeoffs are
+     * involved. 
+     * 
+     * The case in redux-app:
+     * ----------------------
+     * 
+     * By default redux-app aligns with redux recommendations and treats
+     * everything stored in the store state as a plain object to prevent the
+     * previously described issues. This approach may come with some performance
+     * cost. Therefor if you don't care about time travel debugging or
+     * rehydration of the store content etc. and you don't want to pay the
+     * performance cost you can set this option to false. 
+     * 
+     * Do note however that redux-app enables you to have class instances
+     * initially set as part of your application tree. This means that every
+     * instance that was part of your initial redux-app application tree will
+     * stay a class instance and will keep it's methods even after the state is
+     * changed. This way you can enjoy the good in both worlds - having time
+     * travel debugging and other advanced redux features working while still
+     * invoking methods from your application tree.
+     * 
      * Default value: true.
      */
     public convertToPlainObject? = true;    

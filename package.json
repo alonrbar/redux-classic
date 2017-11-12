@@ -24,7 +24,7 @@
   "main": "dist/redux-app.js",
   "typings": "dist/index.d.ts",
   "files": [
-    "dist", 
+    "dist",
     "src"
   ],
   "scripts": {
