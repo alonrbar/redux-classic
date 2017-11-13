@@ -48,6 +48,11 @@ export function getConstructorProp(obj: object, key: symbol | string): any {
     return obj && obj.constructor && (obj.constructor as any)[key];
 }
 
+/**
+ * If 'obj' is a function it's assumed to be a constructor function and returned as-is.
+ * If 'obj' is an object it's type is returned.
+ * Otherwise the function throws.
+ */
 export function getType(obj: object | Function): Function {
     if (!obj)
         return undefined;
