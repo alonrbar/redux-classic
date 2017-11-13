@@ -1,7 +1,52 @@
 import { expect } from 'chai';
-import { getParentType, getType } from 'src/utils';
+import { getMethods, getParentType, getType } from 'src/utils';
 
 describe('utils', () => {
+
+    describe(nameof(getMethods), () => {
+
+        it("returns the methods of an object", () => {
+
+            class MyClass {
+                public foo() {
+                    // noop
+                }
+
+                public bar() {
+                    // noop
+                }
+            }
+
+            const obj = new MyClass();
+            const methods = getMethods(obj);
+
+            expect(Object.keys(methods).length).to.eql(2);
+
+            expect(methods).to.haveOwnProperty('foo');
+            expect(methods).to.haveOwnProperty('bar');
+        });
+
+        it("returns the methods of a constructor function", () => {
+
+            class MyClass {
+                public foo() {
+                    // noop
+                }
+
+                public bar() {
+                    // noop
+                }
+            }
+
+            const methods = getMethods(MyClass);
+
+            expect(Object.keys(methods).length).to.eql(2);
+
+            expect(methods).to.haveOwnProperty('foo');
+            expect(methods).to.haveOwnProperty('bar');
+        });
+
+    });
 
     describe(nameof(getType), () => {
 

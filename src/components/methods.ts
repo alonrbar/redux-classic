@@ -1,29 +1,27 @@
 import { IMap, Method } from '../types';
-import { getMethods } from '../utils';
+import { getMethods, getParentType } from '../utils';
 import { CreatorInfo } from '../info';
 
-export function getComponentMethods(obj: object, inherit = true): IMap<Method> {
+// tslint:disable:ban-types
 
-    // skip non-components
-    
+export function getCreatorMethods(obj: object | Function, inherit = true): IMap<Method> {
+
+    // ignore non-components
     if (!CreatorInfo.getInfo(obj))
-        return {};
+        return undefined;
 
-    // without inheritance
+    // get methods
+    var methods = getMethods(obj);
+    if (inherit) {
 
-    if (!inherit)
-        return getMethods(obj);
-
-    // with inheritance
-
-    var finalMethods = {};
-    var objMethods = getMethods(obj);
-    while (obj) {
-
-        finalMethods = Object.assign({}, objMethods, finalMethods);
-        obj = Object.getPrototypeOf(obj);
-        objMethods = getComponentMethods(obj);
+        // with inheritance
+        var parentType = getParentType(obj);
+        while (parentType !== Object) {
+            var parentMethods = getCreatorMethods(parentType, false);
+            methods = Object.assign({}, parentMethods, methods);
+            parentType = getParentType(parentType);
+        }
     }
 
-    return finalMethods;
+    return methods;
 }

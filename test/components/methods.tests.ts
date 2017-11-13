@@ -1,9 +1,9 @@
 import { expect } from 'chai';
 import { component } from 'src';
-import { getComponentMethods } from 'src/components';
+import { getCreatorMethods } from 'src/components';
 
 describe('component methods', () => {
-    describe(nameof(getComponentMethods), () => {
+    describe(nameof(getCreatorMethods), () => {
 
         it("returns own methods of a component", () => {
 
@@ -19,7 +19,7 @@ describe('component methods', () => {
             }
 
             const myComponent = new MyComponent();
-            const methods = getComponentMethods(myComponent);
+            const methods = getCreatorMethods(myComponent);
 
             expect(methods).to.haveOwnProperty('foo');
             expect(methods).to.haveOwnProperty('bar');
@@ -42,36 +42,7 @@ describe('component methods', () => {
             }
 
             const myComponent = new DerivedComponent();
-            const methods = getComponentMethods(myComponent);
-
-            expect(methods).to.haveOwnProperty('foo');
-            expect(methods).to.haveOwnProperty('bar');
-        });
-
-        it("returns own and inherited methods of a component, with an intermediate regular class", () => {
-
-            @component
-            class BaseComponent {
-                public bar() {
-                    // noop
-                }
-            }
-
-            class IntermediateClass extends BaseComponent {
-                public goo() {
-                    // noop
-                }
-            }
-
-            @component
-            class DerivedComponent extends IntermediateClass {
-                public foo() {
-                    // noop
-                }
-            }
-
-            const myComponent = new DerivedComponent();
-            const methods = getComponentMethods(myComponent);
+            const methods = getCreatorMethods(myComponent);
 
             expect(methods).to.haveOwnProperty('foo');
             expect(methods).to.haveOwnProperty('bar');
@@ -94,40 +65,32 @@ describe('component methods', () => {
             }
 
             const myComponent = new DerivedComponent();
-            const methods = getComponentMethods(myComponent, false);
+            const methods = getCreatorMethods(myComponent, false);
 
             expect(methods).to.haveOwnProperty('foo');
             expect(methods).to.not.haveOwnProperty('bar');
         });
 
-        it("does not return methods of non-component base class", () => {
+        it("does not return methods of non-component base class, even if 'inheritance' is set to true", () => {
 
-            @component
             class BaseComponent {
                 public bar() {
                     // noop
                 }
             }
 
-            class IntermediateClass extends BaseComponent {
-                public goo() {
-                    // noop
-                }
-            }
-
             @component
-            class DerivedComponent extends IntermediateClass {
+            class DerivedComponent extends BaseComponent {
                 public foo() {
                     // noop
                 }
             }
 
             const myComponent = new DerivedComponent();
-            const methods = getComponentMethods(myComponent);
+            const methods = getCreatorMethods(myComponent, true);
 
             expect(methods).to.haveOwnProperty('foo');
-            expect(methods).to.haveOwnProperty('bar');
-            expect(methods).to.not.haveOwnProperty('goo');
+            expect(methods).to.not.haveOwnProperty('bar');
         });
     });
 });

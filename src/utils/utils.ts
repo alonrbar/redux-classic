@@ -14,11 +14,19 @@ export function isPrimitive(val: any): boolean {
     return type !== 'object' && type !== 'function';
 }
 
-export function getMethods(obj: object): IMap<Method> {
+export function getMethods(obj: object | Function): IMap<Method> {
     if (!obj)
         return undefined;
 
-    var proto = Object.getPrototypeOf(obj);
+    var proto: any;
+    if (typeof obj === 'object') {
+        proto = Object.getPrototypeOf(obj);
+    } else if (typeof obj === 'function') {
+        proto = obj.prototype;
+    } else {
+        throw new Error("Expected an object or a function. Got: " + obj);
+    }
+
     if (!proto)
         return undefined;
 
@@ -41,16 +49,21 @@ export function getConstructorProp(obj: object, key: symbol | string): any {
 }
 
 export function getType(obj: object): Function {
+    if (!obj)
+        return undefined;
+
     return Object.getPrototypeOf(obj).constructor;
 }
 
 export function getParentType(obj: object | Function) {
+
     var type: Function;
     if (typeof obj === 'object') {
         type = getType(obj);
-        
     } else if (typeof obj === 'function') {
         type = obj;
+    } else {
+        throw new Error("Expected an object or a function. Got: " + obj);
     }
 
     return Object.getPrototypeOf(type.prototype).constructor;
