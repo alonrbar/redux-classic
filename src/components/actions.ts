@@ -1,8 +1,7 @@
 import { Action } from 'redux';
-import { ComponentInfo, CreatorInfo } from '../info';
+import { ComponentInfo, CreatorInfo, getCreatorMethods } from '../info';
 import { getActionName } from '../options';
 import { IMap, Method } from '../types';
-import { getMethods } from '../utils';
 import { Component } from './component';
 
 // tslint:disable-next-line:interface-name
@@ -14,7 +13,7 @@ export interface ReduxAppAction extends Action {
 export class ComponentActions {
 
     public static createActions(creator: object): IMap<Method> {
-        const methods = getMethods(creator);
+        const methods = getCreatorMethods(creator);
         if (!methods)
             return undefined;
 

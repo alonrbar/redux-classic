@@ -1,8 +1,8 @@
 import { Reducer, ReducersMapObject } from 'redux';
 import { Computed, Connect } from '../decorators';
-import { ComponentInfo, CreatorInfo } from '../info';
+import { ComponentInfo, CreatorInfo, getCreatorMethods } from '../info';
 import { getActionName } from '../options';
-import { getMethods, isPrimitive, log, simpleCombineReducers } from '../utils';
+import { isPrimitive, log, simpleCombineReducers } from '../utils';
 import { ReduxAppAction } from './actions';
 import { Component } from './component';
 
@@ -21,7 +21,7 @@ export class ComponentReducer {
     public static createReducer(component: Component, creator: object): Reducer<object> {
 
         // method names lookup
-        const methods = getMethods(creator);
+        const methods = getCreatorMethods(creator);
         const options = CreatorInfo.getInfo(creator).options;
         const methodNames: any = {};
         Object.keys(methods).forEach(methName => {

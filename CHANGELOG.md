@@ -1,5 +1,17 @@
 # Change Log
 
+## Unreleased
+
+## Added
+
+- Enable component inheritance.
+- New component level option: inheritMethods.
+
+## Changed
+
+- Npm package only contains the source and dist files.
+- Update convertToPlainObject docs.
+
 ## [1.7.2 - 2017-11-2](https://github.com/alonrbar/redux-app/tree/v1.7.2)
 
 ### Added

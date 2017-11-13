@@ -134,6 +134,11 @@ export class SchemaOptions {
      * Default value: true.
      */
     uppercaseActions?: boolean;
+    /**
+     * Inherit methods from base component classes.
+     * Default value: true.
+     */
+    inheritMethods?: boolean;
 }
 
 export class AppOptions {
