@@ -48,24 +48,27 @@ export function getConstructorProp(obj: object, key: symbol | string): any {
     return obj && obj.constructor && (obj.constructor as any)[key];
 }
 
-export function getType(obj: object): Function {
+export function getType(obj: object | Function): Function {
     if (!obj)
         return undefined;
 
-    return Object.getPrototypeOf(obj).constructor;
+    // constructor function
+    if (typeof obj === 'function')
+        return obj;
+
+    // object
+    if (typeof obj === 'object')
+        return Object.getPrototypeOf(obj).constructor;
+
+    throw new Error("Expected an object or a function. Got: " + obj);
 }
 
 export function getParentType(obj: object | Function) {
 
-    var type: Function;
-    if (typeof obj === 'object') {
-        type = getType(obj);
-    } else if (typeof obj === 'function') {
-        type = obj;
-    } else {
-        throw new Error("Expected an object or a function. Got: " + obj);
-    }
+    // get own type
+    var type = getType(obj);
 
+    // get parent type
     return Object.getPrototypeOf(type.prototype).constructor;
 }
 
