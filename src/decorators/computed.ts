@@ -1,5 +1,5 @@
 import { ClassInfo } from '../info';
-import { dataDescriptor, deferredDefineProperty, log } from '../utils';
+import { dataDescriptor, deferredDefineProperty, log, transformDeep, TransformOptions } from '../utils';
 
 /**
  * Property decorator.
@@ -26,6 +26,8 @@ export class Computed {
 
     public static readonly placeholder = '<computed>';
 
+    private static readonly transformOptions: TransformOptions;
+
     public static isComputedProperty(propHolder: object, propKey: string | symbol): boolean {
         const info = ClassInfo.getInfo(propHolder);
         return info && (typeof info.computedGetters[propKey] === 'function');
@@ -47,31 +49,39 @@ export class Computed {
         return newState;
     }
 
+    public static computeProps(root: any): void {
+        if (!Computed.transformOptions) {
+            // ...
+        }
+
+        transformDeep(root, root, Computed.computeTargetProps, Computed.transformOptions);
+    }
+
     /**
      * Replace each computed property of 'obj' with it's current computed value.
      */
-    public static computeProps(obj: any): any {
+    private static computeTargetProps(target: any, source: any): any {
 
         // obj may be a component or any other object
-        const info = ClassInfo.getInfo(obj);
+        const info = ClassInfo.getInfo(target);
         if (!info)
-            return obj;
+            return target;
 
         for (let propKey of Object.keys(info.computedGetters)) {
 
             // get old value
             var getter = info.computedGetters[propKey];
             log.verbose(`[computeProps] computing new value of '${propKey}'`);
-            var newValue = getter.call(obj);
+            var newValue = getter.call(target);
 
             // update if necessary
-            var oldValue = obj[propKey];
+            var oldValue = target[propKey];
             if (newValue !== oldValue) {
                 log.verbose(`[computeProps] updating the state of '${propKey}'. New value: '${newValue}', Old value: '${oldValue}'.`);
-                obj[propKey] = newValue;
+                target[propKey] = newValue;
             }
         }
 
-        return obj;
+        return target;
     }
 }

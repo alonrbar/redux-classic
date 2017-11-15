@@ -4,7 +4,7 @@ import { ComponentId, Computed, Connect } from './decorators';
 import { ComponentInfo } from './info';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
 import { IMap } from './types';
-import { isPrimitive, log, pathString, toPlainObject, transformDeep } from './utils';
+import { isPrimitive, log, pathString, toPlainObject } from './utils';
 
 // tslint:disable:ban-types
 
@@ -217,7 +217,7 @@ export class ReduxApp<T extends object> {
         this.updateStateRecursion(this.root, newState, [this.name], visited, changedComponents);
 
         // assign computed properties
-        transformDeep(this.root, this.root, (target, source) => Computed.computeProps(target));
+        Computed.computeProps(this.root);
 
         const end = Date.now();
 

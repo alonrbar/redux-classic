@@ -14,7 +14,7 @@
 
 ## Fix
 
-- Fix computed properties that are based on connected values.
+- Fix `computed` properties that are based on `connect`ed values.
 
 ## [1.7.2 - 2017-11-2](https://github.com/alonrbar/redux-app/tree/v1.7.2)
 
