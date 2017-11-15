@@ -4,13 +4,13 @@
 
 ## Added
 
-- Enable component inheritance.
-- New component level option: inheritMethods.
+- Component inheritance (controlled via a the new component level option: `inheritMethods`).
+- Return value from `noDispatch` methods.
 
 ## Changed
 
 - Npm package only contains the source and dist files.
-- Update convertToPlainObject docs.
+- Update docs.
 
 ## [1.7.2 - 2017-11-2](https://github.com/alonrbar/redux-app/tree/v1.7.2)
 
@@ -34,8 +34,8 @@
 ### Added
 
 - Connection of components inside the app tree is now stable.
-- The 'computed' decorator is now stable.
-- Can use the 'computed' decorator on non-components (although must still be used inside the app tree).
+- The `computed` decorator is now stable.
+- Can use the `computed` decorator on non-components (although must still be used inside the app tree).
 
 ### Changed
 
@@ -57,7 +57,7 @@
 
 ### Changed
 
-- Marked the 'computed' decorator as experimental (requires further testing and validation).
+- Marked the `computed` decorator as experimental (requires further testing and validation).
 - Set default log level to LogLevel.Warn.
 - Remove some verbose log messages.
 
@@ -86,7 +86,7 @@
 ### Changed
 
 - When updating state do not remove component properties that exists on the state but are undefined.
-- The 'updateState' option is now an app level option instead of a component level option.
+- The `updateState` option is now an app level option instead of a component level option.
 - Throw if component method is invoked with non-component as 'this'.
 - Verbose logs are emitted using console.debug instead of console.log.
 

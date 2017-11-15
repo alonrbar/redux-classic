@@ -30,7 +30,7 @@ export class ComponentActions {
                 if (creatorInfo.noDispatch[key]) {
 
                     // handle non-dispatch methods (just call the function)
-                    oldMethod.call(this, ...payload);
+                    return oldMethod.call(this, ...payload);
                 } else {
 
                     // handle dispatch methods (use store dispatch)
