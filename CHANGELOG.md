@@ -12,6 +12,10 @@
 - Npm package only contains the source and dist files.
 - Update docs.
 
+## Fix
+
+- Fix computed properties that are based on connected values.
+
 ## [1.7.2 - 2017-11-2](https://github.com/alonrbar/redux-app/tree/v1.7.2)
 
 ### Added

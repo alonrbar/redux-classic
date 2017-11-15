@@ -4,7 +4,7 @@ import { ComponentId, Computed, Connect } from './decorators';
 import { ComponentInfo } from './info';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
 import { IMap } from './types';
-import { isPrimitive, log, pathString, toPlainObject } from './utils';
+import { isPrimitive, log, pathString, toPlainObject, transformDeep } from './utils';
 
 // tslint:disable:ban-types
 
@@ -211,9 +211,13 @@ export class ReduxApp<T extends object> {
             newState = toPlainObject(newState);
         log.verbose('[updateState] Store before: ', newState);
 
+        // update state
         const visited = new Set();
         const changedComponents = new Set();
         this.updateStateRecursion(this.root, newState, [this.name], visited, changedComponents);
+
+        // assign computed properties
+        transformDeep(this.root, this.root, (target, source) => Computed.computeProps(target));
 
         const end = Date.now();
 
@@ -256,7 +260,7 @@ export class ReduxApp<T extends object> {
         } else {
 
             // overwrite, since those are different types (and the newState is not a plain object)
-            return newState;
+            obj = newState;
         }
 
         // handle changes
@@ -297,6 +301,11 @@ export class ReduxApp<T extends object> {
             if (Connect.isConnectedProperty(obj, key))
                 return;
 
+            // because computed props may be dependant on connected props their
+            // calculation is postponed to after the entire app tree is up-to-date
+            if (Computed.isComputedProperty(obj, key))
+                return;
+
             var subState = newState[key];
             var subObj = obj[key];
 
@@ -309,9 +318,6 @@ export class ReduxApp<T extends object> {
                 propsAssigned.push(key);
             }
         });
-
-        // calculate and assign computed props
-        Computed.computeProps(obj);
 
         // report changes
         if (propsAssigned.length || propsDeleted.length) {

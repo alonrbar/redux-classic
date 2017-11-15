@@ -5,9 +5,9 @@ export class Connect {
 
     public static readonly placeholderPrefix = '<connected';
 
-    public static isConnectedProperty(propHolder: Component | object, propKey: string | symbol): boolean {
-        const compInfo = ClassInfo.getInfo(propHolder);
-        return compInfo && compInfo.connectedProps[propKey];
+    public static isConnectedProperty(propHolder: object, propKey: string | symbol): boolean {
+        const info = ClassInfo.getInfo(propHolder);
+        return info && info.connectedProps[propKey];
     }
 
     public static setupConnectedProps(target: Component, targetInfo: ClassInfo, source: object, sourceInfo: ClassInfo): void {

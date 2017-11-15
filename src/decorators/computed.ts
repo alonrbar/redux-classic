@@ -26,6 +26,11 @@ export class Computed {
 
     public static readonly placeholder = '<computed>';
 
+    public static isComputedProperty(propHolder: object, propKey: string | symbol): boolean {
+        const info = ClassInfo.getInfo(propHolder);
+        return info && (typeof info.computedGetters[propKey] === 'function');
+    }
+
     /**
      * Returns a shallow clone of 'state' with it's computed props replaced with
      * Computed.placeholder.
@@ -45,12 +50,12 @@ export class Computed {
     /**
      * Replace each computed property of 'obj' with it's current computed value.
      */
-    public static computeProps(obj: any): void {
+    public static computeProps(obj: any): any {
 
         // obj may be a component or any other object
         const info = ClassInfo.getInfo(obj);
         if (!info)
-            return;
+            return obj;
 
         for (let propKey of Object.keys(info.computedGetters)) {
 
@@ -66,5 +71,7 @@ export class Computed {
                 obj[propKey] = newValue;
             }
         }
+
+        return obj;
     }
 }

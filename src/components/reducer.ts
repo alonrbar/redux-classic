@@ -2,11 +2,9 @@ import { Reducer, ReducersMapObject } from 'redux';
 import { Computed, Connect } from '../decorators';
 import { ComponentInfo, CreatorInfo, getCreatorMethods } from '../info';
 import { getActionName } from '../options';
-import { isPrimitive, log, simpleCombineReducers } from '../utils';
+import { isPrimitive, log, simpleCombineReducers, transformDeep } from '../utils';
 import { ReduxAppAction } from './actions';
 import { Component } from './component';
-
-type StateTransformer = (state: any, obj: any) => any;
 
 // tslint:disable:member-ordering
 
@@ -147,46 +145,13 @@ export class ComponentReducer {
     }    
 
     private static finalizeState(rootState: any, root: any): any {
-        return ComponentReducer.transformDeep(rootState, root, (subState, subObj) => {
+        return transformDeep(rootState, root, (subState, subObj) => {
 
             // replace computed and connected props with placeholders
             var newSubState = Computed.removeComputedProps(subState, subObj);
             newSubState = Connect.removeConnectedProps(newSubState, subObj);
 
             return newSubState;
-        }, new Set());
-    }
-
-    private static transformDeep(target: any, source: any, callback: StateTransformer, visited: Set<any>): any {
-
-        // not traversing primitives
-        if (isPrimitive(target) || isPrimitive(source))
-            return target;
-
-        // prevent endless loops on circular references
-        if (visited.has(source))
-            return source;
-        visited.add(source);
-
-        // transform children
-        Object.keys(target).forEach(key => {
-
-            // state of connected components is update on their source
-            if (Connect.isConnectedProperty(source, key))
-                return;
-
-            // transform child
-            var subState = target[key];
-            var subObj = source[key];
-            var newSubState = ComponentReducer.transformDeep(subState, subObj, callback, visited);
-
-            // assign only if changed
-            if (newSubState !== subState) {
-                target[key] = newSubState;
-            }
         });
-
-        // invoke on self
-        return callback(target, source);
-    }
+    }    
 }
