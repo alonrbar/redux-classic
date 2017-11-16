@@ -94,6 +94,9 @@ function setSymbol(obj, symbol, value) {
 function getSymbol(obj, symbol) {
     return obj[symbol];
 }
+function getOwnSymbol(obj, symbol) {
+    return Object.getOwnPropertySymbols(obj).includes(symbol) && getSymbol(obj, symbol);
+}
 var COMPONENT_INFO = Symbol('REDUX-APP.COMPONENT_INFO');
 var CREATOR_INFO = Symbol('REDUX-APP.CREATOR_INFO');
 var CLASS_INFO = Symbol('REDUX-APP.CLASS_INFO');
@@ -288,7 +291,16 @@ function isPrimitive(val) {
 function getMethods(obj) {
     if (!obj)
         return undefined;
-    var proto = Object.getPrototypeOf(obj);
+    var proto;
+    if (typeof obj === 'object') {
+        proto = Object.getPrototypeOf(obj);
+    }
+    else if (typeof obj === 'function') {
+        proto = obj.prototype;
+    }
+    else {
+        throw new Error("Expected an object or a function. Got: " + obj);
+    }
     if (!proto)
         return undefined;
     var methods = {};
@@ -301,8 +313,30 @@ function getMethods(obj) {
     }
     return methods;
 }
-function getConstructorProp(obj, key) {
-    return obj && obj.constructor && obj.constructor[key];
+function getConstructorOwnProp(obj, key) {
+    if (!obj || !obj.constructor)
+        return undefined;
+    var ctor = obj.constructor;
+    if (typeof key === 'symbol' && Object.getOwnPropertySymbols(ctor).includes(key)) {
+        return ctor[key];
+    }
+    else if (typeof key === 'string' && Object.getOwnPropertyNames(ctor).includes(key)) {
+        return ctor[key];
+    }
+    return undefined;
+}
+function getType(obj) {
+    if (!obj)
+        return undefined;
+    if (typeof obj === 'function')
+        return obj;
+    if (typeof obj === 'object')
+        return Object.getPrototypeOf(obj).constructor;
+    throw new Error("Expected an object or a function. Got: " + obj);
+}
+function getParentType(obj) {
+    var type = getType(obj);
+    return Object.getPrototypeOf(type.prototype).constructor;
 }
 function pathString(path) {
     var str = "" + path.slice(1).join('.');
@@ -314,7 +348,37 @@ function toPlainObject(obj) {
     return JSON.parse(json);
 }
 
+// CONCATENATED MODULE: ./src/utils/transformDeep.ts
+
+var TransformOptions = (function () {
+    function TransformOptions() {
+    }
+    return TransformOptions;
+}());
+
+function transformDeep(target, source, callback, options, visited) {
+    if (options === void 0) { options = new TransformOptions(); }
+    if (visited === void 0) { visited = new Set(); }
+    if (isPrimitive(target) || isPrimitive(source))
+        return target;
+    if (visited.has(source))
+        return source;
+    visited.add(source);
+    Object.keys(target).forEach(function (key) {
+        if (options.propertyPreTransform && (options.propertyPreTransform(target, source, key) === false))
+            return;
+        var subTarget = target[key];
+        var subSource = source[key];
+        var newSubTarget = transformDeep(subTarget, subSource, callback, options, visited);
+        if (newSubTarget !== subTarget) {
+            target[key] = newSubTarget;
+        }
+    });
+    return callback(target, source);
+}
+
 // CONCATENATED MODULE: ./src/utils/index.ts
+
 
 
 
@@ -332,10 +396,10 @@ var creatorInfo_CreatorInfo = (function () {
         if (!obj)
             return undefined;
         if (typeof obj === 'object') {
-            return getConstructorProp(obj, CREATOR_INFO);
+            return getConstructorOwnProp(obj, CREATOR_INFO);
         }
         else {
-            return getSymbol(obj, CREATOR_INFO);
+            return getOwnSymbol(obj, CREATOR_INFO);
         }
     };
     CreatorInfo.getOrInitInfo = function (obj) {
@@ -343,7 +407,9 @@ var creatorInfo_CreatorInfo = (function () {
         if (!info) {
             var isConstructor = (typeof obj === 'function' ? true : false);
             var target = (isConstructor ? obj : obj.constructor);
-            info = setSymbol(target, CREATOR_INFO, new CreatorInfo());
+            var baseInfo = getSymbol(target, CREATOR_INFO);
+            var selfInfo = Object.assign(new CreatorInfo(), baseInfo);
+            info = setSymbol(target, CREATOR_INFO, selfInfo);
         }
         return info;
     };
@@ -351,7 +417,27 @@ var creatorInfo_CreatorInfo = (function () {
 }());
 
 
+// CONCATENATED MODULE: ./src/info/creatorMethods.ts
+
+
+function getCreatorMethods(obj, inherit) {
+    if (inherit === void 0) { inherit = true; }
+    if (!creatorInfo_CreatorInfo.getInfo(obj))
+        return undefined;
+    var methods = getMethods(obj);
+    if (inherit) {
+        var parentType = getParentType(obj);
+        while (parentType !== Object) {
+            var parentMethods = getCreatorMethods(parentType, false);
+            methods = Object.assign({}, parentMethods, methods);
+            parentType = getParentType(parentType);
+        }
+    }
+    return methods;
+}
+
 // CONCATENATED MODULE: ./src/info/index.ts
+
 
 
 
@@ -468,8 +554,9 @@ var reduxApp_ReduxApp = (function () {
             newState = toPlainObject(newState);
         log.verbose('[updateState] Store before: ', newState);
         var visited = new Set();
-        var changedComponents = new Set();
-        this.updateStateRecursion(this.root, newState, [this.name], visited, changedComponents);
+        var changedPaths = new Set();
+        this.updateStateRecursion(this.root, newState, [this.name], visited, changedPaths);
+        computed_Computed.computeProps(this.root);
         var end = Date.now();
         log.debug("[updateState] Component tree updated in " + (end - start) + "ms.");
         log.verbose('[updateState] Store after: ', newState);
@@ -494,7 +581,7 @@ var reduxApp_ReduxApp = (function () {
             }
         }
         else {
-            return newState;
+            obj = newState;
         }
         var pathStr = pathString(path);
         if (changeMessage && changeMessage.length) {
@@ -513,6 +600,8 @@ var reduxApp_ReduxApp = (function () {
         var propsDeleted = [];
         Object.keys(obj).forEach(function (key) {
             if (!newState.hasOwnProperty(key)) {
+                if (typeof obj[key] === 'function')
+                    log.warn("[updateState] Function property removed in path: " + pathString(path.concat(key)) + ". Consider using a method instead.");
                 delete obj[key];
                 propsDeleted.push(key);
             }
@@ -520,6 +609,8 @@ var reduxApp_ReduxApp = (function () {
         var propsAssigned = [];
         Object.keys(newState).forEach(function (key) {
             if (connect_Connect.isConnectedProperty(obj, key))
+                return;
+            if (computed_Computed.isComputedProperty(obj, key))
                 return;
             var subState = newState[key];
             var subObj = obj[key];
@@ -529,7 +620,6 @@ var reduxApp_ReduxApp = (function () {
                 propsAssigned.push(key);
             }
         });
-        computed_Computed.computeProps(obj);
         if (propsAssigned.length || propsDeleted.length) {
             var propsAssignedMessage = propsAssigned.length ? "Props assigned: " + propsAssigned.join(', ') + "." : '';
             var propsDeleteMessage = propsDeleted.length ? "Props deleted: " + propsDeleted.join(', ') + "." : '';
@@ -589,8 +679,8 @@ var connect_Connect = (function () {
     function Connect() {
     }
     Connect.isConnectedProperty = function (propHolder, propKey) {
-        var compInfo = classInfo_ClassInfo.getInfo(propHolder);
-        return compInfo && compInfo.connectedProps[propKey];
+        var info = classInfo_ClassInfo.getInfo(propHolder);
+        return info && info.connectedProps[propKey];
     };
     Connect.setupConnectedProps = function (target, targetInfo, source, sourceInfo) {
         if (!sourceInfo)
@@ -727,6 +817,7 @@ function componentDecorator(ctor, options) {
 // CONCATENATED MODULE: ./src/decorators/computed.ts
 
 
+
 function computed(target, propertyKey) {
     var descriptor = Object.getOwnPropertyDescriptor(target, propertyKey);
     if (typeof descriptor.get !== 'function')
@@ -740,6 +831,10 @@ function computed(target, propertyKey) {
 var computed_Computed = (function () {
     function Computed() {
     }
+    Computed.isComputedProperty = function (propHolder, propKey) {
+        var info = classInfo_ClassInfo.getInfo(propHolder);
+        return info && (typeof info.computedGetters[propKey] === 'function');
+    };
     Computed.removeComputedProps = function (state, obj) {
         var info = classInfo_ClassInfo.getInfo(obj);
         if (!info)
@@ -751,21 +846,30 @@ var computed_Computed = (function () {
         }
         return newState;
     };
-    Computed.computeProps = function (obj) {
-        var info = classInfo_ClassInfo.getInfo(obj);
+    Computed.computeProps = function (root) {
+        if (!Computed.transformOptions) {
+            var options = new TransformOptions();
+            options.propertyPreTransform = function (target, source, key) { return !connect_Connect.isConnectedProperty(target, key); };
+            Computed.transformOptions = options;
+        }
+        transformDeep(root, root, Computed.computeTargetProps, Computed.transformOptions);
+    };
+    Computed.computeTargetProps = function (target, source) {
+        var info = classInfo_ClassInfo.getInfo(target);
         if (!info)
-            return;
+            return target;
         for (var _i = 0, _a = Object.keys(info.computedGetters); _i < _a.length; _i++) {
             var propKey = _a[_i];
             var getter = info.computedGetters[propKey];
             log.verbose("[computeProps] computing new value of '" + propKey + "'");
-            var newValue = getter.call(obj);
-            var oldValue = obj[propKey];
+            var newValue = getter.call(target);
+            var oldValue = target[propKey];
             if (newValue !== oldValue) {
                 log.verbose("[computeProps] updating the state of '" + propKey + "'. New value: '" + newValue + "', Old value: '" + oldValue + "'.");
-                obj[propKey] = newValue;
+                target[propKey] = newValue;
             }
         }
+        return target;
     };
     Computed.placeholder = '<computed>';
     return Computed;
@@ -854,8 +958,10 @@ var reducer_ComponentReducer = (function () {
     function ComponentReducer() {
     }
     ComponentReducer.createReducer = function (component, creator) {
-        var methods = getMethods(creator);
+        var methods = getCreatorMethods(creator);
         var options = creatorInfo_CreatorInfo.getInfo(creator).options;
+        if (!options)
+            throw new Error("Inconsistent component '" + creator.constructor.name + "'. The 'component' class decorator is missing.");
         var methodNames = {};
         Object.keys(methods).forEach(function (methName) {
             var actionName = getActionName(creator, methName, options);
@@ -924,36 +1030,33 @@ var reducer_ComponentReducer = (function () {
             resultReducer = function (state, action) {
                 var thisState = rootReducer(state, action);
                 var subStates = combinedSubReducer(thisState, action);
-                var combinedState = __assign({}, thisState, subStates);
+                var combinedState = ComponentReducer.mergeState(thisState, subStates);
                 return combinedState;
             };
         }
         return resultReducer;
     };
+    ComponentReducer.mergeState = function (state, subStates) {
+        if (Array.isArray(state) && Array.isArray(subStates)) {
+            for (var i = 0; i < subStates.length; i++)
+                state[i] = subStates[i];
+            return state;
+        }
+        else {
+            return __assign({}, state, subStates);
+        }
+    };
     ComponentReducer.finalizeState = function (rootState, root) {
-        return ComponentReducer.transformDeep(rootState, root, function (subState, subObj) {
+        if (!ComponentReducer.transformOptions) {
+            var options = new TransformOptions();
+            options.propertyPreTransform = function (target, source, key) { return !connect_Connect.isConnectedProperty(target, key); };
+            ComponentReducer.transformOptions = options;
+        }
+        return transformDeep(rootState, root, function (subState, subObj) {
             var newSubState = computed_Computed.removeComputedProps(subState, subObj);
             newSubState = connect_Connect.removeConnectedProps(newSubState, subObj);
             return newSubState;
-        }, new Set());
-    };
-    ComponentReducer.transformDeep = function (target, source, callback, visited) {
-        if (isPrimitive(target) || isPrimitive(source))
-            return target;
-        if (visited.has(source))
-            return source;
-        visited.add(source);
-        Object.keys(target).forEach(function (key) {
-            if (connect_Connect.isConnectedProperty(source, key))
-                return;
-            var subState = target[key];
-            var subObj = source[key];
-            var newSubState = ComponentReducer.transformDeep(subState, subObj, callback, visited);
-            if (newSubState !== subState) {
-                target[key] = newSubState;
-            }
-        });
-        return callback(target, source);
+        }, ComponentReducer.transformOptions);
     };
     ComponentReducer.identityReducer = function (state) { return state; };
     return ComponentReducer;
@@ -1073,12 +1176,11 @@ var component_Component = (function () {
 
 
 
-
 var actions_ComponentActions = (function () {
     function ComponentActions() {
     }
     ComponentActions.createActions = function (creator) {
-        var methods = getMethods(creator);
+        var methods = getCreatorMethods(creator);
         if (!methods)
             return undefined;
         var creatorInfo = creatorInfo_CreatorInfo.getInfo(creator);
@@ -1093,7 +1195,7 @@ var actions_ComponentActions = (function () {
                     throw new Error("Component method invoked with non-Component as 'this'. Bound 'this' argument is: " + this);
                 var oldMethod = methods[key];
                 if (creatorInfo.noDispatch[key]) {
-                    oldMethod.call.apply(oldMethod, [this].concat(payload));
+                    return oldMethod.call.apply(oldMethod, [this].concat(payload));
                 }
                 else {
                     var compInfo = componentInfo_ComponentInfo.getInfo(this);
