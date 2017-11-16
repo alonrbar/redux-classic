@@ -1,6 +1,6 @@
 {
   "name": "redux-app",
-  "version": "1.7.2",
+  "version": "1.8.0",
   "description": "Type-safe, DRY and OO redux. Implemented with typescript. Integrates naturally with Angular, Aurelia and more.",
   "keywords": [
     "redux",

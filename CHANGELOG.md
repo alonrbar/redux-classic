@@ -7,6 +7,7 @@
 - Component inheritance.
 - Return value from `noDispatch` methods.
 - More informative errors and warnings.
+- Check out the new [real world example](https://github.com/alonrbar/redux-app-examples/tree/master/src/angular/gladiators) in the [examples project](https://github.com/alonrbar/redux-app-examples).
 
 ## Changed
 
