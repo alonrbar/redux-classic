@@ -2,7 +2,7 @@ import { Reducer, ReducersMapObject } from 'redux';
 import { Computed, Connect } from '../decorators';
 import { ComponentInfo, CreatorInfo, getCreatorMethods } from '../info';
 import { getActionName } from '../options';
-import { isPrimitive, log, simpleCombineReducers, transformDeep } from '../utils';
+import { isPrimitive, log, simpleCombineReducers, transformDeep, TransformOptions } from '../utils';
 import { ReduxAppAction } from './actions';
 import { Component } from './component';
 
@@ -11,6 +11,8 @@ import { Component } from './component';
 export class ComponentReducer {
 
     private static readonly identityReducer = (state: any) => state;
+
+    private static transformOptions: TransformOptions;
 
     //
     // public methods
@@ -142,9 +144,15 @@ export class ComponentReducer {
         }
 
         return resultReducer;
-    }    
+    }
 
     private static finalizeState(rootState: any, root: any): any {
+        if (!ComponentReducer.transformOptions) {
+            const options = new TransformOptions();
+            options.propertyPreTransform = (target, source, key) => !Connect.isConnectedProperty(target, key);
+            ComponentReducer.transformOptions = options;
+        }
+
         return transformDeep(rootState, root, (subState, subObj) => {
 
             // replace computed and connected props with placeholders
@@ -152,6 +160,6 @@ export class ComponentReducer {
             newSubState = Connect.removeConnectedProps(newSubState, subObj);
 
             return newSubState;
-        });
-    }    
+        }, ComponentReducer.transformOptions);
+    }
 }

@@ -213,8 +213,8 @@ export class ReduxApp<T extends object> {
 
         // update state
         const visited = new Set();
-        const changedComponents = new Set();
-        this.updateStateRecursion(this.root, newState, [this.name], visited, changedComponents);
+        const changedPaths = new Set();
+        this.updateStateRecursion(this.root, newState, [this.name], visited, changedPaths);
 
         // assign computed properties
         Computed.computeProps(this.root);
@@ -250,7 +250,7 @@ export class ReduxApp<T extends object> {
 
             // update if:
             // 1. same type
-            // 2. new state is a plain object (this is the reason we update recursively, to keep methods while updating props)
+            // 2. new state is a plain object (this is one of the main reasons we update recursively, to keep methods while updating props)
             var changeMessage: string;
             if (Array.isArray(obj) && Array.isArray(newState)) {
                 changeMessage = this.updateArray(obj, newState, path, visited, changedPaths);
