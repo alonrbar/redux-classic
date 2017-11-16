@@ -168,5 +168,40 @@ describe(nameof(Component), () => {
 
             expect(comp1.foo).to.equal(comp2.foo);
         });
+
+        it("derived component dispatches parent actions with derived namespace", () => {
+            
+            @component
+            class Base {
+                public bar() {
+                    // noop
+                }
+            }
+
+            @component
+            class Derived extends Base {
+                public foo() {
+                    // noop
+                }
+            }
+
+            // fake store
+            const store = new FakeStore();
+            var dispatchedAction: any;
+            (store.dispatch as any) = (action: any) => { dispatchedAction = action; };
+
+            // create component tree
+            const comp: any = Component.create(store, new Derived());
+
+            // has methods
+            expect(comp).to.have.property('foo');
+            expect(comp).to.have.property('bar');
+
+            // dispatch
+            comp.foo();
+            expect(dispatchedAction).to.not.be.undefined;
+            expect(dispatchedAction.type).be.a('string');
+            expect(dispatchedAction.type.toLowerCase()).to.include(nameof(Derived).toLowerCase());
+        });
     });
 });

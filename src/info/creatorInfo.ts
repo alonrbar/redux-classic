@@ -1,8 +1,8 @@
 import { Component } from '../components';
 import { SchemaOptions } from '../options';
-import { CREATOR_INFO, getSymbol, setSymbol } from '../symbols';
+import { CREATOR_INFO, getOwnSymbol, setSymbol } from '../symbols';
 import { IMap } from '../types';
-import { getConstructorProp } from '../utils';
+import { getConstructorOwnProp } from '../utils';
 
 // tslint:disable:ban-types
 
@@ -23,9 +23,9 @@ export class CreatorInfo {
             return undefined;
 
         if (typeof obj === 'object') {
-            return getConstructorProp(obj, CREATOR_INFO);
+            return getConstructorOwnProp(obj, CREATOR_INFO);
         } else {
-            return getSymbol(obj, CREATOR_INFO);
+            return getOwnSymbol(obj, CREATOR_INFO);
         }
     }
 

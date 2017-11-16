@@ -44,8 +44,18 @@ export function getMethods(obj: object | Function): IMap<Method> {
     return methods;
 }
 
-export function getConstructorProp(obj: object, key: symbol | string): any {
-    return obj && obj.constructor && (obj.constructor as any)[key];
+export function getConstructorOwnProp(obj: object, key: symbol | string): any {
+    if (!obj || !obj.constructor)
+        return undefined;
+
+    const ctor = (obj.constructor as any);
+    if (typeof key === 'symbol' && Object.getOwnPropertySymbols(ctor).includes(key)) {
+        return ctor[key];
+    } else if (typeof key === 'string' && Object.getOwnPropertyNames(ctor).includes(key)) {
+        return ctor[key];
+    }
+
+    return undefined;
 }
 
 /**

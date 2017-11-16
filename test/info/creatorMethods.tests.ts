@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { component } from 'src';
 import { getCreatorMethods } from 'src/info';
 
-describe('component methods', () => {
+describe('creator methods', () => {
     describe(nameof(getCreatorMethods), () => {
 
         it("returns own methods of a component", () => {
