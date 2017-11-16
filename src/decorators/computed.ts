@@ -1,5 +1,6 @@
 import { ClassInfo } from '../info';
 import { dataDescriptor, deferredDefineProperty, log, transformDeep, TransformOptions } from '../utils';
+import { Connect } from './connect';
 
 /**
  * Property decorator.
@@ -26,7 +27,7 @@ export class Computed {
 
     public static readonly placeholder = '<computed>';
 
-    private static readonly transformOptions: TransformOptions;
+    private static transformOptions: TransformOptions;
 
     public static isComputedProperty(propHolder: object, propKey: string | symbol): boolean {
         const info = ClassInfo.getInfo(propHolder);
@@ -51,7 +52,9 @@ export class Computed {
 
     public static computeProps(root: any): void {
         if (!Computed.transformOptions) {
-            // ...
+            const options = new TransformOptions();
+            options.propertyPreTransform = (target, source, key) => !Connect.isConnectedProperty(target, key);
+            Computed.transformOptions = options;
         }
 
         transformDeep(root, root, Computed.computeTargetProps, Computed.transformOptions);
