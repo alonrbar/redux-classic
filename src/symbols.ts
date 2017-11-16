@@ -20,7 +20,7 @@ export const COMPONENT_INFO = Symbol('REDUX-APP.COMPONENT_INFO');
  */
 export const CREATOR_INFO = Symbol('REDUX-APP.CREATOR_INFO');
 /**
- * Stored on other classes.
+ * Stored on any class constructor.
  */
 export const CLASS_INFO = Symbol('REDUX-APP.CLASS_INFO');
 export const AUTO_ID = Symbol('REDUX-APP.AUTO_ID');

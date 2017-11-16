@@ -1,6 +1,6 @@
 import { Component } from '../components';
 import { SchemaOptions } from '../options';
-import { CREATOR_INFO, getOwnSymbol, setSymbol } from '../symbols';
+import { CREATOR_INFO, getOwnSymbol, getSymbol, setSymbol } from '../symbols';
 import { IMap } from '../types';
 import { getConstructorOwnProp } from '../utils';
 
@@ -38,7 +38,9 @@ export class CreatorInfo {
         if (!info) {
             const isConstructor = (typeof obj === 'function' ? true : false);
             const target = (isConstructor ? obj : obj.constructor);
-            info = setSymbol(target, CREATOR_INFO, new CreatorInfo());
+            const baseInfo = getSymbol(target, CREATOR_INFO);
+            const selfInfo = Object.assign(new CreatorInfo(), baseInfo);
+            info = setSymbol(target, CREATOR_INFO, selfInfo);
         }
 
         return info;

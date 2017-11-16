@@ -18,11 +18,6 @@ export class SchemaOptions {
      * Default value: true.
      */
     public uppercaseActions? = true;
-    /**
-     * Inherit methods from base component classes.
-     * Default value: true.
-     */
-    public inheritMethods?= true;
 }
 
 export function getActionName(creator: object, methodName: string, options: SchemaOptions): string {
