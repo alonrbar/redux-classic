@@ -288,6 +288,8 @@ export class ReduxApp<T extends object> {
         var propsDeleted: string[] = [];
         Object.keys(obj).forEach(key => {
             if (!newState.hasOwnProperty(key)) {
+                if (typeof obj[key] === 'function')
+                    log.warn(`[updateState] Function property removed in path: ${pathString(path.concat(key))}. Consider using a method instead.`);
                 delete obj[key];
                 propsDeleted.push(key);
             }

@@ -62,15 +62,7 @@ export class ComponentReducer {
 
             // call the action-reducer with the new state as the 'this' argument
             var newState = Object.assign({}, state);
-            try {
-                actionReducer.call(newState, ...action.payload);
-            } catch (e) {
-                if (e instanceof TypeError) {
-                    log.error('[reducer] TypeError thrown while calling component method. ' +
-                        'Some errors may arise when not using the appropriate decorator (e.g. sequence, noDispatch...).');
-                }
-                throw e;
-            }
+            actionReducer.call(newState, ...action.payload);
 
             // return new state
             log.verbose('[reducer] Reducer invoked, returning new state');

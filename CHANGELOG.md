@@ -1,12 +1,12 @@
 # Change Log
 
-## Unreleased
+## [1.8.0 - 2017-11-16](https://github.com/alonrbar/redux-app/tree/v1.8.0)
 
 ## Added
 
 - Component inheritance.
 - Return value from `noDispatch` methods.
-- Error logs.
+- More informative errors and warnings.
 
 ## Changed
 
