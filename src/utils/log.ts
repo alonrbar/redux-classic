@@ -20,7 +20,13 @@ class Log {
         if (!this.shouldLog(LogLevel.Warn))
             return;
         console.warn('WARN [redux-app] ' + message, ...optionalParams);
-    }    
+    }
+
+    public error(message: string, ...optionalParams: any[]): void {
+        if (!this.shouldLog(LogLevel.Error))
+            return;
+        console.error('ERROR [redux-app] ' + message, ...optionalParams);
+    }
 
     private shouldLog(level: LogLevel): boolean {
         if (globalOptions.logLevel === LogLevel.None)

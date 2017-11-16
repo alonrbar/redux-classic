@@ -23,6 +23,9 @@ export class ComponentReducer {
         // method names lookup
         const methods = getCreatorMethods(creator);
         const options = CreatorInfo.getInfo(creator).options;
+        if (!options)
+            throw new Error(`Inconsistent component '${creator.constructor.name}'. The 'component' class decorator is missing.`);
+            
         const methodNames: any = {};
         Object.keys(methods).forEach(methName => {
             var actionName = getActionName(creator, methName, options);
@@ -59,7 +62,15 @@ export class ComponentReducer {
 
             // call the action-reducer with the new state as the 'this' argument
             var newState = Object.assign({}, state);
-            actionReducer.call(newState, ...action.payload);
+            try {
+                actionReducer.call(newState, ...action.payload);
+            } catch (e) {
+                if (e instanceof TypeError) {
+                    log.error('[reducer] TypeError thrown while calling component method. ' +
+                        'Some errors may arise when not using the appropriate decorator (e.g. sequence, noDispatch...).');
+                }
+                throw e;
+            }
 
             // return new state
             log.verbose('[reducer] Reducer invoked, returning new state');

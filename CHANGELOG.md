@@ -6,6 +6,7 @@
 
 - Component inheritance (controlled via a the new component level option: `inheritMethods`).
 - Return value from `noDispatch` methods.
+- Error logs.
 
 ## Changed
 
