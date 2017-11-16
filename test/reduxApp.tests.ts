@@ -102,6 +102,31 @@ describe(nameof(ReduxApp), () => {
 
             app.dispose();
         });
+
+        it("arrays of objects from the app creator are stored in the store state", () => {
+
+            class Some {
+
+            }
+
+            @component
+            class Root {
+                public arr: Some[];
+
+                constructor(arr?: Some[]) {
+                    this.arr = arr || [];
+                }
+            }
+
+            const app = new ReduxApp(new Root([new Some(), new Some(), new Some()]), undefined);
+
+            try {
+                const state = app.store.getState();
+                expect(Array.isArray(state.arr)).to.be.true;
+            } finally {
+                app.dispose();
+            }
+        });
     });
 
     describe('updateState', () => {
@@ -296,7 +321,7 @@ describe(nameof(ReduxApp), () => {
                 public incrementIndex(index: number) {
                     this.items = this.items.map((item, i) => {
                         if (i === index) {
-                            const { value, ...otherProps} = item;
+                            const { value, ...otherProps } = item;
                             return {
                                 value: value + 1,
                                 ...otherProps

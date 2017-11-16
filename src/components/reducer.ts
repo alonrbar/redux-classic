@@ -25,7 +25,7 @@ export class ComponentReducer {
         const options = CreatorInfo.getInfo(creator).options;
         if (!options)
             throw new Error(`Inconsistent component '${creator.constructor.name}'. The 'component' class decorator is missing.`);
-            
+
         const methodNames: any = {};
         Object.keys(methods).forEach(methName => {
             var actionName = getActionName(creator, methName, options);
@@ -145,16 +145,32 @@ export class ComponentReducer {
                 const subStates = combinedSubReducer(thisState, action);
 
                 // merge self and sub states
-                var combinedState = {
-                    ...thisState,
-                    ...subStates
-                };
+                const combinedState = ComponentReducer.mergeState(thisState, subStates);
 
                 return combinedState;
             };
         }
 
         return resultReducer;
+    }
+
+    private static mergeState(state: any, subStates: any): any {
+
+        if (Array.isArray(state) && Array.isArray(subStates)) {
+
+            // merge arrays
+            for (let i = 0; i < subStates.length; i++)
+                state[i] = subStates[i];
+            return state;
+
+        } else {
+
+            // merge objects
+            return {
+                ...state,
+                ...subStates
+            };
+        }
     }
 
     private static finalizeState(rootState: any, root: any): any {
