@@ -19,7 +19,7 @@
 - Fix `computed` properties that are based on `connect`ed values.
 - Fix reduction of arrays of objects when the array is initially undefined.
 
-## [1.7.2 - 2017-11-2](https://github.com/alonrbar/redux-app/tree/v1.7.2)
+## [1.7.2 - 2017-11-8](https://github.com/alonrbar/redux-app/tree/v1.7.2)
 
 ### Added
 
