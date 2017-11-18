@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.8.1 - 2017-11-18](https://github.com/alonrbar/redux-app/tree/v1.8.0)
+
+- package-lock.json
+
 ## [1.8.0 - 2017-11-16](https://github.com/alonrbar/redux-app/tree/v1.8.0)
 
 ## Added
