@@ -1,5 +1,5 @@
 import { Reducer, ReducersMapObject } from 'redux';
-import { Computed, Connect } from '../decorators';
+import { Computed, Connect, IgnoreState } from '../decorators';
 import { ComponentInfo, CreatorInfo, getCreatorMethods } from '../info';
 import { getActionName } from '../options';
 import { isPrimitive, log, simpleCombineReducers, transformDeep, TransformOptions } from '../utils';
@@ -177,6 +177,9 @@ export class ComponentReducer {
             // replace computed and connected props with placeholders
             var newSubState = Computed.removeComputedProps(subState, subObj);
             newSubState = Connect.removeConnectedProps(newSubState, subObj);
+
+            // removed props that should not be stored in the store
+            newSubState = IgnoreState.removeIgnoredProps(newSubState, subObj);
 
             return newSubState;
         }, ComponentReducer.transformOptions);

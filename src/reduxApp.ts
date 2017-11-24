@@ -1,6 +1,6 @@
 import { createStore, Store, StoreEnhancer } from 'redux';
 import { Component, ComponentReducer } from './components';
-import { ComponentId, Computed, Connect } from './decorators';
+import { ComponentId, Computed, Connect, IgnoreState } from './decorators';
 import { ComponentInfo } from './info';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
 import { IMap } from './types';
@@ -287,6 +287,10 @@ export class ReduxApp<T extends object> {
         // delete anything not in the new state
         var propsDeleted: string[] = [];
         Object.keys(obj).forEach(key => {
+
+            if (IgnoreState.isIgnoredProperty(obj, key))
+                return;
+
             if (!newState.hasOwnProperty(key)) {
                 if (typeof obj[key] === 'function')
                     log.warn(`[updateState] Function property removed in path: ${pathString(path.concat(key))}. Consider using a method instead.`);
@@ -306,6 +310,9 @@ export class ReduxApp<T extends object> {
             // because computed props may be dependant on connected props their
             // calculation is postponed to after the entire app tree is up-to-date
             if (Computed.isComputedProperty(obj, key))
+                return;
+
+            if (IgnoreState.isIgnoredProperty(obj, key))
                 return;
 
             var subState = newState[key];

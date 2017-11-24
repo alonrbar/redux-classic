@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.9.0 - 2017-11-24](https://github.com/alonrbar/redux-app/tree/v1.9.0)
+
+## Added
+
+- New decorator: `ignoreState`.
+
 ## [1.8.1 - 2017-11-18](https://github.com/alonrbar/redux-app/tree/v1.8.0)
 
 - package-lock.json
@@ -89,9 +95,9 @@
 
 ### Added
 
-- New decorator: computed.
-- New utility function: isInstanceOf.
-- New global option: emitClassNames.
+- New decorator: `computed`.
+- New utility function: `isInstanceOf`.
+- New global option: `emitClassNames`.
 - Handle pre-loaded state.
 
 ### Changed
@@ -99,7 +105,7 @@
 - When updating state do not remove component properties that exists on the state but are undefined.
 - The `updateState` option is now an app level option instead of a component level option.
 - Throw if component method is invoked with non-component as 'this'.
-- Verbose logs are emitted using console.debug instead of console.log.
+- Verbose logs are emitted using `console.debug` instead of `console.log`.
 
 ### Fixed
 
@@ -128,7 +134,7 @@
 
 ### Added
 
-- New decorators: withId, noDispatch and sequence.
+- New decorators: `withId`, `noDispatch` and `sequence`.
 
 ## [1.0.3 - 2017-10-19](https://github.com/alonrbar/redux-app/tree/v1.0.3)
 

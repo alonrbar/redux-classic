@@ -76,6 +76,7 @@ export class Component<T extends object = object> {
         selfInfo.id = ComponentId.getComponentId(parentCreator, path);
         selfInfo.originalClass = creatorInfo.originalClass;        
         selfClassInfo.computedGetters = creatorClassInfo.computedGetters;
+        selfClassInfo.ignoreState = creatorClassInfo.ignoreState;
 
         // connected props
         Connect.setupConnectedProps(component, selfClassInfo, creator, creatorClassInfo);

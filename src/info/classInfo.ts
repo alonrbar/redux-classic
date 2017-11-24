@@ -28,4 +28,5 @@ export class ClassInfo {
 
     public computedGetters: IMap<Getter> = {};
     public connectedProps: IMap<boolean> = {};
+    public ignoreState: IMap<boolean> = {};
 }
