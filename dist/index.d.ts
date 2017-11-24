@@ -57,6 +57,12 @@ export function connect(options?: ConnectOptions): PropertyDecorator;
 export function connect(target: any, propertyKey: string | symbol): void;
 
 /**
+ * Property decorator.
+ * Instruct redux-app to not store this property in the store.
+ */
+export function ignoreState(target: object, propertyKey: string | symbol): void;
+
+/**
  * Method decorator.
  * 
  * Instruct redux-app to keep this method as is and not to replace it with invocation of store.dispatch.
