@@ -1,10 +1,11 @@
 # Change Log
 
-## [1.9.0 - 2017-11-24](https://github.com/alonrbar/redux-app/tree/v1.9.0)
+## [1.9.0 - 2017-11-25](https://github.com/alonrbar/redux-app/tree/v1.9.0)
 
 ## Added
 
 - New decorator: `ignoreState`.
+- Allow `noDispatch` calls inside actions.
 
 ## [1.8.1 - 2017-11-18](https://github.com/alonrbar/redux-app/tree/v1.8.0)
 
