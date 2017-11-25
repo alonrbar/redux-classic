@@ -20,7 +20,7 @@ export class ComponentActions {
         const creatorInfo = CreatorInfo.getInfo(creator);
         const componentActions: any = {};
         Object.keys(methods).forEach(key => {
-            componentActions[key] = function (this: Component<object>, ...payload: any[]): void {
+            componentActions[key] = function (this: Component, ...payload: any[]): void {
 
                 // verify 'this' arg
                 if (!(this instanceof Component))

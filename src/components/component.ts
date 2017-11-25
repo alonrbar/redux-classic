@@ -9,13 +9,13 @@ import { ComponentReducer } from './reducer';
 
 // tslint:disable:member-ordering variable-name
 
-export class Component<T extends object = object> {    
+export class Component {    
 
     //
     // static methods
     //
 
-    public static create<T extends object>(store: Store<T>, creator: T, parentCreator?: object, path: string[] = [], visited = new Set()): Component<T> {
+    public static create(store: Store<any>, creator: object, parentCreator?: object, path: string[] = [], visited = new Set()): Component {
 
         // create the component
         var ComponentClass = Component.getComponentClass(creator);
@@ -36,13 +36,13 @@ export class Component<T extends object = object> {
         return info.componentClass;
     }
 
-    private static createComponentClass<T extends object>(creator: object) {
+    private static createComponentClass(creator: object) {
 
         // declare new class
-        class ComponentClass extends Component<T> {
+        class ComponentClass extends Component {
             public __originalClassName__ = creator.constructor.name; // tslint:disable-line:variable-name
 
-            constructor(store: Store<T>, creatorArg: T, ...params: any[]) {
+            constructor(store: Store<any>, creatorArg: object, ...params: any[]) {
                 super(store, creatorArg, ...params);
 
                 if (!globalOptions.emitClassNames)
@@ -128,7 +128,7 @@ export class Component<T extends object = object> {
     // constructor
     //
 
-    private constructor(store: Store<T>, creator: T, parentCreator?: object, path: string[] = [], visited = new Set()) {
+    private constructor(store: Store<any>, creator: object, parentCreator?: object, path: string[] = [], visited = new Set()) {
 
         if (!CreatorInfo.getInfo(creator))
             throw new Error(`Argument '${nameof(creator)}' is not a component creator. Did you forget to use the decorator?`);
