@@ -2,7 +2,8 @@ import { Reducer, ReducersMapObject } from 'redux';
 import { Computed, Connect, IgnoreState } from '../decorators';
 import { ComponentInfo, CreatorInfo, getCreatorMethods } from '../info';
 import { getActionName } from '../options';
-import { isPrimitive, log, simpleCombineReducers, transformDeep, TransformOptions } from '../utils';
+import { IMap, Method } from '../types';
+import { getMethods, isPrimitive, log, simpleCombineReducers, transformDeep, TransformOptions } from '../utils';
 import { ReduxAppAction } from './actions';
 import { Component } from './component';
 
@@ -22,15 +23,19 @@ export class ComponentReducer {
 
         // method names lookup
         const methods = getCreatorMethods(creator);
-        const options = CreatorInfo.getInfo(creator).options;
-        if (!options)
+        const creatorInfo = CreatorInfo.getInfo(creator);
+        if (!creatorInfo)
             throw new Error(`Inconsistent component '${creator.constructor.name}'. The 'component' class decorator is missing.`);
 
+        const options = creatorInfo.options;
         const methodNames: any = {};
         Object.keys(methods).forEach(methName => {
             var actionName = getActionName(creator, methName, options);
             methodNames[actionName] = methName;
         });
+
+        // state object prototype
+        const stateProto = ComponentReducer.createStateObjectPrototype(component, creatorInfo);
 
         // component id
         const componentId = ComponentInfo.getInfo(component).id;
@@ -61,7 +66,7 @@ export class ComponentReducer {
             }
 
             // call the action-reducer with the new state as the 'this' argument
-            var newState = Object.assign({}, state);
+            const newState = ComponentReducer.createStateObject(state, stateProto);
             actionReducer.call(newState, ...action.payload);
 
             // return new state
@@ -90,6 +95,38 @@ export class ComponentReducer {
     //
     // private methods
     //
+
+    /**
+     * Create a "state object". The state object receives it's properties from
+     * the current state and it's methods from the owning component. Methods
+     * that represent actions are replace with a throw call, while noDispatch
+     * methods are kept in place.
+     */
+    private static createStateObject(state: object, stateProto: object): object {
+        const stateObj = Object.create(stateProto);
+        Object.assign(stateObj, state);
+        return stateObj;
+    }
+
+    /**
+     * See description of 'createStateObject'.
+     */
+    private static createStateObjectPrototype(component: Component, creatorInfo: CreatorInfo): object {
+        const stateProto: IMap<Method> = {};
+        const componentMethods = getMethods(component);
+        for (let key of Object.keys(componentMethods)) {
+            if (creatorInfo.noDispatch[key]) {
+                stateProto[key] = componentMethods[key].bind(component);
+            } else {
+                stateProto[key] = ComponentReducer.actionInvokedError;
+            }
+        }
+        return stateProto;
+    }
+
+    private static actionInvokedError() {
+        throw new Error("Only 'noDispatch' methods can be invoked inside actions.");
+    }
 
     private static combineReducersRecursion(obj: any, visited: Set<any>): Reducer<any> {
 

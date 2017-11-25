@@ -1,6 +1,7 @@
 import { expect } from 'chai';
-import { component } from 'src';
+import { component, noDispatch } from 'src';
 import { Component } from 'src/components';
+import { ComponentInfo } from 'src/info';
 import { FakeStore } from '../testTypes';
 
 // tslint:disable:no-unused-expression
@@ -170,7 +171,7 @@ describe(nameof(Component), () => {
         });
 
         it("derived component dispatches parent actions with derived namespace", () => {
-            
+
             @component
             class Base {
                 public bar() {
@@ -202,6 +203,103 @@ describe(nameof(Component), () => {
             expect(dispatchedAction).to.not.be.undefined;
             expect(dispatchedAction.type).be.a('string');
             expect(dispatchedAction.type.toLowerCase()).to.include(nameof(Derived).toLowerCase());
+        });
+    });
+
+    describe('reducer', () => {
+
+        it("throws when invoking an action from within another action", () => {
+
+            @component
+            class Person {
+
+                public name: string;
+
+                public changeName(name: string) {
+                    this.name = name;
+                }
+
+                public shouldThrow() {
+                    this.changeName('something');
+                }
+            }
+
+            const store = new FakeStore();
+            const comp = Component.create(store, new Person());
+            const info = ComponentInfo.getInfo(comp);
+            const reducer = info.reducer;
+
+            expect(() => reducer({}, { type: 'PERSON.SHOULD_THROW' })).to.throw;
+        });
+
+        it("throws when invoking an action from within another action (implicit call)", () => {
+
+            @component
+            class Person {
+
+                public name: string;
+
+                public changeName(name: string) {
+                    this.name = name;
+                }
+
+                public shouldThrow() {
+                    this.changeName('something');
+                }
+            }
+
+            const store = new FakeStore();
+            const comp = Component.create(store, new Person()) as Person;
+
+            expect(() => comp.changeName('alon')).to.throw;
+        });
+
+        it("does not throw when invoking noDispatch methods from within actions", () => {
+
+            @component
+            class Person {
+                public name: string;
+
+                public changeName(name: string) {
+                    this.name = this.toUpperCase(name);
+                }
+
+                @noDispatch
+                public toUpperCase(str: string) {
+                    return str.toUpperCase();
+                }
+            }
+
+            const store = new FakeStore();
+            const comp = Component.create(store, new Person());
+            const info = ComponentInfo.getInfo(comp);
+            const reducer = info.reducer;
+
+            var newState = reducer({}, { type: 'PERSON.CHANGE_NAME', payload: ['alon'] });
+
+            expect(newState.name).to.eql('ALON');
+        });
+
+        it("does not throw when invoking noDispatch methods from within actions (implicit call)", () => {
+
+            @component
+            class Person {
+                public name: string;
+
+                public changeName(name: string) {
+                    this.name = this.toUpperCase(name);
+                }
+
+                @noDispatch
+                public toUpperCase(str: string) {
+                    return str.toUpperCase();
+                }
+            }
+
+            const store = new FakeStore();
+            const comp = Component.create(store, new Person()) as Person;
+
+            comp.changeName('alon');
         });
     });
 });
