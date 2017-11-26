@@ -1,5 +1,5 @@
 import { createStore, Store, StoreEnhancer } from 'redux';
-import { Component, ComponentReducer } from './components';
+import { Component, ComponentCreationContext, ComponentReducer } from './components';
 import { ComponentId, Computed, Connect, IgnoreState } from './decorators';
 import { ComponentInfo } from './info';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
@@ -96,7 +96,8 @@ export class ReduxApp<T extends object> {
         this.store = createStore<T>(initialReducer as any, preLoadedState, enhancer);
 
         // create the app
-        const rootComponent = Component.create(this.store, appCreator, { path: [this.name] });
+        const creationContext = new ComponentCreationContext({ path: [this.name] });
+        const rootComponent = Component.create(this.store, appCreator, creationContext);
         this.root = (rootComponent as any);
 
         // state        
@@ -105,7 +106,7 @@ export class ReduxApp<T extends object> {
         }
 
         // update the store
-        const actualReducer = ComponentReducer.combineReducersTree(rootComponent);
+        const actualReducer = ComponentReducer.combineReducersTree(rootComponent, creationContext.components);
         this.store.replaceReducer(actualReducer);
     }
 

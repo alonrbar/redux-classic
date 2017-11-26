@@ -3,6 +3,7 @@ import { ComponentId, Connect } from '../decorators';
 import { ClassInfo, ComponentInfo, CreatorInfo } from '../info';
 import { globalOptions } from '../options';
 import { ReduxApp } from '../reduxApp';
+import { IMap } from '../types';
 import { isPrimitive, log, pathString } from '../utils';
 import { ComponentActions } from './actions';
 import { ComponentReducer } from './reducer';
@@ -13,6 +14,11 @@ export class ComponentCreationContext {
     public visited = new Set();
     public path: string[] = [];
     public parentCreator: object;
+    public components: IMap<Component> = {};
+
+    constructor(initial?: Partial<ComponentCreationContext>) {
+        Object.assign(this, initial);
+    }
 }
 
 export class Component {
@@ -21,7 +27,7 @@ export class Component {
     // static methods
     //
 
-    public static create(store: Store<any>, creator: object, context?: Partial<ComponentCreationContext>): Component {
+    public static create(store: Store<any>, creator: object, context?: ComponentCreationContext): Component {
 
         context = Object.assign(new ComponentCreationContext(), context);
 
@@ -124,18 +130,18 @@ export class Component {
 
                 // child is sub-component
                 obj[key] = Component.create(store, subCreator, {
-                     parentCreator: creator, 
-                     path: subPath, 
-                     visited: context.visited
+                    ...context,
+                    parentCreator: creator,
+                    path: subPath
                 });
             } else {
 
                 // child is regular object, nothing special to do with it
                 Component.createSubComponents(obj[key], store, null, {
-                    parentCreator: null, 
-                    path: subPath, 
-                    visited: context.visited
-               });
+                    ...context,
+                    parentCreator: null,
+                    path: subPath
+                });
             }
         }
     }
@@ -152,7 +158,11 @@ export class Component {
         Component.createSelf(this, store, creator, context);
         Component.createSubComponents(this, store, creator, context);
 
-        log.debug(`[Component] New ${creator.constructor.name} component created. path: ${pathString(context.path)}`);
+        const pathStr = pathString(context.path);
+
+        context.components[pathStr] = this;
+
+        log.debug(`[Component] New ${creator.constructor.name} component created. path: ${pathStr}`);
     }
 
     // 

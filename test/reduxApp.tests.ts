@@ -46,10 +46,13 @@ describe(nameof(ReduxApp), () => {
 
             // create component tree
             const app = new ReduxApp(new Root());
+            try {
 
-            expect(app.root.first.second.third.some).to.be.an.instanceOf(Component);
+                expect(app.root.first.second.third.some).to.be.an.instanceOf(Component);
 
-            app.dispose();
+            } finally {
+                app.dispose();
+            }
         });
 
         it("handles pre-loaded state", () => {

@@ -33,6 +33,8 @@
     "test": "mocha-webpack --watch --require source-map-support/register --webpack-config webpack.config.test.js \"test/**/*.tests.ts\""
   },
   "dependencies": {
+    "lodash.get": "^4.4.2",
+    "lodash.set": "^4.3.2",
     "lodash.snakecase": "^4.1.1",
     "redux": "^3.7.2",
     "reflect-metadata": "^0.1.10"

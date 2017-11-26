@@ -6,6 +6,8 @@ import { IMap, Method } from '../types';
 import { getMethods, isPrimitive, log, simpleCombineReducers, transformDeep, TransformOptions } from '../utils';
 import { ReduxAppAction } from './actions';
 import { Component } from './component';
+var getProp = require('lodash.get');
+var setProp = require('lodash.set');
 
 // tslint:disable:member-ordering
 
@@ -45,7 +47,7 @@ export class ComponentReducer {
 
             log.verbose(`[reducer] Reducer of: ${creator.constructor.name}, action: ${action.type}`);
 
-            // initial state (redundant, handled in 'prepareState')
+            // initial state
             if (state === undefined) {
                 log.verbose('[reducer] State is undefined, returning initial value');
                 return component;
@@ -75,9 +77,10 @@ export class ComponentReducer {
         };
     }
 
-    public static combineReducersTree(root: any): Reducer<any> {
+    public static combineReducersTree(root: Component, components: IMap<Component>): Reducer<any> {
 
-        const reducer = ComponentReducer.combineReducersRecursion(root, new Set());
+        // const reducer = ComponentReducer.combineReducersRecursion(root, new Set(), components);
+        const reducer = ComponentReducer.newCombineReducers(root, components);
 
         return (state: any, action: ReduxAppAction) => {
             const start = Date.now();
@@ -93,7 +96,7 @@ export class ComponentReducer {
     }
 
     //
-    // private methods
+    // private methods - state object
     //
 
     /**
@@ -128,7 +131,61 @@ export class ComponentReducer {
         throw new Error("Only 'noDispatch' methods can be invoked inside actions.");
     }
 
-    private static combineReducersRecursion(obj: any, visited: Set<any>): Reducer<any> {
+    //
+    // private methods - reducer
+    //
+
+    public static newCombineReducers(root: Component, components: IMap<Component>): Reducer<any> {
+        return (state: object, action: ReduxAppAction) => {
+            const newState = Object.assign({}, state);
+
+            const componentPaths = Object.keys(components).sort();
+            for (let curCompPath of componentPaths) {
+
+                // get the component
+                const curComponent = components[curCompPath];
+                const curReducer = ComponentInfo.getInfo(curComponent).reducer;
+
+                debugger;
+
+                // get the old state
+                const normalizedCompPath = ComponentReducer.normalizeComponentPath(curCompPath);
+                const oldSubState = ComponentReducer.getOldSubState(state, normalizedCompPath);
+
+                // reduce new state
+                const newSubState = curReducer(oldSubState, action);
+                if (oldSubState !== newSubState)
+                    ComponentReducer.setNewSubState(newState, curCompPath, newSubState);
+            }
+
+            return newState;
+        };
+    }
+
+    private static normalizeComponentPath(path: string): string {
+        var normalizedPath = path.substr('root'.length);
+        if (normalizedPath.startsWith('.'))
+            normalizedPath = normalizedPath.substr(1);
+
+        return normalizedPath;
+    }
+
+    private static getOldSubState(state: any, path: string): any {
+        if (path === '')
+            return state;
+
+        return getProp(state, path);
+    }
+
+    private static setNewSubState(newState: any, path: string, newSubState: any): any {
+        if (path === '')
+            return newSubState;
+
+        setProp(newState, path, newSubState);
+        return newState;
+    }
+
+    public static combineReducersRecursion(obj: any, visited: Set<any>, components: IMap<Component>): Reducer<any> {
 
         // no need to search inside primitives
         if (isPrimitive(obj))
@@ -157,7 +214,7 @@ export class ComponentReducer {
                 continue;
 
             // other objects
-            var newSubReducer = ComponentReducer.combineReducersRecursion((obj as any)[key], visited);
+            var newSubReducer = ComponentReducer.combineReducersRecursion((obj as any)[key], visited, components);
             if (typeof newSubReducer === 'function')
                 subReducers[key] = newSubReducer;
         }
