@@ -87,12 +87,6 @@ export function getParentType(obj: object | Function) {
     return Object.getPrototypeOf(type.prototype).constructor;
 }
 
-export function pathString(path: string[]): string {
-    const str = path.join('.');
-    const dot = (path.length > 0 ? '.' : '');
-    return 'root' + dot + str;
-}
-
 export function toPlainObject(obj: any): any {
     const json = JSON.stringify(obj, (key: any, value: any) => value === undefined ? null : value);
     return JSON.parse(json);

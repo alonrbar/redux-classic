@@ -6,18 +6,9 @@ import { IMap, Method } from '../types';
 import { getMethods, isPrimitive, log, simpleCombineReducers, transformDeep, TransformOptions } from '../utils';
 import { ReduxAppAction } from './actions';
 import { Component } from './component';
+import { RecursionContext } from './recursionContext';
 
 // tslint:disable:member-ordering
-
-export class CombineReducersContext {
-    public visited = new Set();
-    public path: string = 'root';
-    public components: IMap<Component> = {};
-
-    constructor(initial?: Partial<CombineReducersContext>) {
-        Object.assign(this, initial);
-    }
-}
 
 export class ComponentReducer {
 
@@ -85,9 +76,9 @@ export class ComponentReducer {
         };
     }
 
-    public static combineReducersTree(root: Component, context: CombineReducersContext): Reducer<any> {
+    public static combineReducersTree(root: Component, context: RecursionContext): Reducer<any> {
 
-        context = Object.assign(new CombineReducersContext(), context);
+        context = Object.assign(new RecursionContext(), context);
         const reducer = ComponentReducer.combineReducersRecursion(root, context);
 
         return (state: any, action: ReduxAppAction) => {
@@ -143,7 +134,7 @@ export class ComponentReducer {
     // private methods - combine reducers
     //
 
-    private static combineReducersRecursion(obj: any, context: CombineReducersContext): Reducer<any> {
+    private static combineReducersRecursion(obj: any, context: RecursionContext): Reducer<any> {
 
         // no need to search inside primitives
         if (isPrimitive(obj))

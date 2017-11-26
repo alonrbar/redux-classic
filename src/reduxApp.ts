@@ -1,10 +1,10 @@
 import { createStore, Store, StoreEnhancer } from 'redux';
-import { CombineReducersContext, Component, ComponentCreationContext, ComponentReducer } from './components';
+import { Component, ComponentCreationContext, ComponentReducer, RecursionContext } from './components';
 import { ComponentId, Computed, Connect, IgnoreState } from './decorators';
 import { ComponentInfo } from './info';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
 import { IMap } from './types';
-import { isPrimitive, log, pathString, toPlainObject } from './utils';
+import { isPrimitive, log, toPlainObject } from './utils';
 
 // tslint:disable:ban-types
 
@@ -19,6 +19,8 @@ export const appsRepository: IMap<ReduxApp<any>> = {};
 var appsCount = 0;
 
 export type AppWarehouse = Map<Function, Map<any, any>>;
+
+type Listener = () => void;
 
 //
 // public
@@ -102,11 +104,11 @@ export class ReduxApp<T extends object> {
 
         // state        
         if (options.updateState) {
-            this.subscriptionDisposer = this.store.subscribe(() => this.updateState());
+            this.subscriptionDisposer = this.store.subscribe(this.updateState(creationContext.components));
         }
 
         // update the store
-        const reducerContext = new CombineReducersContext({ components: creationContext.components });
+        const reducerContext = new RecursionContext({ components: creationContext.components });
         const actualReducer = ComponentReducer.combineReducersTree(rootComponent, reducerContext);
         this.store.replaceReducer(actualReducer);
     }
@@ -199,37 +201,37 @@ export class ReduxApp<T extends object> {
     // update state
     //
 
-    private updateState(): void {
+    private updateState(components: IMap<Component>): Listener {
+        return () => {
+            //
+            // Reducers are invoked with regular objects, therefor we use this
+            // method which copies the resulted values back to the components.
+            //
 
-        //
-        // Reducers are invoked with regular objects, therefor we use this
-        // method which copies the resulted values back to the components.
-        //
+            const start = Date.now();
 
-        const start = Date.now();
+            var newState = this.store.getState();
+            if (globalOptions.convertToPlainObject)
+                newState = toPlainObject(newState);
+            log.verbose('[updateState] Store before: ', newState);
 
-        var newState = this.store.getState();
-        if (globalOptions.convertToPlainObject)
-            newState = toPlainObject(newState);
-        log.verbose('[updateState] Store before: ', newState);
+            // update state
+            const context = new RecursionContext();
+            this.updateStateRecursion(this.root, newState, context);
 
-        // update state
-        const visited = new Set();
-        const changedPaths = new Set();
-        this.updateStateRecursion(this.root, newState, [this.name], visited, changedPaths);
+            // assign computed properties
+            Computed.computeProps(this.root);
 
-        // assign computed properties
-        Computed.computeProps(this.root);
+            const end = Date.now();
 
-        const end = Date.now();
+            log.debug(`[updateState] Component tree updated in ${end - start}ms.`);
+            log.verbose('[updateState] Store after: ', newState);
 
-        log.debug(`[updateState] Component tree updated in ${end - start}ms.`);
-        log.verbose('[updateState] Store after: ', newState);
-
-        // TODO: notify changes
+            // TODO: notify changes
+        };
     }
 
-    private updateStateRecursion(obj: any, newState: any, path: string[], visited: Set<any>, changedPaths: Set<string>): any {
+    private updateStateRecursion(obj: any, newState: any, context: RecursionContext): any {
 
         // same object
         if (obj === newState)
@@ -240,9 +242,9 @@ export class ReduxApp<T extends object> {
             return newState;
 
         // prevent endless loops on circular references
-        if (visited.has(obj))
+        if (context.visited.has(obj))
             return obj;
-        visited.add(obj);
+        context.visited.add(obj);
 
         // update
         const targetType = obj.constructor;
@@ -255,9 +257,9 @@ export class ReduxApp<T extends object> {
             // 2. new state is a plain object (this is one of the main reasons we update recursively, to keep methods while updating props)
             var changeMessage: string;
             if (Array.isArray(obj) && Array.isArray(newState)) {
-                changeMessage = this.updateArray(obj, newState, path, visited, changedPaths);
+                changeMessage = this.updateArray(obj, newState, context);
             } else {
-                changeMessage = this.updateObject(obj, newState, path, visited, changedPaths);
+                changeMessage = this.updateObject(obj, newState, context);
             }
         } else {
 
@@ -266,25 +268,20 @@ export class ReduxApp<T extends object> {
         }
 
         // handle changes
-        const pathStr = pathString(path);
         if (changeMessage && changeMessage.length) {
 
-            // register for later
-            if (obj instanceof Component && !changedPaths.has(pathStr))
-                changedPaths.add(pathStr);
-
             // log
-            log.debug(`[updateState] Change in '${pathStr}'. ${changeMessage}`);
+            log.debug(`[updateState] Change in '${context.path}'. ${changeMessage}`);
             log.verbose(`[updateState] New state: `, obj);
 
         } else {
-            log.verbose(`[updateState] No change in path '${pathStr}'.`);
+            log.verbose(`[updateState] No change in path '${context.path}'.`);
         }
 
         return obj;
     }
 
-    private updateObject(obj: any, newState: any, path: string[], visited: Set<any>, changedPaths: Set<string>): string {
+    private updateObject(obj: any, newState: any, context: RecursionContext): string {
 
         // delete anything not in the new state
         var propsDeleted: string[] = [];
@@ -295,7 +292,7 @@ export class ReduxApp<T extends object> {
 
             if (!newState.hasOwnProperty(key)) {
                 if (typeof obj[key] === 'function')
-                    log.warn(`[updateState] Function property removed in path: ${pathString(path.concat(key))}. Consider using a method instead.`);
+                    log.warn(`[updateState] Function property removed in path: ${context.path}.${key}. Consider using a method instead.`);
                 delete obj[key];
                 propsDeleted.push(key);
             }
@@ -321,7 +318,10 @@ export class ReduxApp<T extends object> {
             var subObj = obj[key];
 
             // must update recursively, otherwise we may lose children types (and methods...)
-            const newSubObj = this.updateStateRecursion(subObj, subState, path.concat(key), visited, changedPaths);
+            const newSubObj = this.updateStateRecursion(subObj, subState, {
+                ...context,
+                path: context.path + '.' + key
+            });
 
             // assign only if changed, in case anyone is monitoring assignments
             if (newSubObj !== subObj) {
@@ -342,7 +342,7 @@ export class ReduxApp<T extends object> {
         }
     }
 
-    private updateArray(arr: any[], newState: any[], path: string[], visited: Set<any>, changedPaths: Set<string>): string {
+    private updateArray(arr: any[], newState: any[], context: RecursionContext): string {
 
         var changeMessage: string[] = [];
 
@@ -354,7 +354,10 @@ export class ReduxApp<T extends object> {
         for (let i = 0; i < Math.min(prevLength, newLength); i++) {
             var subState = newState[i];
             var subObj = arr[i];
-            const newSubObj = this.updateStateRecursion(subObj, subState, path.concat(i.toString()), visited, changedPaths);
+            const newSubObj = this.updateStateRecursion(subObj, subState, {
+                ...context,
+                path: context.path + '.' + i
+            });
             if (newSubObj !== subObj) {
                 arr[i] = newSubObj;
                 itemsAssigned.push(i);

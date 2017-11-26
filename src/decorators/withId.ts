@@ -25,7 +25,7 @@ export class ComponentId {
         return --ComponentId.autoComponentId; // using negative ids to decrease chance of collision with user assigned ids
     }
 
-    public static getComponentId(parentCreator: object, path: string[]): any {
+    public static getComponentId(parentCreator: object, path: string): any {
 
         //
         // Note: The component id is first stored on it's parent. It can be only
@@ -37,7 +37,8 @@ export class ComponentId {
         //
 
         // no parent
-        if (!parentCreator || !path.length)
+        const pathArray = path.split('.');
+        if (!parentCreator || !pathArray.length)
             return undefined;
 
         // parent is not a component creator
@@ -45,7 +46,7 @@ export class ComponentId {
         if (!info)
             return;
 
-        const selfKey = path[path.length - 1];
+        const selfKey = pathArray[pathArray.length - 1];
         const id = info.childIds[selfKey];
 
         // the specific component was not assigned an id

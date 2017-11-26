@@ -3,21 +3,20 @@ import { ComponentId, Connect } from '../decorators';
 import { ClassInfo, ComponentInfo, CreatorInfo } from '../info';
 import { globalOptions } from '../options';
 import { ReduxApp } from '../reduxApp';
-import { IMap } from '../types';
-import { isPrimitive, pathString } from '../utils';
+import { isPrimitive } from '../utils';
 import { ComponentActions } from './actions';
+import { RecursionContext } from './recursionContext';
 import { ComponentReducer } from './reducer';
 
 // tslint:disable:member-ordering variable-name
 
-export class ComponentCreationContext {
-    public visited = new Set();
-    public path: string[] = [];
+export class ComponentCreationContext extends RecursionContext {
+    
     public appName: string;
     public parentCreator: object;
-    public components: IMap<Component> = {};
 
     constructor(initial?: Partial<ComponentCreationContext>) {
+        super(initial);
         Object.assign(this, initial);
     }
 }
@@ -122,7 +121,7 @@ export class Component {
             if (connectionInfo)
                 continue;
 
-            var subPath = context.path.concat([key]);
+            var subPath = context.path + '.' + key;
 
             var subCreator = searchIn[key];
             if (CreatorInfo.getInfo(subCreator)) {
@@ -157,8 +156,7 @@ export class Component {
         Component.createSelf(this, store, creator, context);
         Component.createSubComponents(this, store, creator, context);
 
-        const pathStr = pathString(context.path);
-        context.components[pathStr] = this;
+        context.components[context.path] = this;
     }
 
     // 
