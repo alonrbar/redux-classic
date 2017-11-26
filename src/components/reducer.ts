@@ -1,17 +1,27 @@
-import { Reducer } from 'redux';
+import { Reducer, ReducersMapObject } from 'redux';
 import { Computed, Connect, IgnoreState } from '../decorators';
 import { ComponentInfo, CreatorInfo, getCreatorMethods } from '../info';
 import { getActionName } from '../options';
 import { IMap, Method } from '../types';
-import { getMethods, log, transformDeep, TransformOptions, toPlainObject } from '../utils';
+import { getMethods, isPrimitive, log, simpleCombineReducers, transformDeep, TransformOptions } from '../utils';
 import { ReduxAppAction } from './actions';
 import { Component } from './component';
-var getProp = require('lodash.get');
-var setProp = require('lodash.set');
 
 // tslint:disable:member-ordering
 
+export class CombineReducersContext {
+    public visited = new Set();
+    public path: string = 'root';
+    public components: IMap<Component> = {};
+
+    constructor(initial?: Partial<CombineReducersContext>) {
+        Object.assign(this, initial);
+    }
+}
+
 export class ComponentReducer {
+
+    private static readonly identityReducer = (state: any) => state;
 
     private static transformOptions: TransformOptions;
 
@@ -75,9 +85,10 @@ export class ComponentReducer {
         };
     }
 
-    public static combineReducersTree(root: Component, components: IMap<Component>): Reducer<any> {
+    public static combineReducersTree(root: Component, context: CombineReducersContext): Reducer<any> {
 
-        const reducer = ComponentReducer.combineComponentReducers(root, components);
+        context = Object.assign(new CombineReducersContext(), context);
+        const reducer = ComponentReducer.combineReducersRecursion(root, context);
 
         return (state: any, action: ReduxAppAction) => {
             const start = Date.now();
@@ -129,58 +140,88 @@ export class ComponentReducer {
     }
 
     //
-    // private methods - reducer
+    // private methods - combine reducers
     //
 
-    public static combineComponentReducers(root: Component, components: IMap<Component>): Reducer<any> {
-        return (state: object, action: ReduxAppAction) => {
-            
-            var newState = toPlainObject(state);
+    private static combineReducersRecursion(obj: any, context: CombineReducersContext): Reducer<any> {
 
-            // call all component reducers
-            const componentPaths = Object.keys(components).sort();
-            for (let curCompPath of componentPaths) {
+        // no need to search inside primitives
+        if (isPrimitive(obj))
+            return undefined;
 
-                // get the component
-                const curComponent = components[curCompPath];
-                const curReducer = ComponentInfo.getInfo(curComponent).reducer;
+        // prevent endless loops on circular references
+        if (context.visited.has(obj))
+            return undefined;
+        context.visited.add(obj);
 
-                // get the old sub state
-                const normalizedCompPath = ComponentReducer.normalizeComponentPath(curCompPath);
-                const oldSubState = ComponentReducer.getOldSubState(state, normalizedCompPath);
+        // ignore branches with no descendant components
+        if (!Object.keys(context.components).some(path => path.startsWith(context.path)))
+            return ComponentReducer.identityReducer;
 
-                // reduce new sub state
-                const newSubState = curReducer(oldSubState, action);
-                if (oldSubState !== newSubState) {
-                    newState = ComponentReducer.setNewSubState(newState, normalizedCompPath, newSubState);
-                }
-            }
+        // get the root reducer
+        var rootReducer: Reducer<any>;
+        const info = ComponentInfo.getInfo(obj as any);
+        if (info) {
+            rootReducer = info.reducer;
+        } else {
+            rootReducer = ComponentReducer.identityReducer;
+        }
 
-            return newState;
-        };
+        // gather the sub-reducers
+        const subReducers: ReducersMapObject = {};
+        for (let key of Object.keys(obj)) {
+
+            // connected components are modified only by their source
+            if (Connect.isConnectedProperty(obj, key))
+                continue;
+
+            // other objects
+            var newSubReducer = ComponentReducer.combineReducersRecursion((obj as any)[key], {
+                ...context,
+                path: (context.path === '' ? key : context.path + '.' + key)
+            });
+            if (typeof newSubReducer === 'function')
+                subReducers[key] = newSubReducer;
+        }
+
+        var resultReducer = rootReducer;
+
+        // combine reducers
+        if (Object.keys(subReducers).length) {
+            var combinedSubReducer = simpleCombineReducers(subReducers);
+
+            resultReducer = (state: object, action: ReduxAppAction) => {
+
+                const thisState = rootReducer(state, action);
+                const subStates = combinedSubReducer(thisState, action);
+
+                // merge self and sub states
+                const combinedState = ComponentReducer.mergeState(thisState, subStates);
+
+                return combinedState;
+            };
+        }
+
+        return resultReducer;
     }
 
-    private static normalizeComponentPath(path: string): string {
-        var normalizedPath = path.substr('root'.length);
-        if (normalizedPath.startsWith('.'))
-            normalizedPath = normalizedPath.substr(1);
+    private static mergeState(state: any, subStates: any): any {
 
-        return normalizedPath;
-    }
+        if (Array.isArray(state) && Array.isArray(subStates)) {
 
-    private static getOldSubState(state: any, path: string): any {
-        if (path === '')
+            // merge arrays
+            for (let i = 0; i < subStates.length; i++)
+                state[i] = subStates[i];
             return state;
 
-        return getProp(state, path);
-    }
+        } else {
 
-    private static setNewSubState(newState: any, path: string, newSubState: any): any {
-        if (path === '')
-            return newSubState;
-
-        setProp(newState, path, newSubState);
-        return newState;
+            // merge objects
+            return {
+                ...state,
+                ...subStates
+            };
+        }
     }
 
     private static finalizeState(rootState: any, root: any): any {

@@ -1,5 +1,5 @@
 import { createStore, Store, StoreEnhancer } from 'redux';
-import { Component, ComponentCreationContext, ComponentReducer } from './components';
+import { CombineReducersContext, Component, ComponentCreationContext, ComponentReducer } from './components';
 import { ComponentId, Computed, Connect, IgnoreState } from './decorators';
 import { ComponentInfo } from './info';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
@@ -106,7 +106,8 @@ export class ReduxApp<T extends object> {
         }
 
         // update the store
-        const actualReducer = ComponentReducer.combineReducersTree(rootComponent, creationContext.components);
+        const reducerContext = new CombineReducersContext({ components: creationContext.components });
+        const actualReducer = ComponentReducer.combineReducersTree(rootComponent, reducerContext);
         this.store.replaceReducer(actualReducer);
     }
 
