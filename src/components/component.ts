@@ -4,7 +4,7 @@ import { ClassInfo, ComponentInfo, CreatorInfo } from '../info';
 import { globalOptions } from '../options';
 import { ReduxApp } from '../reduxApp';
 import { IMap } from '../types';
-import { isPrimitive, log, pathString } from '../utils';
+import { isPrimitive, pathString } from '../utils';
 import { ComponentActions } from './actions';
 import { ComponentReducer } from './reducer';
 
@@ -13,6 +13,7 @@ import { ComponentReducer } from './reducer';
 export class ComponentCreationContext {
     public visited = new Set();
     public path: string[] = [];
+    public appName: string;
     public parentCreator: object;
     public components: IMap<Component> = {};
 
@@ -36,7 +37,7 @@ export class Component {
         const component = new ComponentClass(store, creator, context as ComponentCreationContext);
 
         // register it on it's containing app
-        ReduxApp.registerComponent(component, creator, context.path);
+        ReduxApp.registerComponent(component, creator, context.appName);
 
         return component;
     }
@@ -118,10 +119,8 @@ export class Component {
         for (let key of Object.keys(searchIn)) {
 
             const connectionInfo = Connect.isConnectedProperty(obj, key);
-            if (connectionInfo) {
-                log.verbose(`[createSubComponents] Property in path '${pathString(context.path)}.${key}' is connected. Skipping component creation.`);
+            if (connectionInfo)
                 continue;
-            }
 
             var subPath = context.path.concat([key]);
 
@@ -159,10 +158,7 @@ export class Component {
         Component.createSubComponents(this, store, creator, context);
 
         const pathStr = pathString(context.path);
-
         context.components[pathStr] = this;
-
-        log.debug(`[Component] New ${creator.constructor.name} component created. path: ${pathStr}`);
     }
 
     // 

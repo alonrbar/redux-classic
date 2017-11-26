@@ -45,8 +45,8 @@ export class ReduxApp<T extends object> {
     /**
      * INTERNAL: Should not appear on the public d.ts file.
      */
-    public static registerComponent(comp: Component, creator: object, path: string[]): void {
-        const appName = path[0] || DEFAULT_APP_NAME;
+    public static registerComponent(comp: Component, creator: object, appName?: string): void {
+        appName = appName || DEFAULT_APP_NAME;
         const app = appsRepository[appName];
         if (app) {  // this check exists for test reason only - in some unit tests we create orphan components that are not part of any app...
             const warehouse = app.getTypeWarehouse(creator.constructor);
@@ -96,7 +96,7 @@ export class ReduxApp<T extends object> {
         this.store = createStore<T>(initialReducer as any, preLoadedState, enhancer);
 
         // create the app
-        const creationContext = new ComponentCreationContext({ path: [this.name] });
+        const creationContext = new ComponentCreationContext({ appName: this.name });
         const rootComponent = Component.create(this.store, appCreator, creationContext);
         this.root = (rootComponent as any);
 

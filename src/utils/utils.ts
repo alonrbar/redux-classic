@@ -88,8 +88,8 @@ export function getParentType(obj: object | Function) {
 }
 
 export function pathString(path: string[]): string {
-    const str = `${path.slice(1).join('.')}`;
-    const dot = (path.length > 1 ? '.' : '');
+    const str = path.join('.');
+    const dot = (path.length > 0 ? '.' : '');
     return 'root' + dot + str;
 }
 
