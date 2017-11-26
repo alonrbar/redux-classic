@@ -9,23 +9,31 @@ import { ComponentReducer } from './reducer';
 
 // tslint:disable:member-ordering variable-name
 
-export class Component {    
+export class ComponentCreationContext {
+    public visited = new Set();
+    public path: string[] = [];
+    public parentCreator: object;
+}
+
+export class Component {
 
     //
     // static methods
     //
 
-    public static create(store: Store<any>, creator: object, parentCreator?: object, path: string[] = [], visited = new Set()): Component {
+    public static create(store: Store<any>, creator: object, context?: Partial<ComponentCreationContext>): Component {
+
+        context = Object.assign(new ComponentCreationContext(), context);
 
         // create the component
         var ComponentClass = Component.getComponentClass(creator);
-        const component = new ComponentClass(store, creator, parentCreator, path, visited);
+        const component = new ComponentClass(store, creator, context as ComponentCreationContext);
 
         // register it on it's containing app
-        ReduxApp.registerComponent(component, creator, path);
+        ReduxApp.registerComponent(component, creator, context.path);
 
         return component;
-    }    
+    }
 
     private static getComponentClass(creator: object): typeof Component {
         var info = CreatorInfo.getInfo(creator);
@@ -42,8 +50,8 @@ export class Component {
         class ComponentClass extends Component {
             public __originalClassName__ = creator.constructor.name; // tslint:disable-line:variable-name
 
-            constructor(store: Store<any>, creatorArg: object, ...params: any[]) {
-                super(store, creatorArg, ...params);
+            constructor(store: Store<any>, creatorArg: object, context: ComponentCreationContext) {
+                super(store, creatorArg, context);
 
                 if (!globalOptions.emitClassNames)
                     delete this.__originalClassName__;
@@ -55,9 +63,9 @@ export class Component {
         Object.assign(ComponentClass.prototype, actions);
 
         return ComponentClass;
-    }       
+    }
 
-    private static createSelf(component: Component, store: Store<object>, creator: object, parentCreator: any, path: string[]): void {
+    private static createSelf(component: Component, store: Store<object>, creator: object, context: ComponentCreationContext): void {
 
         // regular js props (including getters and setters)
         for (let key of Object.getOwnPropertyNames(creator)) {
@@ -73,8 +81,8 @@ export class Component {
         const creatorInfo = CreatorInfo.getInfo(creator);
         const creatorClassInfo = ClassInfo.getInfo(creator) || new ClassInfo();
 
-        selfInfo.id = ComponentId.getComponentId(parentCreator, path);
-        selfInfo.originalClass = creatorInfo.originalClass;        
+        selfInfo.id = ComponentId.getComponentId(context.parentCreator, context.path);
+        selfInfo.originalClass = creatorInfo.originalClass;
         selfClassInfo.computedGetters = creatorClassInfo.computedGetters;
         selfClassInfo.ignoreState = creatorClassInfo.ignoreState;
 
@@ -88,16 +96,16 @@ export class Component {
         selfInfo.reducer = ComponentReducer.createReducer(component, creator);
     }
 
-    private static createSubComponents(obj: any, store: Store<object>, creator: object, path: string[], visited: Set<any>): void {
+    private static createSubComponents(obj: any, store: Store<object>, creator: object, context: ComponentCreationContext): void {
 
         // no need to search inside primitives
         if (isPrimitive(obj))
             return;
 
         // prevent endless loops on circular references
-        if (visited.has(obj))
+        if (context.visited.has(obj))
             return;
-        visited.add(obj);
+        context.visited.add(obj);
 
         // traverse object children
         const searchIn = creator || obj;
@@ -105,38 +113,46 @@ export class Component {
 
             const connectionInfo = Connect.isConnectedProperty(obj, key);
             if (connectionInfo) {
-                log.verbose(`[createSubComponents] Property in path '${pathString(path)}.${key}' is connected. Skipping component creation.`);
+                log.verbose(`[createSubComponents] Property in path '${pathString(context.path)}.${key}' is connected. Skipping component creation.`);
                 continue;
             }
 
-            var subPath = path.concat([key]);
+            var subPath = context.path.concat([key]);
 
             var subCreator = searchIn[key];
             if (CreatorInfo.getInfo(subCreator)) {
 
                 // child is sub-component
-                obj[key] = Component.create(store, subCreator, creator, subPath, visited);
+                obj[key] = Component.create(store, subCreator, {
+                     parentCreator: creator, 
+                     path: subPath, 
+                     visited: context.visited
+                });
             } else {
 
                 // child is regular object, nothing special to do with it
-                Component.createSubComponents(obj[key], store, null, subPath, visited);
+                Component.createSubComponents(obj[key], store, null, {
+                    parentCreator: null, 
+                    path: subPath, 
+                    visited: context.visited
+               });
             }
         }
-    }    
+    }
 
     //
     // constructor
     //
 
-    private constructor(store: Store<any>, creator: object, parentCreator?: object, path: string[] = [], visited = new Set()) {
+    private constructor(store: Store<any>, creator: object, context: ComponentCreationContext) {
 
         if (!CreatorInfo.getInfo(creator))
             throw new Error(`Argument '${nameof(creator)}' is not a component creator. Did you forget to use the decorator?`);
 
-        Component.createSelf(this, store, creator, parentCreator, path);
-        Component.createSubComponents(this, store, creator, path, visited);
+        Component.createSelf(this, store, creator, context);
+        Component.createSubComponents(this, store, creator, context);
 
-        log.debug(`[Component] New ${creator.constructor.name} component created. path: ${pathString(path)}`);
+        log.debug(`[Component] New ${creator.constructor.name} component created. path: ${pathString(context.path)}`);
     }
 
     // 

@@ -121,7 +121,7 @@ describe(nameof(Component), () => {
             (store.dispatch as any) = () => { isConnected = true; };
 
             // create component tree
-            const root: any = Component.create(store, new Root(), null, [], new Set());
+            const root: any = Component.create(store, new Root());
 
             // assert
             root.first.second.third.some.dispatchMe();

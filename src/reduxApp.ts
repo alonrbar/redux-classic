@@ -96,7 +96,7 @@ export class ReduxApp<T extends object> {
         this.store = createStore<T>(initialReducer as any, preLoadedState, enhancer);
 
         // create the app
-        const rootComponent = Component.create(this.store, appCreator, null, [this.name]);
+        const rootComponent = Component.create(this.store, appCreator, { path: [this.name] });
         this.root = (rootComponent as any);
 
         // state        
