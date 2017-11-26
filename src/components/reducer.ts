@@ -1,9 +1,9 @@
-import { Reducer, ReducersMapObject } from 'redux';
+import { Reducer } from 'redux';
 import { Computed, Connect, IgnoreState } from '../decorators';
 import { ComponentInfo, CreatorInfo, getCreatorMethods } from '../info';
 import { getActionName } from '../options';
 import { IMap, Method } from '../types';
-import { getMethods, isPrimitive, log, simpleCombineReducers, transformDeep, TransformOptions } from '../utils';
+import { getMethods, log, transformDeep, TransformOptions, toPlainObject } from '../utils';
 import { ReduxAppAction } from './actions';
 import { Component } from './component';
 var getProp = require('lodash.get');
@@ -12,8 +12,6 @@ var setProp = require('lodash.set');
 // tslint:disable:member-ordering
 
 export class ComponentReducer {
-
-    private static readonly identityReducer = (state: any) => state;
 
     private static transformOptions: TransformOptions;
 
@@ -79,8 +77,7 @@ export class ComponentReducer {
 
     public static combineReducersTree(root: Component, components: IMap<Component>): Reducer<any> {
 
-        // const reducer = ComponentReducer.combineReducersRecursion(root, new Set(), components);
-        const reducer = ComponentReducer.newCombineReducers(root, components);
+        const reducer = ComponentReducer.combineComponentReducers(root, components);
 
         return (state: any, action: ReduxAppAction) => {
             const start = Date.now();
@@ -135,10 +132,12 @@ export class ComponentReducer {
     // private methods - reducer
     //
 
-    public static newCombineReducers(root: Component, components: IMap<Component>): Reducer<any> {
+    public static combineComponentReducers(root: Component, components: IMap<Component>): Reducer<any> {
         return (state: object, action: ReduxAppAction) => {
-            const newState = Object.assign({}, state);
+            
+            var newState = toPlainObject(state);
 
+            // call all component reducers
             const componentPaths = Object.keys(components).sort();
             for (let curCompPath of componentPaths) {
 
@@ -146,16 +145,15 @@ export class ComponentReducer {
                 const curComponent = components[curCompPath];
                 const curReducer = ComponentInfo.getInfo(curComponent).reducer;
 
-                debugger;
-
-                // get the old state
+                // get the old sub state
                 const normalizedCompPath = ComponentReducer.normalizeComponentPath(curCompPath);
                 const oldSubState = ComponentReducer.getOldSubState(state, normalizedCompPath);
 
-                // reduce new state
+                // reduce new sub state
                 const newSubState = curReducer(oldSubState, action);
-                if (oldSubState !== newSubState)
-                    ComponentReducer.setNewSubState(newState, curCompPath, newSubState);
+                if (oldSubState !== newSubState) {
+                    newState = ComponentReducer.setNewSubState(newState, normalizedCompPath, newSubState);
+                }
             }
 
             return newState;
@@ -183,80 +181,6 @@ export class ComponentReducer {
 
         setProp(newState, path, newSubState);
         return newState;
-    }
-
-    public static combineReducersRecursion(obj: any, visited: Set<any>, components: IMap<Component>): Reducer<any> {
-
-        // no need to search inside primitives
-        if (isPrimitive(obj))
-            return undefined;
-
-        // prevent endless loops on circular references
-        if (visited.has(obj))
-            return undefined;
-        visited.add(obj);
-
-        // get the root reducer
-        var rootReducer: Reducer<any>;
-        const info = ComponentInfo.getInfo(obj as any);
-        if (info) {
-            rootReducer = info.reducer;
-        } else {
-            rootReducer = ComponentReducer.identityReducer;
-        }
-
-        // gather the sub-reducers
-        const subReducers: ReducersMapObject = {};
-        for (let key of Object.keys(obj)) {
-
-            // connected components are modified only by their source
-            if (Connect.isConnectedProperty(obj, key))
-                continue;
-
-            // other objects
-            var newSubReducer = ComponentReducer.combineReducersRecursion((obj as any)[key], visited, components);
-            if (typeof newSubReducer === 'function')
-                subReducers[key] = newSubReducer;
-        }
-
-        var resultReducer = rootReducer;
-
-        // combine reducers
-        if (Object.keys(subReducers).length) {
-            var combinedSubReducer = simpleCombineReducers(subReducers);
-
-            resultReducer = (state: object, action: ReduxAppAction) => {
-
-                const thisState = rootReducer(state, action);
-                const subStates = combinedSubReducer(thisState, action);
-
-                // merge self and sub states
-                const combinedState = ComponentReducer.mergeState(thisState, subStates);
-
-                return combinedState;
-            };
-        }
-
-        return resultReducer;
-    }
-
-    private static mergeState(state: any, subStates: any): any {
-
-        if (Array.isArray(state) && Array.isArray(subStates)) {
-
-            // merge arrays
-            for (let i = 0; i < subStates.length; i++)
-                state[i] = subStates[i];
-            return state;
-
-        } else {
-
-            // merge objects
-            return {
-                ...state,
-                ...subStates
-            };
-        }
     }
 
     private static finalizeState(rootState: any, root: any): any {
