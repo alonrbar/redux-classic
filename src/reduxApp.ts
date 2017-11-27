@@ -110,7 +110,7 @@ export class ReduxApp<T extends object> {
 
         // update the store
         if (options.updateState) {
-            const stateListener = this.updateState(changedComponents);
+            const stateListener = this.updateState(creationContext.createdComponents, changedComponents);
             this.subscriptionDisposer = this.store.subscribe(stateListener);
         }
         this.store.replaceReducer(rootReducer);
@@ -204,7 +204,10 @@ export class ReduxApp<T extends object> {
     // update state
     //
 
-    private updateState(changedComponents: IMap<Component>): Listener {
+    private updateState(allComponents: IMap<Component>, changedComponents: IMap<Component>): Listener {
+
+        const withComputedProps = Computed.filterComponents(Object.values(allComponents));
+
         return () => {
 
             //
@@ -224,7 +227,7 @@ export class ReduxApp<T extends object> {
             }
 
             // assign computed properties
-            Computed.computeProps(this.root);
+            Computed.computeProps(withComputedProps);
 
             const end = Date.now();
 

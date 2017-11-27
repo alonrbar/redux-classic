@@ -102,10 +102,11 @@ describe(nameof(computed), () => {
         @component
         class App {
             public greeter = new ComputedGreeter();
-            public connectedComputed = new ConnectedCompute();
+            public connectedComputed = new ConnectedComputed();
         }
 
-        class ConnectedCompute {
+        @component
+        class ConnectedComputed {
 
             @connect
             public linkToGreeter: ComputedGreeter;

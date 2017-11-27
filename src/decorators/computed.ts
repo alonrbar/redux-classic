@@ -1,6 +1,6 @@
+import { Component } from '../components';
 import { ClassInfo } from '../info';
-import { dataDescriptor, deferredDefineProperty, transformDeep, TransformOptions } from '../utils';
-import { Connect } from './connect';
+import { dataDescriptor, deferredDefineProperty } from '../utils';
 
 /**
  * Property decorator.
@@ -27,8 +27,6 @@ export class Computed {
 
     public static readonly placeholder = '<computed>';
 
-    private static transformOptions: TransformOptions;
-
     public static isComputedProperty(propHolder: object, propKey: string | symbol): boolean {
         const info = ClassInfo.getInfo(propHolder);
         return info && (typeof info.computedGetters[propKey] === 'function');
@@ -50,39 +48,39 @@ export class Computed {
         return newState;
     }
 
-    public static computeProps(root: any): void {
-        if (!Computed.transformOptions) {
-            const options = new TransformOptions();
-            options.propertyPreTransform = (target, source, key) => !Connect.isConnectedProperty(target, key);
-            Computed.transformOptions = options;
-        }
+    public static filterComponents(components: Component[]): Component[] {
+        return components.filter(comp => {
+            const info = ClassInfo.getInfo(comp);
+            return info && Object.keys(info.computedGetters);
+        });
+    }
 
-        transformDeep(root, root, Computed.computeTargetProps, Computed.transformOptions);
+    public static computeProps(components: Component[]): void {
+        for (let comp of components) {
+            this.computeObjectProps(comp);
+        }
     }
 
     /**
      * Replace each computed property of 'obj' with it's current computed value.
      */
-    private static computeTargetProps(target: any, source: any): any {
+    private static computeObjectProps(obj: any): void {
 
-        // obj may be a component or any other object
-        const info = ClassInfo.getInfo(target);
+        const info = ClassInfo.getInfo(obj);
         if (!info)
-            return target;
+            return;
 
         for (let propKey of Object.keys(info.computedGetters)) {
 
             // get old value
             var getter = info.computedGetters[propKey];
-            var newValue = getter.call(target);
+            var newValue = getter.call(obj);
 
             // update if necessary
-            var oldValue = target[propKey];
+            var oldValue = obj[propKey];
             if (newValue !== oldValue) {
-                target[propKey] = newValue;
+                obj[propKey] = newValue;
             }
         }
-
-        return target;
     }
 }
