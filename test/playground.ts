@@ -4,6 +4,7 @@ import { Component } from 'src/components';
 
 describe('playground', () => {
     it("a place to run wild", () => {
+
         @component
         class Root {
             public first = {
@@ -12,29 +13,37 @@ describe('playground', () => {
         }
 
         class Level2 {
-            public third = new Level3();
-        }
-
-        class Level3 {
-            public some = new ThisIsAComponent();
+            public theComponent = new ThisIsAComponent();
         }
 
         @component
         class ThisIsAComponent {
-            public dispatchMe() {
-                /* noop */
+
+            public value: string = 'before';
+
+            public changeValue() {
+                this.value = 'after';
             }
         }
 
+        const preLoadedState = {
+            first: {
+                second: {
+                    theComponent: {
+                        value: 'I am here!'
+                    }
+                }
+            }
+        };
+
         // create component tree
-        const app = new ReduxApp(new Root());
-        try {
+        const root = new Root();
+        expect(root.first.second.theComponent).to.be.an.instanceOf(ThisIsAComponent);
+        expect(root.first.second.theComponent.value).to.eql('before');
 
-            debugger;
-            expect(app.root.first.second.third.some).to.be.an.instanceOf(Component);
-
-        } finally {
-            app.dispose();
-        }
+        // create the app
+        const app = new ReduxApp(root, undefined, preLoadedState);
+        expect(app.root.first.second.theComponent).to.be.an.instanceOf(Component);
+        expect(app.root.first.second.theComponent.value).to.eql('I am here!');
     });
 });

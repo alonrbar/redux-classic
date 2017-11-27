@@ -3,12 +3,24 @@ import { Computed, Connect, IgnoreState } from '../decorators';
 import { ComponentInfo, CreatorInfo, getCreatorMethods } from '../info';
 import { getActionName } from '../options';
 import { IMap, Method } from '../types';
-import { getMethods, isPrimitive, log, simpleCombineReducers, transformDeep, TransformOptions } from '../utils';
+import { clearProperties, getMethods, isPrimitive, log, simpleCombineReducers, transformDeep, TransformOptions } from '../utils';
 import { ReduxAppAction } from './actions';
 import { Component } from './component';
-import { RecursionContext } from './recursionContext';
 
 // tslint:disable:member-ordering
+
+export type ReducerCreator = (componentPath: string, changedComponents: IMap<Component>) => Reducer<object>;
+
+export class CombineReducersContext {
+    
+    public path = 'root';
+    public visited = new Set();
+    public components: IMap<Component> = {};    
+
+    constructor(initial?: Partial<CombineReducersContext>) {
+        Object.assign(this, initial);
+    }
+}
 
 export class ComponentReducer {
 
@@ -20,18 +32,18 @@ export class ComponentReducer {
     // public methods
     //
 
-    public static createReducer(component: Component, creator: object): Reducer<object> {
+    public static createReducer(component: Component, componentCreator: object): ReducerCreator {
 
         // method names lookup
-        const methods = getCreatorMethods(creator);
-        const creatorInfo = CreatorInfo.getInfo(creator);
+        const methods = getCreatorMethods(componentCreator);
+        const creatorInfo = CreatorInfo.getInfo(componentCreator);
         if (!creatorInfo)
-            throw new Error(`Inconsistent component '${creator.constructor.name}'. The 'component' class decorator is missing.`);
+            throw new Error(`Inconsistent component '${componentCreator.constructor.name}'. The 'component' class decorator is missing.`);
 
         const options = creatorInfo.options;
         const methodNames: any = {};
         Object.keys(methods).forEach(methName => {
-            var actionName = getActionName(creator, methName, options);
+            var actionName = getActionName(componentCreator, methName, options);
             methodNames[actionName] = methName;
         });
 
@@ -42,47 +54,56 @@ export class ComponentReducer {
         const componentId = ComponentInfo.getInfo(component).id;
 
         // the reducer
-        return (state: object, action: ReduxAppAction) => {
+        return (componentPath: string, changedComponents: IMap<Component>) => {
 
-            log.verbose(`[reducer] Reducer of: ${creator.constructor.name}, action: ${action.type}`);
+            return (state: object, action: ReduxAppAction) => {
 
-            // initial state
-            if (state === undefined) {
-                log.verbose('[reducer] State is undefined, returning initial value');
-                return component;
-            }
+                log.verbose(`[reducer] Reducer of: ${componentCreator.constructor.name}, action: ${action.type}`);
 
-            // check component id
-            if (componentId !== action.id) {
-                log.verbose(`[reducer] Component id and action.id don't match (${componentId} !== ${action.id})`);
-                return state;
-            }
+                // initial state
+                if (state === undefined) {
+                    log.verbose('[reducer] State is undefined, returning initial value');
+                    return component;
+                }
 
-            // check if should use this reducer
-            const methodName = methodNames[action.type];
-            const actionReducer = methods[methodName];
-            if (!actionReducer) {
-                log.verbose('[reducer] No matching action in this reducer, returning previous state');
-                return state;
-            }
+                // check component id
+                if (componentId !== action.id) {
+                    log.verbose(`[reducer] Component id and action.id don't match (${componentId} !== ${action.id})`);
+                    return state;
+                }
 
-            // call the action-reducer with the new state as the 'this' argument
-            const newState = ComponentReducer.createStateObject(state, stateProto);
-            actionReducer.call(newState, ...action.payload);
+                // check if should use this reducer
+                const methodName = methodNames[action.type];
+                const actionReducer = methods[methodName];
+                if (!actionReducer) {
+                    log.verbose('[reducer] No matching action in this reducer, returning previous state');
+                    return state;
+                }
 
-            // return new state
-            log.verbose('[reducer] Reducer invoked, returning new state');
-            return newState;
+                // call the action-reducer with the new state as the 'this' argument
+                const newState = ComponentReducer.createStateObject(state, stateProto);
+                actionReducer.call(newState, ...action.payload);
+
+                // register changes
+                changedComponents[componentPath] = component;
+
+                // return new state                
+                log.verbose('[reducer] Reducer invoked, returning new state');
+                return newState;
+            };
         };
     }
 
-    public static combineReducersTree(root: Component, context: RecursionContext): Reducer<any> {
+    public static combineReducersTree(root: Component, changedComponents: IMap<Component>, context: CombineReducersContext): Reducer<any> {
 
-        context = Object.assign(new RecursionContext(), context);
-        const reducer = ComponentReducer.combineReducersRecursion(root, context);
+        context = Object.assign(new CombineReducersContext(), context);
+        const reducer = ComponentReducer.combineReducersRecursion(root, changedComponents, context);
 
         return (state: any, action: ReduxAppAction) => {
             const start = Date.now();
+
+            // clear previous change records
+            clearProperties(changedComponents);
 
             var newState = reducer(state, action);
             newState = ComponentReducer.finalizeState(newState, root);
@@ -134,7 +155,7 @@ export class ComponentReducer {
     // private methods - combine reducers
     //
 
-    private static combineReducersRecursion(obj: any, context: RecursionContext): Reducer<any> {
+    private static combineReducersRecursion(obj: any, changedComponents: IMap<Component>, context: CombineReducersContext): Reducer<any> {
 
         // no need to search inside primitives
         if (isPrimitive(obj))
@@ -153,7 +174,7 @@ export class ComponentReducer {
         var rootReducer: Reducer<any>;
         const info = ComponentInfo.getInfo(obj as any);
         if (info) {
-            rootReducer = info.reducer;
+            rootReducer = info.reducerCreator(context.path, changedComponents);
         } else {
             rootReducer = ComponentReducer.identityReducer;
         }
@@ -167,7 +188,7 @@ export class ComponentReducer {
                 continue;
 
             // other objects
-            var newSubReducer = ComponentReducer.combineReducersRecursion((obj as any)[key], {
+            var newSubReducer = ComponentReducer.combineReducersRecursion((obj as any)[key], changedComponents, {
                 ...context,
                 path: (context.path === '' ? key : context.path + '.' + key)
             });

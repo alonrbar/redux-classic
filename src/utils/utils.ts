@@ -91,3 +91,10 @@ export function toPlainObject(obj: any): any {
     const json = JSON.stringify(obj, (key: any, value: any) => value === undefined ? null : value);
     return JSON.parse(json);
 }
+
+export function clearProperties(obj: any): void {
+    const keys = Object.keys(obj);
+    for (let key of keys) {
+        delete obj[key];
+    }
+}

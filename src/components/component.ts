@@ -3,20 +3,22 @@ import { ComponentId, Connect } from '../decorators';
 import { ClassInfo, ComponentInfo, CreatorInfo } from '../info';
 import { globalOptions } from '../options';
 import { ReduxApp } from '../reduxApp';
+import { IMap } from '../types';
 import { isPrimitive } from '../utils';
 import { ComponentActions } from './actions';
-import { RecursionContext } from './recursionContext';
 import { ComponentReducer } from './reducer';
 
-// tslint:disable:member-ordering variable-name
-
-export class ComponentCreationContext extends RecursionContext {
+export class ComponentCreationContext {
     
     public appName: string;
-    public parentCreator: object;
+    
+    public path = 'root';
+    public visited = new Set();
+    public parentCreator: object;    
+
+    public createdComponents: IMap<Component> = {};
 
     constructor(initial?: Partial<ComponentCreationContext>) {
-        super(initial);
         Object.assign(this, initial);
     }
 }
@@ -31,8 +33,8 @@ export class Component {
 
         context = Object.assign(new ComponentCreationContext(), context);
 
-        // create the component
-        var ComponentClass = Component.getComponentClass(creator);
+        // create the component        
+        var ComponentClass = Component.getComponentClass(creator);  // tslint:disable-line:variable-name
         const component = new ComponentClass(store, creator, context as ComponentCreationContext);
 
         // register it on it's containing app
@@ -99,7 +101,7 @@ export class Component {
         selfInfo.dispatch = store.dispatch;
 
         // reducer
-        selfInfo.reducer = ComponentReducer.createReducer(component, creator);
+        selfInfo.reducerCreator = ComponentReducer.createReducer(component, creator);
     }
 
     private static createSubComponents(obj: any, store: Store<object>, creator: object, context: ComponentCreationContext): void {
@@ -156,7 +158,7 @@ export class Component {
         Component.createSelf(this, store, creator, context);
         Component.createSubComponents(this, store, creator, context);
 
-        context.components[context.path] = this;
+        context.createdComponents[context.path] = this;
     }
 
     // 

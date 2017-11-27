@@ -1,5 +1,5 @@
-import { Dispatch, Reducer } from 'redux';
-import { Component } from '../components';
+import { Dispatch } from 'redux';
+import { Component, ReducerCreator } from '../components';
 import { COMPONENT_INFO, getSymbol, setSymbol } from '../symbols';
 
 // tslint:disable:ban-types
@@ -23,5 +23,5 @@ export class ComponentInfo {
     public id: any;
     public originalClass: Function;
     public dispatch: Dispatch<any>;
-    public reducer: Reducer<any>;
+    public reducerCreator: ReducerCreator;
 }
