@@ -6,20 +6,17 @@ import { ReduxApp } from '../reduxApp';
 import { IMap } from '../types';
 import { isPrimitive } from '../utils';
 import { ComponentActions } from './actions';
+import { RecursionContext } from './recursionContext';
 import { ComponentReducer } from './reducer';
 
-export class ComponentCreationContext {
+export class ComponentCreationContext extends RecursionContext {
     
     public appName: string;
-    
-    public path = 'root';
-    public visited = new Set();
     public parentCreator: object;    
-
     public createdComponents: IMap<Component> = {};
 
     constructor(initial?: Partial<ComponentCreationContext>) {
-        Object.assign(this, initial);
+        super(initial);
     }
 }
 

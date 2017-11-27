@@ -1,9 +1,9 @@
 import { createStore, Store, StoreEnhancer } from 'redux';
-import { Component, ComponentCreationContext, ComponentReducer, CombineReducersContext } from './components';
+import { Component, ComponentCreationContext, ComponentReducer, RecursionContext } from './components';
 import { ComponentId, Computed, Connect, IgnoreState } from './decorators';
 import { ComponentInfo } from './info';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
-import { IMap } from './types';
+import { IMap, Listener } from './types';
 import { isPrimitive, log, toPlainObject } from './utils';
 var getProp = require('lodash.get');
 
@@ -13,11 +13,6 @@ var getProp = require('lodash.get');
 // internal
 //
 
-export class UpdateStateContext {
-    public path = 'root';
-    public visited = new Set();
-}
-
 export const DEFAULT_APP_NAME = 'default';
 
 export const appsRepository: IMap<ReduxApp<any>> = {};
@@ -25,8 +20,6 @@ export const appsRepository: IMap<ReduxApp<any>> = {};
 export type AppWarehouse = Map<Function, Map<any, any>>;
 
 var appsCount = 0;
-
-type Listener = () => void;
 
 //
 // public
@@ -110,8 +103,7 @@ export class ReduxApp<T extends object> {
 
         // create the root reducer
         const changedComponents: IMap<Component> = {};
-        const combineContext = new CombineReducersContext({ components: creationContext.createdComponents });
-        const rootReducer = ComponentReducer.combineReducersTree(rootComponent, changedComponents, combineContext);
+        const rootReducer = ComponentReducer.combineReducersTree(this.root, creationContext.createdComponents, changedComponents);
 
         // update the store
         if (options.updateState) {
@@ -219,9 +211,8 @@ export class ReduxApp<T extends object> {
             const start = Date.now();
 
             // update the application tree
-            const newState = this.store.getState();
-            const updateContext = new UpdateStateContext();
-            this.updateComponents({ root: newState }, changedComponents, updateContext);
+            const newState = this.store.getState();            
+            this.updateComponents({ root: newState }, changedComponents);
 
             // assign computed properties
             Computed.computeProps(this.root);
@@ -232,20 +223,21 @@ export class ReduxApp<T extends object> {
         };
     }
 
-    private updateComponents(newState: any, changedComponents: IMap<Component>, context: UpdateStateContext): void {
+    private updateComponents(newState: any, changedComponents: IMap<Component>): void {
 
         const changedPaths = Object.keys(changedComponents);
+        const updateContext = new RecursionContext();
 
         for (let path of changedPaths) {
 
             const curComponent = changedComponents[path];
             var newSubState = getProp(newState, path);
 
-            this.updateStateRecursion(curComponent, newSubState, context);
+            this.updateStateRecursion(curComponent, newSubState, updateContext);
         }
     }
 
-    private updateStateRecursion(obj: any, newState: any, context: UpdateStateContext): any {
+    private updateStateRecursion(obj: any, newState: any, context: RecursionContext): any {
 
         // same object
         if (obj === newState)
@@ -292,7 +284,7 @@ export class ReduxApp<T extends object> {
         return obj;
     }
 
-    private updateObject(obj: any, newState: any, context: UpdateStateContext): string {
+    private updateObject(obj: any, newState: any, context: RecursionContext): string {
 
         // delete anything not in the new state
         var propsDeleted: string[] = [];
@@ -357,7 +349,7 @@ export class ReduxApp<T extends object> {
         }
     }
 
-    private updateArray(arr: any[], newState: any[], context: UpdateStateContext): string {
+    private updateArray(arr: any[], newState: any[], context: RecursionContext): string {
 
         var changeMessage: string[] = [];
 

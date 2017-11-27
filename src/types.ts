@@ -10,3 +10,5 @@ export type Getter = () => any;
 export interface IMap<T> { 
     [key: string]: T;
 }
+
+export type Listener<T = any> = (arg?: T) => void;

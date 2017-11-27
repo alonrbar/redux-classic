@@ -227,9 +227,9 @@ describe(nameof(Component), () => {
             const store = new FakeStore();
             const comp = Component.create(store, new Person());
             const info = ComponentInfo.getInfo(comp);
-            const reducer = info.reducerCreator;
+            const reducer = info.reducerCreator(() => { /* noop */ });
 
-            expect(() => reducer(null, null)({}, { type: 'PERSON.SHOULD_THROW' })).to.throw;
+            expect(() => reducer({}, { type: 'PERSON.SHOULD_THROW' })).to.throw;
         });
 
         it("throws when invoking an action from within another action (implicit call)", () => {
@@ -273,9 +273,9 @@ describe(nameof(Component), () => {
             const store = new FakeStore();
             const comp = Component.create(store, new Person());
             const info = ComponentInfo.getInfo(comp);
-            const reducer = info.reducerCreator;
+            const reducer = info.reducerCreator(() => { /* noop */ });
 
-            var newState = reducer(null, null)({}, { type: 'PERSON.CHANGE_NAME', payload: ['alon'] }) as any;
+            var newState = reducer({}, { type: 'PERSON.CHANGE_NAME', payload: ['alon'] }) as any;
 
             expect(newState.name).to.eql('ALON');
         });
