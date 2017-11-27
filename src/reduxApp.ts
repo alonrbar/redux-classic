@@ -103,7 +103,8 @@ export class ReduxApp<T extends object> {
 
         // create the root reducer
         const changedComponents: IMap<Component> = {};
-        const rootReducer = ComponentReducer.combineReducersTree(this.root, creationContext.createdComponents, changedComponents);
+        const componentPaths = Object.keys(creationContext.createdComponents);
+        const rootReducer = ComponentReducer.combineReducersTree(this.root, componentPaths, changedComponents);
 
         // update the store
         if (options.updateState) {

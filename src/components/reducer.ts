@@ -14,7 +14,7 @@ export type ReducerCreator = (changeListener: Listener<Component>) => Reducer<ob
 
 export class CombineReducersContext extends RecursionContext {
 
-    public allComponents: IMap<Component> = {};
+    public componentPaths: string[] = [];
     public changedComponents: IMap<Component> = {};
 
     constructor(initial?: Partial<CombineReducersContext>) {
@@ -96,10 +96,10 @@ export class ComponentReducer {
         };
     }
 
-    public static combineReducersTree(root: Component, allComponents: IMap<Component>, changedComponents: IMap<Component>): Reducer<any> {
+    public static combineReducersTree(root: Component, componentPaths: string[], changedComponents: IMap<Component>): Reducer<any> {
 
         const context = new CombineReducersContext({
-            allComponents,
+            componentPaths,
             changedComponents
         });
         const reducer = ComponentReducer.combineReducersRecursion(root, context);
@@ -172,7 +172,7 @@ export class ComponentReducer {
         context.visited.add(obj);
 
         // ignore branches with no descendant components
-        if (!Object.keys(context.allComponents).some(path => path.startsWith(context.path)))
+        if (!context.componentPaths.some(path => path.startsWith(context.path)))
             return ComponentReducer.identityReducer;
 
         // get the root reducer
