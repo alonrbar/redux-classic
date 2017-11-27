@@ -72,6 +72,8 @@ export class ReduxApp<T extends object> {
 
     private readonly warehouse: AppWarehouse = new Map<Function, Map<any, any>>();
 
+    private initialStateUpdate = true;
+
     private subscriptionDisposer: () => void;
 
     //
@@ -108,7 +110,8 @@ export class ReduxApp<T extends object> {
 
         // update the store
         if (options.updateState) {
-            this.subscriptionDisposer = this.store.subscribe(this.updateState(changedComponents));
+            const stateListener = this.updateState(changedComponents);
+            this.subscriptionDisposer = this.store.subscribe(stateListener);
         }
         this.store.replaceReducer(rootReducer);
     }
@@ -212,8 +215,13 @@ export class ReduxApp<T extends object> {
             const start = Date.now();
 
             // update the application tree
-            const newState = this.store.getState();            
-            this.updateComponents({ root: newState }, changedComponents);
+            const newState = this.store.getState();
+            if (this.initialStateUpdate) {
+                this.initialStateUpdate = false;
+                this.updateStateRecursion(this.root, newState, new RecursionContext());
+            } else {
+                this.updateComponents({ root: newState }, changedComponents);
+            }
 
             // assign computed properties
             Computed.computeProps(this.root);
