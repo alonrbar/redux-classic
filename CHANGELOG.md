@@ -1,11 +1,17 @@
 # Change Log
 
-## [1.9.0 - 2017-11-25](https://github.com/alonrbar/redux-app/tree/v1.9.0)
+## [1.9.0 - 2017-11-28](https://github.com/alonrbar/redux-app/tree/v1.9.0)
 
 ## Added
 
 - New decorator: `ignoreState`.
 - Allow `noDispatch` calls inside actions.
+- Significant performance boost (reducers and update state logic refactored).
+
+## Removed
+
+- Breaking change: Can no longer use the `computed` decorator on non-components.
+- Remove some verbose log messages.
 
 ## [1.8.1 - 2017-11-18](https://github.com/alonrbar/redux-app/tree/v1.8.0)
 
@@ -76,7 +82,7 @@
 ### Changed
 
 - Marked the `computed` decorator as experimental (requires further testing and validation).
-- Set default log level to LogLevel.Warn.
+- Set default log level to `LogLevel.Warn`.
 - Remove some verbose log messages.
 
 ### Fix
