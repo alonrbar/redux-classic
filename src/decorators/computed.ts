@@ -1,5 +1,5 @@
 import { ClassInfo } from '../info';
-import { dataDescriptor, deferredDefineProperty, log, transformDeep, TransformOptions } from '../utils';
+import { dataDescriptor, deferredDefineProperty, transformDeep, TransformOptions } from '../utils';
 import { Connect } from './connect';
 
 /**
@@ -74,13 +74,11 @@ export class Computed {
 
             // get old value
             var getter = info.computedGetters[propKey];
-            log.verbose(`[computeProps] computing new value of '${propKey}'`);
             var newValue = getter.call(target);
 
             // update if necessary
             var oldValue = target[propKey];
             if (newValue !== oldValue) {
-                log.verbose(`[computeProps] updating the state of '${propKey}'. New value: '${newValue}', Old value: '${oldValue}'.`);
                 target[propKey] = newValue;
             }
         }

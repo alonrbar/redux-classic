@@ -85,8 +85,7 @@ export class GlobalOptions {
      */
     public emitClassNames = false;
     /**
-     * From the original redux FAQ: 
-     * ----------------------------
+     * ### From the original redux FAQ: 
      * 
      * Q: Can I put functions, promises, or other non-serializable items in my
      * store state? 
@@ -104,8 +103,7 @@ export class GlobalOptions {
      * things about Redux, just be sure you understand what tradeoffs are
      * involved. 
      * 
-     * The case in redux-app:
-     * ----------------------
+     * ### The case in redux-app:
      * 
      * By default redux-app aligns with redux recommendations and treats
      * everything stored in the store state as a plain object to prevent the
