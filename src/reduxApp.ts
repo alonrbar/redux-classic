@@ -245,7 +245,10 @@ export class ReduxApp<T extends object> {
             const curComponent = changedComponents[path];
             var newSubState = getProp(newState, path);
 
-            this.updateStateRecursion(curComponent, newSubState, updateContext);
+            this.updateStateRecursion(curComponent, newSubState, {
+                ...updateContext,
+                path
+            });
         }
     }
 
@@ -285,10 +288,8 @@ export class ReduxApp<T extends object> {
             obj = newState;
         }
 
-        // handle changes
+        // log changes
         if (changeMessage && changeMessage.length) {
-
-            // log
             log.debug(`[updateState] Change in '${context.path}'. ${changeMessage}`);
             log.verbose(`[updateState] New state: `, obj);
         }
@@ -334,7 +335,7 @@ export class ReduxApp<T extends object> {
 
             // convert to plain object (see comment on the options itself)
             if (subState !== subObj && globalOptions.convertToPlainObject)
-                newState = toPlainObject(newState);
+                subState = toPlainObject(subState);
 
             // must update recursively, otherwise we may lose children types (and methods...)
             const newSubObj = this.updateStateRecursion(subObj, subState, {
