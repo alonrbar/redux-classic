@@ -40,19 +40,19 @@ describe(nameof(computed), () => {
         }
 
         class Second {
-            public third = new ComputedGreeter();
+            public greeter = new ComputedGreeter();
         }
 
         const app = new ReduxApp(new Root());
 
         try {
-            expect(app.root.first.second.third.welcomeString).to.equal('hello undefined');
+            expect(app.root.first.second.greeter.welcomeString).to.equal('hello undefined');
         } finally {
             app.dispose();
         }
     });
 
-    it("computes a value", () => {
+    it("updates computed value", () => {
 
         const app = new ReduxApp(new ComputedGreeter());
         try {
@@ -69,7 +69,7 @@ describe(nameof(computed), () => {
         }
     });
 
-    it("computes a nested value", () => {
+    it("updates nested computed value", () => {
 
         @component
         class Root {
@@ -79,18 +79,67 @@ describe(nameof(computed), () => {
         }
 
         class Second {
-            public third = new ComputedGreeter();
+            public greeter = new ComputedGreeter();
         }
 
         const app = new ReduxApp(new Root());
         try {
 
             // assert before
-            expect(app.root.first.second.third.welcomeString).to.equal('hello undefined');
+            expect(app.root.first.second.greeter.welcomeString).to.equal('hello undefined');
 
             // assert after
-            app.root.first.second.third.setName('Alon');
-            expect(app.root.first.second.third.welcomeString).to.equal('hello Alon');
+            app.root.first.second.greeter.setName('Alon');
+            expect(app.root.first.second.greeter.welcomeString).to.equal('hello Alon');
+
+        } finally {
+            app.dispose();
+        }
+    });
+
+    it("computed values are not persisted on the store", () => {
+
+        const app = new ReduxApp(new ComputedGreeter());
+        try {
+
+            // assert before
+            expect(app.root.welcomeString).to.equal('hello undefined');
+            expect(app.store.getState().welcomeString).to.equal(Computed.placeholder);
+
+            // assert after
+            app.root.setName('Alon');
+            expect(app.root.welcomeString).to.equal('hello Alon');
+            expect(app.store.getState().welcomeString).to.equal(Computed.placeholder);
+
+        } finally {
+            app.dispose();
+        }
+    });
+
+    it("nested computed values are not persisted on the store", () => {
+
+        @component
+        class Root {
+            public first = {
+                second: new Second()
+            };
+        }
+
+        class Second {
+            public greeter = new ComputedGreeter();
+        }
+
+        const app = new ReduxApp(new Root());
+        try {
+
+            // assert before
+            expect(app.root.first.second.greeter.welcomeString).to.equal('hello undefined');
+            expect(app.store.getState().first.second.greeter.welcomeString).to.equal(Computed.placeholder);
+
+            // assert after
+            app.root.first.second.greeter.setName('Alon');
+            expect(app.root.first.second.greeter.welcomeString).to.equal('hello Alon');
+            expect(app.store.getState().first.second.greeter.welcomeString).to.equal(Computed.placeholder);
 
         } finally {
             app.dispose();
@@ -127,36 +176,6 @@ describe(nameof(computed), () => {
 
             expect(app.root.greeter.welcomeString).to.eql('hello Alon');
             expect(app.root.connectedComputed.upperCaseGreeting).to.eql('HELLO ALON');
-
-        } finally {
-            app.dispose();
-        }
-    });
-
-    it("computed values are not persisted on the store", () => {
-
-        @component
-        class Root {
-            public first = {
-                second: new Second()
-            };
-        }
-
-        class Second {
-            public third = new ComputedGreeter();
-        }
-
-        const app = new ReduxApp(new Root());
-        try {
-
-            // assert before
-            expect(app.root.first.second.third.welcomeString).to.equal('hello undefined');
-            expect(app.store.getState().first.second.third.welcomeString).to.equal(Computed.placeholder);
-
-            // assert after
-            app.root.first.second.third.setName('Alon');
-            expect(app.root.first.second.third.welcomeString).to.equal('hello Alon');
-            expect(app.store.getState().first.second.third.welcomeString).to.equal(Computed.placeholder);
 
         } finally {
             app.dispose();
