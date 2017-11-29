@@ -1,6 +1,6 @@
 # Change Log
 
-## [1.9.0 - 2017-11-28](https://github.com/alonrbar/redux-app/tree/v1.9.0)
+## [1.9.0 - 2017-11-29](https://github.com/alonrbar/redux-app/tree/v1.9.0)
 
 ## Added
 
@@ -11,7 +11,10 @@
 ## Removed
 
 - Breaking change: Can no longer use the `computed` decorator on non-components.
-- Remove some verbose log messages.
+
+## Changed
+
+- Some log messages changed/removed.
 
 ## [1.8.1 - 2017-11-18](https://github.com/alonrbar/redux-app/tree/v1.8.0)
 
