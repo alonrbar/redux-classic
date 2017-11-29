@@ -2,24 +2,24 @@ import { Reducer, ReducersMapObject } from 'redux';
 import { Computed, Connect, IgnoreState } from '../decorators';
 import { ComponentInfo, CreatorInfo, getCreatorMethods } from '../info';
 import { getActionName } from '../options';
+import { ROOT_COMPONENT_PATH } from '../reduxApp';
 import { IMap, Listener, Method } from '../types';
 import { clearProperties, getMethods, isPrimitive, log, simpleCombineReducers } from '../utils';
 import { ReduxAppAction } from './actions';
 import { Component } from './component';
-import { RecursionContext } from './recursionContext';
 
 // tslint:disable:member-ordering
 
 export type ReducerCreator = (changeListener: Listener<Component>) => Reducer<object>;
 
-export class CombineReducersContext extends RecursionContext {
+export class CombineReducersContext {
 
+    public visited = new Set();
+    public path = ROOT_COMPONENT_PATH;
     public componentPaths: string[] = [];
     public changedComponents: IMap<Component> = {};
 
     constructor(initial?: Partial<CombineReducersContext>) {
-        super();
-
         Object.assign(this, initial);
     }
 }

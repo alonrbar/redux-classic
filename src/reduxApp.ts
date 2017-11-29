@@ -13,6 +13,8 @@ var getProp = require('lodash.get');
 // internal
 //
 
+export const ROOT_COMPONENT_PATH = 'root';
+
 export const DEFAULT_APP_NAME = 'default';
 
 export const appsRepository: IMap<ReduxApp<any>> = {};
@@ -22,9 +24,10 @@ export type AppWarehouse = Map<Function, Map<any, any>>;
 var appsCount = 0;
 
 class UpdateContext {
-    public forceRecursion = false;
+    
     public visited = new Set();
-    public path = 'root';
+    public path = ROOT_COMPONENT_PATH;
+    public forceRecursion = false;
 
     constructor(initial?: Partial<UpdateContext>) {
         Object.assign(this, initial);
@@ -233,7 +236,7 @@ export class ReduxApp<T extends object> {
                 this.initialStateUpdate = false;
                 this.updateStateRecursion(this.root, newState, new UpdateContext({ forceRecursion: true }));
             } else {
-                this.updateComponents({ root: newState }, changedComponents);
+                this.updateComponents({ [ROOT_COMPONENT_PATH]: newState }, changedComponents);
             }
 
             // assign computed properties

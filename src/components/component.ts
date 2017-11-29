@@ -2,21 +2,22 @@ import { Store } from 'redux';
 import { ComponentId, Connect } from '../decorators';
 import { ClassInfo, ComponentInfo, CreatorInfo } from '../info';
 import { globalOptions } from '../options';
-import { ReduxApp } from '../reduxApp';
+import { ReduxApp, ROOT_COMPONENT_PATH } from '../reduxApp';
 import { IMap } from '../types';
 import { isPrimitive, log } from '../utils';
 import { ComponentActions } from './actions';
-import { RecursionContext } from './recursionContext';
 import { ComponentReducer } from './reducer';
 
-export class ComponentCreationContext extends RecursionContext {
+export class ComponentCreationContext {
     
+    public visited = new Set();
+    public path = ROOT_COMPONENT_PATH;
     public appName: string;
     public parentCreator: object;    
     public createdComponents: IMap<Component> = {};
 
     constructor(initial?: Partial<ComponentCreationContext>) {
-        super(initial);
+        Object.assign(this, initial);
     }
 }
 
