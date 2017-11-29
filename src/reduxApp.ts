@@ -1,5 +1,5 @@
 import { createStore, Store, StoreEnhancer } from 'redux';
-import { Component, ComponentCreationContext, ComponentReducer } from './components';
+import { CombineReducersContext, Component, ComponentCreationContext, ComponentReducer } from './components';
 import { ComponentId, Computed, Connect, IgnoreState } from './decorators';
 import { ComponentInfo } from './info';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
@@ -24,7 +24,7 @@ export type AppWarehouse = Map<Function, Map<any, any>>;
 var appsCount = 0;
 
 class UpdateContext {
-    
+
     public visited = new Set();
     public path = ROOT_COMPONENT_PATH;
     public forceRecursion = false;
@@ -117,13 +117,14 @@ export class ReduxApp<T extends object> {
         this.root = (rootComponent as any);
 
         // create the root reducer
-        const changedComponents: IMap<Component> = {};
-        const componentPaths = Object.keys(creationContext.createdComponents);
-        const rootReducer = ComponentReducer.combineReducersTree(this.root, componentPaths, changedComponents);
+        const reducersContext = new CombineReducersContext({
+            componentPaths: Object.keys(creationContext.createdComponents)
+        });
+        const rootReducer = ComponentReducer.combineReducersTree(this.root, reducersContext);
 
         // update the store
         if (options.updateState) {
-            const stateListener = this.updateState(creationContext.createdComponents, changedComponents);
+            const stateListener = this.updateState(creationContext.createdComponents, reducersContext);
             this.subscriptionDisposer = this.store.subscribe(stateListener);
         }
         this.store.replaceReducer(rootReducer);
@@ -217,7 +218,7 @@ export class ReduxApp<T extends object> {
     // update state
     //
 
-    private updateState(allComponents: IMap<Component>, changedComponents: IMap<Component>): Listener {
+    private updateState(allComponents: IMap<Component>, reducersContext: CombineReducersContext): Listener {
 
         const withComputedProps = Computed.filterComponents(Object.values(allComponents));
 
@@ -232,15 +233,23 @@ export class ReduxApp<T extends object> {
 
             // update the application tree
             const newState = this.store.getState();
-            if (this.initialStateUpdate) {
+            if (this.initialStateUpdate || !reducersContext.invoked) {
+
+                // initial state, state rehydration, time-travel debugging, etc. - update the entire tree
                 this.initialStateUpdate = false;
                 this.updateStateRecursion(this.root, newState, new UpdateContext({ forceRecursion: true }));
             } else {
-                this.updateComponents({ [ROOT_COMPONENT_PATH]: newState }, changedComponents);
+
+                // standard update - update only changed components
+                this.updateChangedComponents({ [ROOT_COMPONENT_PATH]: newState }, reducersContext.changedComponents);
             }
 
-            // assign computed properties
+            // because computed props may be dependant on connected props their
+            // calculation is postponed to after the entire app tree is up-to-date
             Computed.computeProps(withComputedProps);
+
+            // reset reducers context
+            reducersContext.reset();
 
             const end = Date.now();
 
@@ -248,7 +257,7 @@ export class ReduxApp<T extends object> {
         };
     }
 
-    private updateComponents(newState: any, changedComponents: IMap<Component>): void {
+    private updateChangedComponents(newState: any, changedComponents: IMap<Component>): void {
 
         const changedPaths = Object.keys(changedComponents);
         const updateContext = new UpdateContext();
@@ -282,6 +291,10 @@ export class ReduxApp<T extends object> {
 
         // update
         const newStateType = newState.constructor;
+
+        // convert to plain object (see comment on the option itself)
+        if (globalOptions.convertToPlainObject)
+            newState = toPlainObject(newState);
 
         if (context.forceRecursion || (obj instanceof Component && newStateType === Object)) {
 
@@ -333,8 +346,7 @@ export class ReduxApp<T extends object> {
             if (Connect.isConnectedProperty(obj, key))
                 return;
 
-            // because computed props may be dependant on connected props their
-            // calculation is postponed to after the entire app tree is up-to-date
+            // see comment about computed properties in updateState
             if (Computed.isComputedProperty(obj, key))
                 return;
 
@@ -343,10 +355,6 @@ export class ReduxApp<T extends object> {
 
             var subState = newState[key];
             var subObj = obj[key];
-
-            // convert to plain object (see comment on the options itself)
-            if (subState !== subObj && globalOptions.convertToPlainObject)
-                subState = toPlainObject(subState);
 
             // must update recursively, otherwise we may lose children types (and methods...)
             const newSubObj = this.updateStateRecursion(subObj, subState, {

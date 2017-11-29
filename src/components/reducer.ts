@@ -18,9 +18,15 @@ export class CombineReducersContext {
     public path = ROOT_COMPONENT_PATH;
     public componentPaths: string[] = [];
     public changedComponents: IMap<Component> = {};
+    public invoked = false;
 
     constructor(initial?: Partial<CombineReducersContext>) {
         Object.assign(this, initial);
+    }
+
+    public reset(): void {
+        clearProperties(this.changedComponents);
+        this.invoked = false;
     }
 }
 
@@ -94,20 +100,15 @@ export class ComponentReducer {
         };
     }
 
-    public static combineReducersTree(root: Component, componentPaths: string[], changedComponents: IMap<Component>): Reducer<any> {
+    public static combineReducersTree(root: Component, context: CombineReducersContext): Reducer<any> {
 
-        const context = new CombineReducersContext({
-            componentPaths,
-            changedComponents
-        });
         const reducer = ComponentReducer.combineReducersRecursion(root, context);
 
         return (state: any, action: ReduxAppAction) => {
-            const start = Date.now();
+            const start = Date.now();            
 
-            // clear previous change records
-            clearProperties(changedComponents);
-
+            context.invoked = true;
+            
             var newState = reducer(state, action);
             newState = ComponentReducer.finalizeState(newState, root);
 
@@ -193,10 +194,10 @@ export class ComponentReducer {
                 continue;
 
             // other objects
-            var newSubReducer = ComponentReducer.combineReducersRecursion((obj as any)[key], {
+            var newSubReducer = ComponentReducer.combineReducersRecursion((obj as any)[key], new CombineReducersContext({
                 ...context,
                 path: (context.path === '' ? key : context.path + '.' + key)
-            });
+            }));
             if (typeof newSubReducer === 'function')
                 subReducers[key] = newSubReducer;
         }
