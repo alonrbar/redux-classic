@@ -1,5 +1,6 @@
 import { Component } from '../components';
 import { ClassInfo } from '../info';
+import { IMap } from '../types';
 import { dataDescriptor, deferredDefineProperty } from '../utils';
 
 /**
@@ -36,11 +37,15 @@ export class Computed {
      * Returns a shallow clone of 'state' with it's computed props replaced with
      * Computed.placeholder.
      */
-    public static removeComputedProps(state: any, obj: any): any {
+    public static removeComputedProps(state: any, obj: any, computedProps: IMap<any>): any {
         const info = ClassInfo.getInfo(obj);
         if (!info)
             return state;
 
+        // populate output parameter
+        Object.assign(computedProps, info.computedGetters);
+
+        // remove computed props
         const newState = Object.assign({}, state);
         for (let propKey of Object.keys(info.computedGetters)) {
             newState[propKey] = Computed.placeholder;

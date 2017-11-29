@@ -3,7 +3,7 @@ import { Computed, Connect, IgnoreState } from '../decorators';
 import { ComponentInfo, CreatorInfo, getCreatorMethods } from '../info';
 import { getActionName } from '../options';
 import { IMap, Listener, Method } from '../types';
-import { clearProperties, getMethods, isPrimitive, log, simpleCombineReducers, transformDeep, TransformOptions } from '../utils';
+import { clearProperties, getMethods, isPrimitive, log, simpleCombineReducers } from '../utils';
 import { ReduxAppAction } from './actions';
 import { Component } from './component';
 import { RecursionContext } from './recursionContext';
@@ -19,7 +19,7 @@ export class CombineReducersContext extends RecursionContext {
 
     constructor(initial?: Partial<CombineReducersContext>) {
         super();
-        
+
         Object.assign(this, initial);
     }
 }
@@ -27,8 +27,6 @@ export class CombineReducersContext extends RecursionContext {
 export class ComponentReducer {
 
     private static readonly identityReducer = (state: any) => state;
-
-    private static transformOptions: TransformOptions;
 
     //
     // public methods
@@ -243,23 +241,43 @@ export class ComponentReducer {
         }
     }
 
-    private static finalizeState(rootState: any, root: any): any {
-        if (!ComponentReducer.transformOptions) {
-            const options = new TransformOptions();
-            options.propertyPreTransform = (target, source, key) => !Connect.isConnectedProperty(target, key);
-            ComponentReducer.transformOptions = options;
-        }
+    private static finalizeState(rootState: any, root: Component): any {
+        return ComponentReducer.finalizeStateRecursion(rootState, root, new Set());
+    }
 
-        return transformDeep(rootState, root, (subState, subObj) => {
+    private static finalizeStateRecursion(state: any, obj: any, visited: Set<any>): any {
 
-            // replace computed and connected props with placeholders
-            var newSubState = Computed.removeComputedProps(subState, subObj);
-            newSubState = Connect.removeConnectedProps(newSubState, subObj);
+        // primitive properties are updated by their owner objects
+        if (isPrimitive(state) || isPrimitive(obj))
+            return state;
 
-            // removed props that should not be stored in the store
-            newSubState = IgnoreState.removeIgnoredProps(newSubState, subObj);
+        // prevent endless loops on circular references
+        if (visited.has(state))
+            return state;
+        visited.add(state);
 
-            return newSubState;
-        }, ComponentReducer.transformOptions);
+        const handledProps = {};
+        state = Connect.removeConnectedProps(state, obj, handledProps);
+        state = Computed.removeComputedProps(state, obj, handledProps);
+        state = IgnoreState.removeIgnoredProps(state, obj, handledProps);
+
+        // transform children
+        Object.keys(state).forEach(key => {
+
+            // skip already handled properties
+            if (handledProps.hasOwnProperty(key))
+                return;
+
+            var subState = state[key];
+            var subObj = obj[key];
+            var newSubState = ComponentReducer.finalizeStateRecursion(subState, subObj, visited);
+
+            // assign only if changed
+            if (newSubState !== subState) {
+                state[key] = newSubState;
+            }
+        });
+
+        return state;
     }
 }

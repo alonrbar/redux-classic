@@ -1,5 +1,5 @@
 import { createStore, Store, StoreEnhancer } from 'redux';
-import { Component, ComponentCreationContext, ComponentReducer, RecursionContext } from './components';
+import { Component, ComponentCreationContext, ComponentReducer } from './components';
 import { ComponentId, Computed, Connect, IgnoreState } from './decorators';
 import { ComponentInfo } from './info';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
@@ -20,6 +20,16 @@ export const appsRepository: IMap<ReduxApp<any>> = {};
 export type AppWarehouse = Map<Function, Map<any, any>>;
 
 var appsCount = 0;
+
+class UpdateContext {
+    public forceRecursion = false;
+    public visited = new Set();
+    public path = 'root';
+
+    constructor(initial?: Partial<UpdateContext>) {
+        Object.assign(this, initial);
+    }
+}
 
 //
 // public
@@ -221,7 +231,7 @@ export class ReduxApp<T extends object> {
             const newState = this.store.getState();
             if (this.initialStateUpdate) {
                 this.initialStateUpdate = false;
-                this.updateStateRecursion(this.root, newState, new RecursionContext());
+                this.updateStateRecursion(this.root, newState, new UpdateContext({ forceRecursion: true }));
             } else {
                 this.updateComponents({ root: newState }, changedComponents);
             }
@@ -238,7 +248,7 @@ export class ReduxApp<T extends object> {
     private updateComponents(newState: any, changedComponents: IMap<Component>): void {
 
         const changedPaths = Object.keys(changedComponents);
-        const updateContext = new RecursionContext();
+        const updateContext = new UpdateContext();
 
         for (let path of changedPaths) {
 
@@ -252,7 +262,7 @@ export class ReduxApp<T extends object> {
         }
     }
 
-    private updateStateRecursion(obj: any, newState: any, context: RecursionContext): any {
+    private updateStateRecursion(obj: any, newState: any, context: UpdateContext): any {
 
         // same object
         if (obj === newState)
@@ -268,14 +278,11 @@ export class ReduxApp<T extends object> {
         context.visited.add(obj);
 
         // update
-        const targetType = obj.constructor;
         const newStateType = newState.constructor;
 
-        if ((targetType === newStateType) || newStateType === Object) {
+        if (context.forceRecursion || (obj instanceof Component && newStateType === Object)) {
 
-            // update if:
-            // 1. same type
-            // 2. new state is a plain object (this is one of the main reasons we update recursively, to keep methods while updating props)
+            // update if new state is a plain object (so to keep methods while updating props)
             var changeMessage: string;
             if (Array.isArray(obj) && Array.isArray(newState)) {
                 changeMessage = this.updateArray(obj, newState, context);
@@ -284,8 +291,9 @@ export class ReduxApp<T extends object> {
             }
         } else {
 
-            // overwrite, since those are different types (and the newState is not a plain object)
+            // overwrite
             obj = newState;
+            changeMessage = 'Object overwritten.';
         }
 
         // log changes
@@ -297,7 +305,7 @@ export class ReduxApp<T extends object> {
         return obj;
     }
 
-    private updateObject(obj: any, newState: any, context: RecursionContext): string {
+    private updateObject(obj: any, newState: any, context: UpdateContext): string {
 
         // delete anything not in the new state
         var propsDeleted: string[] = [];
@@ -362,7 +370,7 @@ export class ReduxApp<T extends object> {
         }
     }
 
-    private updateArray(arr: any[], newState: any[], context: RecursionContext): string {
+    private updateArray(arr: any[], newState: any[], context: UpdateContext): string {
 
         var changeMessage: string[] = [];
 

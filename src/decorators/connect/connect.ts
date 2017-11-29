@@ -1,5 +1,6 @@
 import { Component } from '../../components';
 import { ClassInfo, ComponentInfo } from '../../info';
+import { IMap } from '../../types';
 
 export class Connect {
 
@@ -28,14 +29,17 @@ export class Connect {
     }
 
     /**
-     * Returns a shallow clone of 'state' with it's computed props replaced with
-     * Connect.placeholder.
+     * Returns a shallow clone of 'state' with it's connected props replaced with a placeholder.
      */
-    public static removeConnectedProps(state: any, obj: any): any {
+    public static removeConnectedProps(state: any, obj: any, connectedProps: IMap<any>): any {
         const info = ClassInfo.getInfo(obj);
         if (!info)
             return state;
 
+        // populate output parameter
+        Object.assign(connectedProps, info.connectedProps);
+
+        // remove connected props
         const newState = Object.assign({}, state);
         for (let propKey of Object.keys(info.connectedProps)) {
             
