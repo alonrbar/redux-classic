@@ -95,7 +95,7 @@ function connectDecorator(target: any, propertyKey: string | symbol, options?: C
 
                 Object.defineProperty(this, propertyKey, dataDescriptor);
                 value = this[propertyKey] = result;
-                log.debug(`[connect] Property '${propertyKey}' connected. Type: ${type.name}.`);
+                log.verbose(`[connect] Property '${propertyKey}' connected. Type: ${type.name}.`);
             }
 
             return result;

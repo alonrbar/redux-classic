@@ -4,7 +4,7 @@ import { ClassInfo, ComponentInfo, CreatorInfo } from '../info';
 import { globalOptions } from '../options';
 import { ReduxApp } from '../reduxApp';
 import { IMap } from '../types';
-import { isPrimitive } from '../utils';
+import { isPrimitive, log } from '../utils';
 import { ComponentActions } from './actions';
 import { RecursionContext } from './recursionContext';
 import { ComponentReducer } from './reducer';
@@ -156,6 +156,8 @@ export class Component {
         Component.createSubComponents(this, store, creator, context);
 
         context.createdComponents[context.path] = this;
+        
+        log.verbose(`[Component] New ${creator.constructor.name} component created. Path: ${context.path}`);
     }
 
     // 
