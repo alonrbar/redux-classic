@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { component, ReduxApp, withId } from 'src';
 
-describe('withId', () => {    
+describe('withId', () => {
 
     @component
     class Counter {
@@ -24,15 +24,19 @@ describe('withId', () => {
 
             public counter3 = new Counter();
         }
+
         const app = new ReduxApp(new App());
+        try {
 
-        app.root.counter1.increment();
-        
-        expect(app.root.counter1.value).to.eql(1);
-        expect(app.root.counter2.value).to.eql(1);
-        expect(app.root.counter3.value).to.eql(0);
+            app.root.counter1.increment();
 
-        app.dispose();
+            expect(app.root.counter1.value).to.eql(1);
+            expect(app.root.counter2.value).to.eql(1);
+            expect(app.root.counter3.value).to.eql(0);
+
+        } finally {
+            app.dispose();
+        }
     });
 
     it("syncs deeply nested components", () => {
@@ -56,12 +60,12 @@ describe('withId', () => {
 
         class Level1Second {
             public nested = new Level2Second();
-        }        
+        }
 
         @component
         class Level2Second {
             public nested = new Level3Second();
-        }  
+        }
 
         @component
         class Level3Second {
@@ -75,13 +79,16 @@ describe('withId', () => {
             public second = new Level1Second();
         }
         const app = new ReduxApp(new App());
+        try {
 
-        app.root.first.nested.nested.counter.increment();
+            app.root.first.nested.nested.counter.increment();
 
-        expect(app.root.first.nested.nested.counter.value).to.eql(1);
-        expect(app.root.second.nested.nested.counter.value).to.eql(1);
+            expect(app.root.first.nested.nested.counter.value).to.eql(1);
+            expect(app.root.second.nested.nested.counter.value).to.eql(1);
 
-        app.dispose();
+        } finally {
+            app.dispose();
+        }
     });
 
     it("multiple components decorated with no parameters (auto-id) are not synced with one another", () => {
@@ -99,17 +106,20 @@ describe('withId', () => {
             public counter3 = new Counter();
         }
         const app = new ReduxApp(new App());
+        try {
 
-        app.root.counter1.increment();
+            app.root.counter1.increment();
 
-        app.root.counter2.increment();
-        app.root.counter2.increment();
+            app.root.counter2.increment();
+            app.root.counter2.increment();
 
-        expect(app.root.counter1.value).to.eql(1);
-        expect(app.root.counter2.value).to.eql(2);
-        expect(app.root.counter3.value).to.eql(0);
+            expect(app.root.counter1.value).to.eql(1);
+            expect(app.root.counter2.value).to.eql(2);
+            expect(app.root.counter3.value).to.eql(0);
 
-        app.dispose();
+        } finally {
+            app.dispose();
+        }
     });
 
 });

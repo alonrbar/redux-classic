@@ -189,17 +189,20 @@ describe(nameof(ReduxApp), () => {
                 }
             }
             const app = new ReduxApp(new MyComponent());
+            try {
 
-            // test before
-            expect(app.root).to.haveOwnProperty('prop1');
-            expect(app.root).to.haveOwnProperty('prop2');
+                // test before
+                expect(app.root).to.haveOwnProperty('prop1');
+                expect(app.root).to.haveOwnProperty('prop2');
 
-            // test after
-            app.root.setAndRemove();
-            expect(app.root).to.not.haveOwnProperty('prop1');
-            expect(app.root).to.haveOwnProperty('prop2');
+                // test after
+                app.root.setAndRemove();
+                expect(app.root).to.not.haveOwnProperty('prop1');
+                expect(app.root).to.haveOwnProperty('prop2');
 
-            app.dispose();
+            } finally {
+                app.dispose();
+            }
         });
 
         it('does not remove component properties that exists on the new state but are undefined', () => {
