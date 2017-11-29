@@ -37,19 +37,22 @@ describe(nameof(connect), () => {
 
         // create the app
         const app = new ReduxApp(new App());
+        try {
 
-        // assert number of sources
-        const warehouse = app.getTypeWarehouse(MyComponent);
-        expect(warehouse.size).to.eql(1);
+            // assert number of sources
+            const warehouse = app.getTypeWarehouse(MyComponent);
+            expect(warehouse.size).to.eql(1);
 
-        // assert reference
-        expect(app.root.partOfApp.linkToSource).to.equal(app.root.source);
-        expect(page.linkToSource).to.equal(app.root.source);
+            // assert reference
+            expect(app.root.partOfApp.linkToSource).to.equal(app.root.source);
+            expect(page.linkToSource).to.equal(app.root.source);
 
-        // assert no getter side effects
-        expect(warehouse.size).to.eql(1);
+            // assert no getter side effects
+            expect(warehouse.size).to.eql(1);
 
-        app.dispose();
+        } finally {
+            app.dispose();
+        }
     });
 
     it("creates a connection between a component inside the default app and a component outside of it", () => {
@@ -87,19 +90,22 @@ describe(nameof(connect), () => {
 
         // elevate the app
         const reduxApp = new ReduxApp(plainApp);
+        try {
 
-        // assert connected
-        expect(page.connectMe).to.equal(reduxApp.root.comp);
+            // assert connected
+            expect(page.connectMe).to.equal(reduxApp.root.comp);
 
-        // assert existence
-        expect(reduxApp.root.comp).to.be.instanceOf(Component);
-        expect(reduxApp.root.comp.value).to.eql(0);
+            // assert existence
+            expect(reduxApp.root.comp).to.be.instanceOf(Component);
+            expect(reduxApp.root.comp.value).to.eql(0);
 
-        // assert action works
-        reduxApp.root.comp.increment();
-        expect(page.connectMe.value).to.eql(1);
+            // assert action works
+            reduxApp.root.comp.increment();
+            expect(page.connectMe.value).to.eql(1);
 
-        reduxApp.dispose();
+        } finally {
+            reduxApp.dispose();
+        }
     });
 
     it("creates a connection between a component inside a named app and a component outside of it", () => {
@@ -139,19 +145,22 @@ describe(nameof(connect), () => {
 
         // elevate the app
         const reduxApp = new ReduxApp(plainApp, { name: testAppName });
+        try {
 
-        // assert connected
-        expect(page.connectMe).to.equal(reduxApp.root.comp);
+            // assert connected
+            expect(page.connectMe).to.equal(reduxApp.root.comp);
 
-        // assert existence
-        expect(reduxApp.root.comp).to.be.instanceOf(Component);
-        expect(reduxApp.root.comp.value).to.eql(0);
+            // assert existence
+            expect(reduxApp.root.comp).to.be.instanceOf(Component);
+            expect(reduxApp.root.comp.value).to.eql(0);
 
-        // assert action works
-        reduxApp.root.comp.increment();
-        expect(page.connectMe.value).to.eql(1);
+            // assert action works
+            reduxApp.root.comp.increment();
+            expect(page.connectMe.value).to.eql(1);
 
-        reduxApp.dispose();
+        } finally {
+            reduxApp.dispose();
+        }
     });
 
     it("creates a connection between two components in the default app", () => {
@@ -198,22 +207,25 @@ describe(nameof(connect), () => {
 
         // elevate the app
         const reduxApp = new ReduxApp(plainApp);
+        try {
 
-        // assert connected
-        expect(reduxApp.root.page1.comp1).to.equal(reduxApp.root.warehouse.components.comp);
-        expect(reduxApp.root.page1.comp1).to.be.instanceOf(Component);
-        expect(reduxApp.root.page1.comp1).to.equal(reduxApp.root.page2.comp2);
+            // assert connected
+            expect(reduxApp.root.page1.comp1).to.equal(reduxApp.root.warehouse.components.comp);
+            expect(reduxApp.root.page1.comp1).to.be.instanceOf(Component);
+            expect(reduxApp.root.page1.comp1).to.equal(reduxApp.root.page2.comp2);
 
-        // validate values
-        expect(reduxApp.root.page1.comp1.value).to.eql(0);
+            // validate values
+            expect(reduxApp.root.page1.comp1.value).to.eql(0);
 
-        // assert action works
-        reduxApp.root.page1.comp1.increment();
-        expect(reduxApp.root.page1.comp1.value).to.eql(1);
-        expect(reduxApp.root.page2.comp2.value).to.eql(1);
-        expect(reduxApp.root.warehouse.components.comp.value).to.eql(1);
+            // assert action works
+            reduxApp.root.page1.comp1.increment();
+            expect(reduxApp.root.page1.comp1.value).to.eql(1);
+            expect(reduxApp.root.page2.comp2.value).to.eql(1);
+            expect(reduxApp.root.warehouse.components.comp.value).to.eql(1);
 
-        reduxApp.dispose();
+        } finally {
+            reduxApp.dispose();
+        }
     });
 
     it("creates a connection between two components in the same named app", () => {
@@ -262,22 +274,25 @@ describe(nameof(connect), () => {
 
         // elevate the app
         const reduxApp = new ReduxApp(plainApp, { name: testAppName });
+        try {
 
-        // assert connected
-        expect(reduxApp.root.page1.comp1).to.equal(reduxApp.root.warehouse.components.comp);
-        expect(reduxApp.root.page1.comp1).to.be.instanceOf(Component);
-        expect(reduxApp.root.page1.comp1).to.equal(reduxApp.root.page2.comp2);
+            // assert connected
+            expect(reduxApp.root.page1.comp1).to.equal(reduxApp.root.warehouse.components.comp);
+            expect(reduxApp.root.page1.comp1).to.be.instanceOf(Component);
+            expect(reduxApp.root.page1.comp1).to.equal(reduxApp.root.page2.comp2);
 
-        // validate values
-        expect(reduxApp.root.page1.comp1.value).to.eql(0);
+            // validate values
+            expect(reduxApp.root.page1.comp1.value).to.eql(0);
 
-        // assert action works
-        reduxApp.root.page1.comp1.increment();
-        expect(reduxApp.root.page1.comp1.value).to.eql(1);
-        expect(reduxApp.root.page2.comp2.value).to.eql(1);
-        expect(reduxApp.root.warehouse.components.comp.value).to.eql(1);
+            // assert action works
+            reduxApp.root.page1.comp1.increment();
+            expect(reduxApp.root.page1.comp1.value).to.eql(1);
+            expect(reduxApp.root.page2.comp2.value).to.eql(1);
+            expect(reduxApp.root.warehouse.components.comp.value).to.eql(1);
 
-        reduxApp.dispose();
+        } finally {
+            reduxApp.dispose();
+        }
     });
 
     it("creates a connection between a component inside the default app and a component outside of it - with id", () => {
@@ -317,19 +332,22 @@ describe(nameof(connect), () => {
 
         // elevate the app
         const reduxApp = new ReduxApp(plainApp);
+        try {
 
-        // assert connected
-        expect(page.connectMe).to.equal(reduxApp.root.comp);
+            // assert connected
+            expect(page.connectMe).to.equal(reduxApp.root.comp);
 
-        // assert existence
-        expect(reduxApp.root.comp).to.be.instanceOf(Component);
-        expect(reduxApp.root.comp.value).to.eql(0);
+            // assert existence
+            expect(reduxApp.root.comp).to.be.instanceOf(Component);
+            expect(reduxApp.root.comp.value).to.eql(0);
 
-        // assert action works
-        reduxApp.root.comp.increment();
-        expect(page.connectMe.value).to.eql(1);
+            // assert action works
+            reduxApp.root.comp.increment();
+            expect(page.connectMe.value).to.eql(1);
 
-        reduxApp.dispose();
+        } finally {
+            reduxApp.dispose();
+        }
     });
 
     it("creates a connection between a component inside a named app and a component outside of it - with id", () => {
@@ -370,19 +388,22 @@ describe(nameof(connect), () => {
 
         // elevate the app
         const reduxApp = new ReduxApp(plainApp, { name: testAppName });
+        try {
 
-        // assert connected
-        expect(page.connectMe).to.equal(reduxApp.root.comp);
+            // assert connected
+            expect(page.connectMe).to.equal(reduxApp.root.comp);
 
-        // assert existence
-        expect(reduxApp.root.comp).to.be.instanceOf(Component);
-        expect(reduxApp.root.comp.value).to.eql(0);
+            // assert existence
+            expect(reduxApp.root.comp).to.be.instanceOf(Component);
+            expect(reduxApp.root.comp.value).to.eql(0);
 
-        // assert action works
-        reduxApp.root.comp.increment();
-        expect(page.connectMe.value).to.eql(1);
+            // assert action works
+            reduxApp.root.comp.increment();
+            expect(page.connectMe.value).to.eql(1);
 
-        reduxApp.dispose();
+        } finally {
+            reduxApp.dispose();
+        }
     });
 
     it("does not connect a component with non-existent id (using named app)", () => {
@@ -421,11 +442,14 @@ describe(nameof(connect), () => {
 
         // elevate the app
         const reduxApp = new ReduxApp(plainApp, { name: testAppName });
+        try {
 
-        // assert not connected
-        expect(page.connectMe).to.be.undefined;
+            // assert not connected
+            expect(page.connectMe).to.be.undefined;
 
-        reduxApp.dispose();
+        } finally {
+            reduxApp.dispose();
+        }
     });
 
     it("connects only component with matching id (doesn't connect a component with different id, using named app)", () => {
@@ -470,30 +494,33 @@ describe(nameof(connect), () => {
 
         // elevate the app
         const reduxApp = new ReduxApp(plainApp, { name: testAppName });
+        try {
 
-        // assert correct component connected
-        expect(page.connectMe).to.equal(reduxApp.root.comp);
+            // assert correct component connected
+            expect(page.connectMe).to.equal(reduxApp.root.comp);
 
-        // assert not connected to wrong component
-        expect(page.connectMe).to.not.equal(reduxApp.root.otherComp);
+            // assert not connected to wrong component
+            expect(page.connectMe).to.not.equal(reduxApp.root.otherComp);
 
-        // assert action affects only the right components
-        expect(page.connectMe.value).to.eql(0);
-        expect(reduxApp.root.comp.value).to.eql(0);
-        expect(reduxApp.root.otherComp.value).to.eql(0);
+            // assert action affects only the right components
+            expect(page.connectMe.value).to.eql(0);
+            expect(reduxApp.root.comp.value).to.eql(0);
+            expect(reduxApp.root.otherComp.value).to.eql(0);
 
-        reduxApp.root.otherComp.increment();
-        expect(page.connectMe.value).to.eql(0);
-        expect(reduxApp.root.comp.value).to.eql(0);
-        expect(reduxApp.root.otherComp.value).to.eql(1);
+            reduxApp.root.otherComp.increment();
+            expect(page.connectMe.value).to.eql(0);
+            expect(reduxApp.root.comp.value).to.eql(0);
+            expect(reduxApp.root.otherComp.value).to.eql(1);
 
-        reduxApp.root.comp.increment();
-        reduxApp.root.comp.increment();
-        expect(page.connectMe.value).to.eql(2);
-        expect(reduxApp.root.comp.value).to.eql(2);
-        expect(reduxApp.root.otherComp.value).to.eql(1);
+            reduxApp.root.comp.increment();
+            reduxApp.root.comp.increment();
+            expect(page.connectMe.value).to.eql(2);
+            expect(reduxApp.root.comp.value).to.eql(2);
+            expect(reduxApp.root.otherComp.value).to.eql(1);
 
-        reduxApp.dispose();
+        } finally {
+            reduxApp.dispose();
+        }
     });
 
     it("connected components inside an app are not persisted on the store", () => {
@@ -544,7 +571,6 @@ describe(nameof(connect), () => {
             expect(app.store.getState().page2.linkToSource2.toString().startsWith(Connect.placeholderPrefix)).to.be.true;
 
         } finally {
-
             app.dispose();
         }
     });
