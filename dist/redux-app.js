@@ -172,27 +172,12 @@ function deferredDefineProperty(target, propertyKey, descriptor) {
 }
 
 // CONCATENATED MODULE: ./src/options.ts
-var snakecase = __webpack_require__(2);
 var SchemaOptions = (function () {
     function SchemaOptions() {
-        this.actionNamespace = true;
-        this.uppercaseActions = true;
     }
     return SchemaOptions;
 }());
 
-function getActionName(creator, methodName, options) {
-    var actionName = methodName;
-    var actionNamespace = creator.constructor.name;
-    if (options.uppercaseActions) {
-        actionName = snakecase(actionName).toUpperCase();
-        actionNamespace = snakecase(actionNamespace).toUpperCase();
-    }
-    if (options.actionNamespace) {
-        actionName = actionNamespace + '.' + actionName;
-    }
-    return actionName;
-}
 var AppOptions = (function () {
     function AppOptions() {
         this.updateState = true;
@@ -416,7 +401,7 @@ function getCreatorMethods(obj, inherit) {
 
 
 // EXTERNAL MODULE: external "redux"
-var external__redux_ = __webpack_require__(3);
+var external__redux_ = __webpack_require__(2);
 var external__redux__default = /*#__PURE__*/__webpack_require__.n(external__redux_);
 
 // CONCATENATED MODULE: ./src/reduxApp.ts
@@ -434,7 +419,7 @@ var __assign = (this && this.__assign) || Object.assign || function(t) {
 
 
 
-var getProp = __webpack_require__(4);
+var getProp = __webpack_require__(3);
 var ROOT_COMPONENT_PATH = 'root';
 var DEFAULT_APP_NAME = 'default';
 var appsRepository = {};
@@ -730,7 +715,7 @@ var connect_Connect = (function () {
 
 
 // EXTERNAL MODULE: external "reflect-metadata"
-var external__reflect_metadata_ = __webpack_require__(5);
+var external__reflect_metadata_ = __webpack_require__(4);
 var external__reflect_metadata__default = /*#__PURE__*/__webpack_require__.n(external__reflect_metadata_);
 
 // CONCATENATED MODULE: ./src/decorators/connect/decorator.ts
@@ -825,7 +810,7 @@ function component_component(ctorOrOptions) {
 }
 function componentDecorator(ctor, options) {
     var info = creatorInfo_CreatorInfo.getOrInitInfo(ctor);
-    info.options = Object.assign({}, options, new SchemaOptions(), globalOptions.schema);
+    info.options = Object.assign(new SchemaOptions(), options);
 }
 
 // CONCATENATED MODULE: ./src/decorators/computed.ts
@@ -1028,7 +1013,7 @@ var reducer_ComponentReducer = (function () {
         var options = creatorInfo.options;
         var methodNames = {};
         Object.keys(methods).forEach(function (methName) {
-            var actionName = getActionName(componentCreator, methName, options);
+            var actionName = actions_ComponentActions.getActionName(componentCreator, methName, options);
             methodNames[actionName] = methName;
         });
         var stateProto = ComponentReducer.createStateObjectPrototype(component, creatorInfo);
@@ -1295,6 +1280,7 @@ var component_Component = (function () {
 
 
 
+var snakecase = __webpack_require__(5);
 var actions_ComponentActions = (function () {
     function ComponentActions() {
     }
@@ -1319,7 +1305,7 @@ var actions_ComponentActions = (function () {
                 else {
                     var compInfo = componentInfo_ComponentInfo.getInfo(this);
                     var action = {
-                        type: getActionName(creator, key, creatorInfo.options),
+                        type: ComponentActions.getActionName(creator, key, creatorInfo.options),
                         id: (compInfo ? compInfo.id : undefined),
                         payload: payload
                     };
@@ -1328,6 +1314,24 @@ var actions_ComponentActions = (function () {
             };
         });
         return componentActions;
+    };
+    ComponentActions.getActionName = function (creator, methodName, options) {
+        options = Object.assign(new SchemaOptions(), ComponentActions.defaultNamingOptions, globalOptions.schema, options);
+        var actionName = methodName;
+        var actionNamespace = creator.constructor.name;
+        if (options.uppercaseActions) {
+            actionName = snakecase(actionName).toUpperCase();
+            actionNamespace = snakecase(actionNamespace).toUpperCase();
+        }
+        if (options.actionNamespace) {
+            actionName = actionNamespace + options.actionNamespaceSeparator + actionName;
+        }
+        return actionName;
+    };
+    ComponentActions.defaultNamingOptions = {
+        uppercaseActions: true,
+        actionNamespace: true,
+        actionNamespaceSeparator: '.'
     };
     return ComponentActions;
 }());
@@ -1372,25 +1376,25 @@ function isInstanceOf(obj, type) {
 /* 2 */
 /***/ (function(module, exports) {
 
-module.exports = require("lodash.snakecase");
+module.exports = require("redux");
 
 /***/ }),
 /* 3 */
 /***/ (function(module, exports) {
 
-module.exports = require("redux");
+module.exports = require("lodash.get");
 
 /***/ }),
 /* 4 */
 /***/ (function(module, exports) {
 
-module.exports = require("lodash.get");
+module.exports = require("reflect-metadata");
 
 /***/ }),
 /* 5 */
 /***/ (function(module, exports) {
 
-module.exports = require("reflect-metadata");
+module.exports = require("lodash.snakecase");
 
 /***/ })
 /******/ ]);

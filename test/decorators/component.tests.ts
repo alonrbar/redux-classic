@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { component, SchemaOptions, ReduxApp } from 'src';
+import { component, SchemaOptions } from 'src';
 import { CreatorInfo } from 'src/info';
 
 // tslint:disable:no-unused-expression
@@ -20,35 +20,8 @@ describe(nameof(component), () => {
         // assert
         const info = CreatorInfo.getInfo(creator);
         expect(info.options).to.be.eql(new SchemaOptions());
-        expect(info.options.uppercaseActions).to.be.true;
-    });
-
-    it(`uses the global ${nameof(SchemaOptions)}`, () => {
-
-        try {
-
-            // set global options before instantiating
-            ReduxApp.options.schema.uppercaseActions = false;
-
-            // instantiate component creator
-            @component
-            class MyComponent {
-                public action(): void {
-                    // noop
-                }
-            }
-            const creator = new MyComponent();
-
-            // assert
-            const info = CreatorInfo.getInfo(creator);
-            expect(info.options).to.be.eql(ReduxApp.options.schema);
-            expect(info.options.uppercaseActions).to.be.false;
-
-        } finally {
-            // restore defaults
-            ReduxApp.options.schema = new SchemaOptions();
-        }
-    });
+        expect(info.options.uppercaseActions).to.be.undefined;
+    });    
 
     it(`uses ad-hoc ${nameof(SchemaOptions)}`, () => {
 

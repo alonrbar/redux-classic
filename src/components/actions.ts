@@ -1,6 +1,6 @@
 import { Action } from 'redux';
 import { ComponentInfo, CreatorInfo, getCreatorMethods } from '../info';
-import { SchemaOptions } from '../options';
+import { globalOptions, SchemaOptions } from '../options';
 import { IMap, Method } from '../types';
 import { Component } from './component';
 var snakecase = require('lodash.snakecase');
@@ -12,6 +12,12 @@ export interface ReduxAppAction extends Action {
 }
 
 export class ComponentActions {
+
+    private static readonly defaultNamingOptions: SchemaOptions = {
+        uppercaseActions: true,
+        actionNamespace: true,
+        actionNamespaceSeparator: '.'
+    };
 
     public static createActions(creator: object): IMap<Method> {
         const methods = getCreatorMethods(creator);
@@ -49,17 +55,19 @@ export class ComponentActions {
         return componentActions;
     }
 
-    public static getActionName(creator: object, methodName: string, options: SchemaOptions): string {
+    public static getActionName(creator: object, methodName: string, options?: SchemaOptions): string {
+        options = Object.assign(new SchemaOptions(), ComponentActions.defaultNamingOptions, globalOptions.schema, options);
+        
         var actionName = methodName;
         var actionNamespace = creator.constructor.name;
     
-        if (options.uppercaseActions || options.uppercaseActions === undefined) {
+        if (options.uppercaseActions) {
             actionName = snakecase(actionName).toUpperCase();
             actionNamespace = snakecase(actionNamespace).toUpperCase();
         }
     
-        if (options.actionNamespace || options.actionNamespace === undefined) {
-            actionName = actionNamespace + '.' + actionName;
+        if (options.actionNamespace) {
+            actionName = actionNamespace + options.actionNamespaceSeparator + actionName;
         }
     
         return actionName;

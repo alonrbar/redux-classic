@@ -2,9 +2,17 @@
 
 ## Unreleased
 
-### Fix
+### Added
 
-- Component SchemaOptions handling.
+- New schema option: `actionNamespaceSeparator`.
+
+### Removed
+
+- Remove the unused `inheritMethods` schema option.
+
+### Fixed
+
+- Global `SchemaOptions` handling.
 
 ## [1.9.0 - 2017-11-29](https://github.com/alonrbar/redux-app/tree/v1.9.0)
 
@@ -40,7 +48,7 @@
 - Npm package only contains the source and dist files.
 - Update docs.
 
-### Fix
+### Fixed
 
 - Fix `computed` properties that are based on `connect`ed values.
 - Fix reduction of arrays of objects when the array is initially undefined.
@@ -57,7 +65,7 @@
 
 ## [1.7.1 - 2017-11-5](https://github.com/alonrbar/redux-app/tree/v1.7.1)
 
-### Fix
+### Fixed
 
 - Fix time travel.
 - Fix and shorten some log messages.
@@ -76,7 +84,7 @@
 - Computed values are persisted only in the ReduxApp tree (and not in the store).
 - Internal code organization changes.
 
-### Fix
+### Fixed
 
 - Fix potential collision of connected components with IDs.
 
@@ -94,7 +102,7 @@
 - Set default log level to `LogLevel.Warn`.
 - Remove some verbose log messages.
 
-### Fix
+### Fixed
 
 - Avoid invoking getters unnecessarily when probing for Component methods.
 - Improve updateState logic. Array handling logic in specific.
