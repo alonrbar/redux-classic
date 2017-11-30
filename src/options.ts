@@ -1,4 +1,3 @@
-var snakecase = require('lodash.snakecase');
 
 //
 // schema options
@@ -18,22 +17,6 @@ export class SchemaOptions {
      * Default value: true.
      */
     public uppercaseActions? = true;
-}
-
-export function getActionName(creator: object, methodName: string, options: SchemaOptions): string {
-    var actionName = methodName;
-    var actionNamespace = creator.constructor.name;
-
-    if (options.uppercaseActions) {
-        actionName = snakecase(actionName).toUpperCase();
-        actionNamespace = snakecase(actionNamespace).toUpperCase();
-    }
-
-    if (options.actionNamespace) {
-        actionName = actionNamespace + '.' + actionName;
-    }
-
-    return actionName;
 }
 
 //

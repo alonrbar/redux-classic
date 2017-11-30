@@ -5,7 +5,7 @@ import { expect } from 'chai';
 describe('playground', () => {
     it("a place to run wild", () => {        
 
-        // right your test here...
+        // write your test here...
         expect(true).to.be.true;
     });
 });

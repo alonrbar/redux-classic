@@ -1,8 +1,9 @@
 import { Action } from 'redux';
 import { ComponentInfo, CreatorInfo, getCreatorMethods } from '../info';
-import { getActionName } from '../options';
+import { SchemaOptions } from '../options';
 import { IMap, Method } from '../types';
 import { Component } from './component';
+var snakecase = require('lodash.snakecase');
 
 // tslint:disable-next-line:interface-name
 export interface ReduxAppAction extends Action {
@@ -36,7 +37,7 @@ export class ComponentActions {
                     // handle dispatch methods (use store dispatch)
                     const compInfo = ComponentInfo.getInfo(this);
                     const action: ReduxAppAction = {
-                        type: getActionName(creator, key, creatorInfo.options),
+                        type: ComponentActions.getActionName(creator, key, creatorInfo.options),
                         id: (compInfo ? compInfo.id : undefined),
                         payload: payload
                     };
@@ -46,5 +47,21 @@ export class ComponentActions {
         });
 
         return componentActions;
+    }
+
+    public static getActionName(creator: object, methodName: string, options: SchemaOptions): string {
+        var actionName = methodName;
+        var actionNamespace = creator.constructor.name;
+    
+        if (options.uppercaseActions || options.uppercaseActions === undefined) {
+            actionName = snakecase(actionName).toUpperCase();
+            actionNamespace = snakecase(actionNamespace).toUpperCase();
+        }
+    
+        if (options.actionNamespace || options.actionNamespace === undefined) {
+            actionName = actionNamespace + '.' + actionName;
+        }
+    
+        return actionName;
     }
 }

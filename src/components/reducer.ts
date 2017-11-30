@@ -1,11 +1,10 @@
 import { Reducer, ReducersMapObject } from 'redux';
 import { Computed, Connect, IgnoreState } from '../decorators';
 import { ComponentInfo, CreatorInfo, getCreatorMethods } from '../info';
-import { getActionName } from '../options';
 import { ROOT_COMPONENT_PATH } from '../reduxApp';
 import { IMap, Listener, Method } from '../types';
 import { clearProperties, getMethods, isPrimitive, log, simpleCombineReducers } from '../utils';
-import { ReduxAppAction } from './actions';
+import { ComponentActions, ReduxAppAction } from './actions';
 import { Component } from './component';
 
 // tslint:disable:member-ordering
@@ -49,7 +48,7 @@ export class ComponentReducer {
         const options = creatorInfo.options;
         const methodNames: any = {};
         Object.keys(methods).forEach(methName => {
-            var actionName = getActionName(componentCreator, methName, options);
+            var actionName = ComponentActions.getActionName(componentCreator, methName, options);
             methodNames[actionName] = methName;
         });
 

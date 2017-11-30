@@ -1,18 +1,24 @@
 # Change Log
 
+## Unreleased
+
+### Fix
+
+- Component SchemaOptions handling.
+
 ## [1.9.0 - 2017-11-29](https://github.com/alonrbar/redux-app/tree/v1.9.0)
 
-## Added
+### Added
 
 - New decorator: `ignoreState`.
 - Allow `noDispatch` calls inside actions.
 - Significant performance boost (reducers and update state logic refactored).
 
-## Removed
+### Removed
 
 - Breaking change: Can no longer use the `computed` decorator on non-components.
 
-## Changed
+### Changed
 
 - Some log messages changed/removed.
 
@@ -22,19 +28,19 @@
 
 ## [1.8.0 - 2017-11-16](https://github.com/alonrbar/redux-app/tree/v1.8.0)
 
-## Added
+### Added
 
 - Component inheritance.
 - Return value from `noDispatch` methods.
 - More informative errors and warnings.
 - Check out the new [real world example](https://github.com/alonrbar/redux-app-examples/tree/master/src/angular/gladiators) in the [examples project](https://github.com/alonrbar/redux-app-examples).
 
-## Changed
+### Changed
 
 - Npm package only contains the source and dist files.
 - Update docs.
 
-## Fix
+### Fix
 
 - Fix `computed` properties that are based on `connect`ed values.
 - Fix reduction of arrays of objects when the array is initially undefined.
