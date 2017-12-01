@@ -18,5 +18,5 @@ export function component(ctorOrOptions: Function | SchemaOptions): any {
 
 function componentDecorator(ctor: Function, options?: SchemaOptions) {
     const info = CreatorInfo.getOrInitInfo(ctor);
-    info.options = Object.assign(new SchemaOptions(), options);
+    info.options = options;
 }

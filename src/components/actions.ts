@@ -13,12 +13,6 @@ export interface ReduxAppAction extends Action {
 
 export class ComponentActions {
 
-    private static readonly defaultNamingOptions: SchemaOptions = {
-        uppercaseActions: true,
-        actionNamespace: true,
-        actionNamespaceSeparator: '.'
-    };
-
     public static createActions(creator: object): IMap<Method> {
         const methods = getCreatorMethods(creator);
         if (!methods)
@@ -56,7 +50,7 @@ export class ComponentActions {
     }
 
     public static getActionName(creator: object, methodName: string, options?: SchemaOptions): string {
-        options = Object.assign(new SchemaOptions(), ComponentActions.defaultNamingOptions, globalOptions.schema, options);
+        options = Object.assign(new SchemaOptions(), globalOptions.schema, options);
         
         var actionName = methodName;
         var actionNamespace = creator.constructor.name;

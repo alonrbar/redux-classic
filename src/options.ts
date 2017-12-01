@@ -9,18 +9,18 @@ export class SchemaOptions {
      * Format: <class name><separator><action name>
      * Default value: true.
      */
-    public actionNamespace?: boolean;
+    public actionNamespace? = true;
     /**
      * Default value: . (dot)
      */
-    public actionNamespaceSeparator?: string;
+    public actionNamespaceSeparator? = '.';
     /**
      * Use redux style action names. For instance, if a component defines a
      * method called 'incrementCounter' the matching action name will be
      * 'INCREMENT_COUNTER'.
      * Default value: true.
      */
-    public uppercaseActions?: boolean;
+    public uppercaseActions? = true;
 }
 
 //

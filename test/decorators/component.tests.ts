@@ -1,12 +1,12 @@
 import { expect } from 'chai';
-import { component, SchemaOptions } from 'src';
+import { component } from 'src';
 import { CreatorInfo } from 'src/info';
 
 // tslint:disable:no-unused-expression
 
 describe(nameof(component), () => {
 
-    it(`uses the default ${nameof(SchemaOptions)}`, () => {
+    it(`default options are undefined`, () => {
 
         // instantiate component creator
         @component
@@ -19,14 +19,13 @@ describe(nameof(component), () => {
 
         // assert
         const info = CreatorInfo.getInfo(creator);
-        expect(info.options).to.be.eql(new SchemaOptions());
-        expect(info.options.uppercaseActions).to.be.undefined;
+        expect(info.options).to.be.undefined;
     });    
 
-    it(`uses ad-hoc ${nameof(SchemaOptions)}`, () => {
+    it(`uses ad-hoc options`, () => {
 
         // instantiate component creator
-        const options = Object.assign(new SchemaOptions(), { uppercaseActions: false });
+        const options = { uppercaseActions: false };
         @component(options)
         class MyComponent {
             public action(): void {
