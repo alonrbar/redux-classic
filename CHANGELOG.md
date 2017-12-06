@@ -5,6 +5,7 @@
 ### Added
 
 - New schema option: `actionNamespaceSeparator`.
+- Update `computed` values only if they are not deeply equal (using lodash.isEqual). <-- should make this optional
 
 ### Removed
 

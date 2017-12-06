@@ -34,6 +34,7 @@
   },
   "dependencies": {
     "lodash.get": "^4.4.2",
+    "lodash.isequal": "^4.5.0",
     "lodash.snakecase": "^4.1.1",
     "redux": "^3.7.2",
     "reflect-metadata": "^0.1.10"

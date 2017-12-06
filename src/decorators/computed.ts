@@ -2,6 +2,7 @@ import { Component } from '../components';
 import { ClassInfo } from '../info';
 import { IMap } from '../types';
 import { dataDescriptor, deferredDefineProperty } from '../utils';
+var isEqual = require('lodash.isequal');
 
 /**
  * Property decorator.
@@ -83,7 +84,7 @@ export class Computed {
 
             // update if necessary
             var oldValue = obj[propKey];
-            if (newValue !== oldValue) {
+            if (newValue !== oldValue && !isEqual(newValue, oldValue)) {
                 obj[propKey] = newValue;
             }
         }
