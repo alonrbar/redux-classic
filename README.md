@@ -71,10 +71,12 @@ _Reading the source tip #1: There are two main classes in redux-app. The first i
   - [`connect` to the view](#withid)
   - [Computed Values](#computed-values)
 - [Utilities](#utilities)
-  - [isInstanceOf](#isinstanceof)
+  - [`ignoreState`](#ignorestate)
+  - [`isInstanceOf`](#isinstanceof)
 - [Applying Enhancers (devtools, etc.)](#applying-enhancers)
 - [Options](#options)
   - [Component Options](#component-options)
+  - [Computed Options](#computed-options)
   - [App Options](#app-options)
   - [Global Options](#global-options)
 - [Changelog](https://github.com/alonrbar/redux-app/blob/master/CHANGELOG.md)
@@ -375,6 +377,20 @@ class Counter {
     increment() { // <-- Will now dispatch 'Counter.increment' instead of 'COUNTER.INCREMENT'. Everything else still works the same, no further change required.
         this.value = this.value + 1;
     }
+}
+```
+
+#### Computed Options
+
+```javascript
+class ComputedOptions {
+    /**
+     * Whether to perform deep comparison or a simple equality comparison
+     * before updating computed values. Using deep comparison has a small
+     * additional performance cost.
+     * Default value: true.
+     */
+    deepComparison: boolean;
 }
 ```
 
