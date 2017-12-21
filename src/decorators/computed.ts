@@ -1,5 +1,6 @@
 import { Component } from '../components';
 import { ClassInfo } from '../info';
+import { globalOptions } from '../options';
 import { IMap } from '../types';
 import { dataDescriptor, deferredDefineProperty } from '../utils';
 var isEqual = require('lodash.isequal');
@@ -84,7 +85,7 @@ export class Computed {
 
             // update if necessary
             var oldValue = obj[propKey];
-            if (newValue !== oldValue && !isEqual(newValue, oldValue)) {
+            if (newValue !== oldValue && (!globalOptions.computed.deepComparison || !isEqual(newValue, oldValue))) {
                 obj[propKey] = newValue;
             }
         }

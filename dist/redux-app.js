@@ -7,7 +7,7 @@
 		exports["redux-app"] = factory();
 	else
 		root["redux-app"] = factory();
-})(this, function() {
+})(typeof self !== 'undefined' ? self : this, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -174,8 +174,18 @@ function deferredDefineProperty(target, propertyKey, descriptor) {
 // CONCATENATED MODULE: ./src/options.ts
 var SchemaOptions = (function () {
     function SchemaOptions() {
+        this.actionNamespace = true;
+        this.actionNamespaceSeparator = '.';
+        this.uppercaseActions = true;
     }
     return SchemaOptions;
+}());
+
+var ComputedOptions = (function () {
+    function ComputedOptions() {
+        this.deepComparison = true;
+    }
+    return ComputedOptions;
 }());
 
 var AppOptions = (function () {
@@ -199,6 +209,7 @@ var GlobalOptions = (function () {
         this.emitClassNames = false;
         this.convertToPlainObject = true;
         this.schema = new SchemaOptions();
+        this.computed = new ComputedOptions();
     }
     return GlobalOptions;
 }());
@@ -799,7 +810,6 @@ function connectDecorator(target, propertyKey, options) {
 
 // CONCATENATED MODULE: ./src/decorators/component.ts
 
-
 function component_component(ctorOrOptions) {
     if (typeof ctorOrOptions === 'function') {
         componentDecorator.call(undefined, ctorOrOptions);
@@ -810,12 +820,14 @@ function component_component(ctorOrOptions) {
 }
 function componentDecorator(ctor, options) {
     var info = creatorInfo_CreatorInfo.getOrInitInfo(ctor);
-    info.options = Object.assign(new SchemaOptions(), options);
+    info.options = options;
 }
 
 // CONCATENATED MODULE: ./src/decorators/computed.ts
 
 
+
+var isEqual = __webpack_require__(5);
 function computed(target, propertyKey) {
     var descriptor = Object.getOwnPropertyDescriptor(target, propertyKey);
     if (typeof descriptor.get !== 'function')
@@ -866,7 +878,7 @@ var computed_Computed = (function () {
             var getter = info.computedGetters[propKey];
             var newValue = getter.call(obj);
             var oldValue = obj[propKey];
-            if (newValue !== oldValue) {
+            if (newValue !== oldValue && (!globalOptions.computed.deepComparison || !isEqual(newValue, oldValue))) {
                 obj[propKey] = newValue;
             }
         }
@@ -1280,7 +1292,7 @@ var component_Component = (function () {
 
 
 
-var snakecase = __webpack_require__(5);
+var snakecase = __webpack_require__(6);
 var actions_ComponentActions = (function () {
     function ComponentActions() {
     }
@@ -1316,7 +1328,7 @@ var actions_ComponentActions = (function () {
         return componentActions;
     };
     ComponentActions.getActionName = function (creator, methodName, options) {
-        options = Object.assign(new SchemaOptions(), ComponentActions.defaultNamingOptions, globalOptions.schema, options);
+        options = Object.assign(new SchemaOptions(), globalOptions.schema, options);
         var actionName = methodName;
         var actionNamespace = creator.constructor.name;
         if (options.uppercaseActions) {
@@ -1327,11 +1339,6 @@ var actions_ComponentActions = (function () {
             actionName = actionNamespace + options.actionNamespaceSeparator + actionName;
         }
         return actionName;
-    };
-    ComponentActions.defaultNamingOptions = {
-        uppercaseActions: true,
-        actionNamespace: true,
-        actionNamespaceSeparator: '.'
     };
     return ComponentActions;
 }());
@@ -1392,6 +1399,12 @@ module.exports = require("reflect-metadata");
 
 /***/ }),
 /* 5 */
+/***/ (function(module, exports) {
+
+module.exports = require("lodash.isequal");
+
+/***/ }),
+/* 6 */
 /***/ (function(module, exports) {
 
 module.exports = require("lodash.snakecase");

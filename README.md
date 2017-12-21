@@ -267,6 +267,28 @@ class ComputedGreeter {
 
 ### Utilities
 
+#### ignoreState
+
+You can use the `ignoreState` decorator to prevent particular properties of your components to be stored in the store.
+
+Example:
+
+```javascript
+@component
+class MyComponent {
+    
+    public storeMe = 'hello';
+
+    @ignoreState
+    public ignoreMe = 'not stored';
+}
+
+const app = new ReduxApp(new MyComponent());
+
+console.log(app.root); // { storeMe: 'hello', ignoreMe: 'not stored' }
+console.log(app.store.getState()); // { storeMe: 'hello' }
+```
+
 #### isInstanceOf
 
 We've already said that classes decorated with the `component` decorator are being replaced at runtime

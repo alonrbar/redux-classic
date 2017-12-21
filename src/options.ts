@@ -24,6 +24,19 @@ export class SchemaOptions {
 }
 
 //
+// computed options
+//
+
+export class ComputedOptions {
+    /**
+     * Whether or to perform deep comparison or a simple equality comparison
+     * before updating computed values. Using deep comparison has a small
+     * additional performance cost.
+     */
+    public deepComparison = true;
+}
+
+//
 // app options
 //
 
@@ -107,6 +120,7 @@ export class GlobalOptions {
      * Options supplied explicitly via the decorator will override options specified here.
      */
     public schema = new SchemaOptions();
+    public computed = new ComputedOptions();
 }
 
 export const globalOptions = new GlobalOptions();

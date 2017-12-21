@@ -1,11 +1,14 @@
 # Change Log
 
-## Unreleased
+## [1.10.0 - 2017-12-21](https://github.com/alonrbar/redux-app/tree/v1.10.0)
 
 ### Added
 
 - New schema option: `actionNamespaceSeparator`.
-- Update `computed` values only if they are not deeply equal (using lodash.isEqual). <-- should make this optional
+- Update `computed` values only if they are not deeply equal (using lodash.isEqual).
+  Controlled via the `ReduxApp.options.computed.deepComparison` option.
+- Document `ignoreState`.
+- Lock dependencies versions.
 
 ### Removed
 
