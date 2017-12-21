@@ -1,6 +1,6 @@
 # Change Log
 
-## [1.10.0 - 2017-12-21](https://github.com/alonrbar/redux-app/tree/v1.10.0)
+## [1.10.1 - 2017-12-21](https://github.com/alonrbar/redux-app/tree/v1.10.1)
 
 ### Added
 
