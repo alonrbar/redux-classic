@@ -121,6 +121,9 @@ export class GlobalOptions {
      * Options supplied explicitly via the decorator will override options specified here.
      */
     public schema = new SchemaOptions();
+    /**
+     * Customize `computed` properties behavior.
+     */
     public computed = new ComputedOptions();
 }
 

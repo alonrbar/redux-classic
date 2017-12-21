@@ -218,6 +218,10 @@ export class GlobalOptions {
      * Options supplied explicitly via the decorator will override options specified here.
      */
     schema: SchemaOptions;
+    /**
+     * Customize `computed` properties behavior.
+     */
+    computed: ComputedOptions;
 }
 
 export enum LogLevel {

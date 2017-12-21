@@ -50,7 +50,7 @@ That's why we write `this.value = this.value + 1` and not `this.value++`.
 
 ## More Examples
 
-More examples, including usage with [Angular](https://angular.io) or [Aurelia](http://aurelia.io), can be found here [redux-app-examples](https://github.com/alonrbar/redux-app-examples).
+More examples, including usage with [Angular](https://angular.io), [Aurelia](http://aurelia.io) and [React](https://reactjs.org/), can be found here [redux-app-examples](https://github.com/alonrbar/redux-app-examples).
 
 ## How it works
 
@@ -382,6 +382,8 @@ class Counter {
 
 #### Computed Options
 
+Customize `computed` properties via `ReduxApp.options.computed`.
+
 ```javascript
 class ComputedOptions {
     /**
@@ -473,6 +475,10 @@ class GlobalOptions {
      * Options supplied explicitly via the decorator will override options specified here.
      */
     schema: SchemaOptions;
+    /**
+     * Customize `computed` properties behavior.
+     */
+    computed: ComputedOptions;
 }
 
 enum LogLevel {
