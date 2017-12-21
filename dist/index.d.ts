@@ -146,6 +146,16 @@ export class SchemaOptions {
     uppercaseActions?: boolean;
 }
 
+export class ComputedOptions {
+    /**
+     * Whether to perform deep comparison or a simple equality comparison
+     * before updating computed values. Using deep comparison has a small
+     * additional performance cost.
+     * Default value: true.
+     */
+    deepComparison: boolean;
+}
+
 export class AppOptions {
     /**
      * Name of the newly created app.

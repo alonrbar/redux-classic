@@ -1369,6 +1369,7 @@ function isInstanceOf(obj, type) {
 /* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "sequence", function() { return sequence; });
 /* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "withId", function() { return withId; });
 /* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "SchemaOptions", function() { return SchemaOptions; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "ComputedOptions", function() { return ComputedOptions; });
 /* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "AppOptions", function() { return AppOptions; });
 /* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "GlobalOptions", function() { return GlobalOptions; });
 /* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "LogLevel", function() { return LogLevel; });
