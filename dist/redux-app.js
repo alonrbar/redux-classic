@@ -88,6 +88,9 @@ module.exports = __webpack_require__(1);
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 // CONCATENATED MODULE: ./src/symbols.ts
+function isSymbol(obj) {
+    return typeof obj === 'symbol' || obj instanceof Symbol;
+}
 function setSymbol(obj, symbol, value) {
     return obj[symbol] = value;
 }
@@ -279,6 +282,7 @@ function simpleCombineReducers(reducers) {
 }
 
 // CONCATENATED MODULE: ./src/utils/utils.ts
+
 function isPrimitive(val) {
     if (!val)
         return true;
@@ -314,7 +318,7 @@ function getConstructorOwnProp(obj, key) {
     if (!obj || !obj.constructor)
         return undefined;
     var ctor = obj.constructor;
-    if (typeof key === 'symbol' && Object.getOwnPropertySymbols(ctor).includes(key)) {
+    if (isSymbol(key) && Object.getOwnPropertySymbols(ctor).includes(key)) {
         return ctor[key];
     }
     else if (typeof key === 'string' && Object.getOwnPropertyNames(ctor).includes(key)) {
