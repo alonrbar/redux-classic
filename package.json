@@ -1,6 +1,6 @@
 {
   "name": "redux-app",
-  "version": "1.10.2",
+  "version": "1.10.3",
   "description": "Type-safe, DRY and OO redux. Implemented with typescript.",
   "keywords": [
     "redux",
@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@types/chai": "4.0.10",
-    "@types/mocha": "2.2.44",
+    "@types/mocha": "2.2.45",
     "@types/node": "8.5.2",
     "chai": "4.1.2",
     "mocha": "4.0.1",

@@ -353,10 +353,14 @@ You can supply the following options to the `component` decorator.
 class SchemaOptions {
     /**
      * Add the class name of the object that holds the action to the action name.
-     * Format: <class name>.<action name>
+     * Format: <class name><separator><action name>
      * Default value: true.
      */
     actionNamespace?: boolean;
+    /**
+     * Default value: . (dot)
+     */
+    actionNamespaceSeparator?: string;
     /**
      * Use redux style action names. For instance, if a component defines a
      * method called 'incrementCounter' the matching action name will be

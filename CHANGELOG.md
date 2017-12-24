@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.10.3 - 2017-12-21](https://github.com/alonrbar/redux-app/tree/v1.10.3)
+
+### Added
+
+- Support for symbol polyfill. This enables the use of redux-app even with IE (tested with [core-js](https://www.npmjs.com/package/core-js)).
+
 ## [1.10.2 - 2017-12-21](https://github.com/alonrbar/redux-app/tree/v1.10.2)
 
 ### Added
@@ -7,7 +13,9 @@
 - New schema option: `actionNamespaceSeparator`.
 - Update `computed` values only if they are not deeply equal (using lodash.isEqual).
   Controlled via the `ReduxApp.options.computed.deepComparison` option.
-- Document `ignoreState`.
+
+### Changed
+
 - Lock dependencies versions.
 
 ### Removed
