@@ -1,3 +1,4 @@
+import { isSymbol } from '../symbols';
 import { IMap, Method } from '../types';
 
 // tslint:disable:ban-types
@@ -49,7 +50,7 @@ export function getConstructorOwnProp(obj: object, key: symbol | string): any {
         return undefined;
 
     const ctor = (obj.constructor as any);
-    if (typeof key === 'symbol' && Object.getOwnPropertySymbols(ctor).includes(key)) {
+    if (isSymbol(key) && Object.getOwnPropertySymbols(ctor).includes(key)) {
         return ctor[key];
     } else if (typeof key === 'string' && Object.getOwnPropertyNames(ctor).includes(key)) {
         return ctor[key];

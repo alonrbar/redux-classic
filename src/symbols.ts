@@ -1,4 +1,8 @@
 
+export function isSymbol(obj: any): obj is symbol {
+    return typeof obj === 'symbol' || obj instanceof Symbol;
+}
+
 export function setSymbol<T>(obj: any, symbol: symbol, value: T): T {
     return obj[symbol] = value;
 }
