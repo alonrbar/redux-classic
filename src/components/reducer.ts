@@ -48,6 +48,11 @@ export class ComponentReducer {
         const options = creatorInfo.options;
         const methodNames: any = {};
         Object.keys(methods).forEach(methName => {
+
+            // reducers does not handle 'noDispatch' and 'sequence' methods
+            if (creatorInfo.noDispatch[methName] || creatorInfo.sequence[methName])
+                return;
+                
             var actionName = ComponentActions.getActionName(componentCreator, methName, options);
             methodNames[actionName] = methName;
         });
@@ -104,10 +109,10 @@ export class ComponentReducer {
         const reducer = ComponentReducer.combineReducersRecursion(root, context);
 
         return (state: any, action: ReduxAppAction) => {
-            const start = Date.now();            
+            const start = Date.now();
 
             context.invoked = true;
-            
+
             var newState = reducer(state, action);
             newState = ComponentReducer.finalizeState(newState, root);
 

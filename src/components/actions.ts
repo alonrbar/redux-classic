@@ -28,13 +28,9 @@ export class ComponentActions {
                     throw new Error(`Component method invoked with non-Component as 'this'. Bound 'this' argument is: ${this}`);
 
                 const oldMethod = methods[key];
-                if (creatorInfo.noDispatch[key]) {
 
-                    // handle non-dispatch methods (just call the function)
-                    return oldMethod.call(this, ...payload);
-                } else {
-
-                    // handle dispatch methods (use store dispatch)
+                // handle dispatch methods (use store dispatch)
+                if (!creatorInfo.noDispatch[key]) {                    
                     const compInfo = ComponentInfo.getInfo(this);
                     const action: ReduxAppAction = {
                         type: ComponentActions.getActionName(creator, key, creatorInfo.options),
@@ -42,6 +38,11 @@ export class ComponentActions {
                         payload: payload
                     };
                     compInfo.dispatch(action);
+                }
+
+                // handle non-dispatch methods (just call the function)
+                if (creatorInfo.noDispatch[key] || creatorInfo.sequence[key]) {                    
+                    return oldMethod.call(this, ...payload);
                 }
             };
         });
@@ -51,19 +52,19 @@ export class ComponentActions {
 
     public static getActionName(creator: object, methodName: string, options?: SchemaOptions): string {
         options = Object.assign(new SchemaOptions(), globalOptions.schema, options);
-        
+
         var actionName = methodName;
         var actionNamespace = creator.constructor.name;
-    
+
         if (options.uppercaseActions) {
             actionName = snakecase(actionName).toUpperCase();
             actionNamespace = snakecase(actionNamespace).toUpperCase();
         }
-    
+
         if (options.actionNamespace) {
             actionName = actionNamespace + options.actionNamespaceSeparator + actionName;
         }
-    
+
         return actionName;
     }
 }

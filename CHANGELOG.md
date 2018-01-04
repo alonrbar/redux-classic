@@ -1,5 +1,16 @@
 # Change Log
 
+## [Unreleased](https://github.com/alonrbar/redux-app/tree/develop)
+
+### Changed
+
+- Differentiate between `noDispatch` and `sequence` methods. The first stays the
+  same while the latter changed. From now on `sequence` methods has a double
+  role. First, it **dispatches** an action which is **ignored** by the reducer.
+  Second, it's being invoked as a regular method as it used to. While this
+  change should not have any actual impact on application behavior it makes it
+  easier to debug and track the flow of the application.
+
 ## [1.10.3 - 2017-12-21](https://github.com/alonrbar/redux-app/tree/v1.10.3)
 
 ### Added
@@ -65,7 +76,7 @@
 - Fix `computed` properties that are based on `connect`ed values.
 - Fix reduction of arrays of objects when the array is initially undefined.
 
-## [1.7.2 - 2017-11-8](https://github.com/alonrbar/redux-app/tree/v1.7.2)
+## [1.7.2 - 2017-11-08](https://github.com/alonrbar/redux-app/tree/v1.7.2)
 
 ### Added
 
@@ -75,14 +86,14 @@
 
 - Use wepback's ModuleConcatenationPlugin to reduce library footprint and increase loading efficiency.
 
-## [1.7.1 - 2017-11-5](https://github.com/alonrbar/redux-app/tree/v1.7.1)
+## [1.7.1 - 2017-11-05](https://github.com/alonrbar/redux-app/tree/v1.7.1)
 
 ### Fixed
 
 - Fix time travel.
 - Fix and shorten some log messages.
 
-## [1.7.0 - 2017-11-4](https://github.com/alonrbar/redux-app/tree/v1.7.0)
+## [1.7.0 - 2017-11-04](https://github.com/alonrbar/redux-app/tree/v1.7.0)
 
 ### Added
 

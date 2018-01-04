@@ -3,4 +3,5 @@ export * from './component';
 export * from './computed';
 export * from './ignoreState';
 export * from './noDispatch';
+export * from './sequence';
 export * from './withId';

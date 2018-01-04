@@ -54,5 +54,6 @@ export class CreatorInfo {
     public componentClass: typeof Component;
     public options: SchemaOptions;
     public noDispatch: IMap<boolean> = {};
+    public sequence: IMap<boolean> = {};
     public childIds: any = {};
 }

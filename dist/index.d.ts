@@ -66,14 +66,16 @@ export function ignoreState(target: object, propertyKey: string | symbol): void;
  * Method decorator.
  * 
  * Instruct redux-app to keep this method as is and not to replace it with invocation of store.dispatch.
- * Alias of 'sequence'.
  */
 export function noDispatch(target: any, propertyKey: string | symbol): void;
+
 /**
- * Method decorator.
+ * Method decorator. 
  * 
- * Instruct redux-app to keep this method as is and not to replace it with invocation of store.dispatch.
- * Alias of 'noDispatch'.
+ * The method will dispatch an action with the corresponding name but the
+ * dispatched action will **not** trigger a reducer reaction. Instead, after the
+ * dispatch process is done the method will be invoked as a regular one
+ * (similarly to `noDispatch` methods).
  */
 export function sequence(target: any, propertyKey: string | symbol): void;
 
