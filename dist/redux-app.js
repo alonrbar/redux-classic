@@ -363,6 +363,7 @@ function clearProperties(obj) {
 var creatorInfo_CreatorInfo = (function () {
     function CreatorInfo() {
         this.noDispatch = {};
+        this.sequence = {};
         this.childIds = {};
     }
     CreatorInfo.getInfo = function (obj) {
@@ -924,14 +925,15 @@ var ignoreState_IgnoreState = (function () {
 // CONCATENATED MODULE: ./src/decorators/noDispatch.ts
 
 function noDispatch(target, propertyKey) {
-    noDispatchDecorator(target, propertyKey);
-}
-function sequence(target, propertyKey) {
-    noDispatchDecorator(target, propertyKey);
-}
-function noDispatchDecorator(target, propertyKey) {
     var info = creatorInfo_CreatorInfo.getOrInitInfo(target);
     info.noDispatch[propertyKey] = true;
+}
+
+// CONCATENATED MODULE: ./src/decorators/sequence.ts
+
+function sequence(target, propertyKey) {
+    var info = creatorInfo_CreatorInfo.getOrInitInfo(target);
+    info.sequence[propertyKey] = true;
 }
 
 // CONCATENATED MODULE: ./src/decorators/withId.ts
@@ -988,6 +990,7 @@ var withId_ComponentId = (function () {
 
 
 
+
 // CONCATENATED MODULE: ./src/components/reducer.ts
 var reducer___assign = (this && this.__assign) || Object.assign || function(t) {
     for (var s, i = 1, n = arguments.length; i < n; i++) {
@@ -1029,6 +1032,8 @@ var reducer_ComponentReducer = (function () {
         var options = creatorInfo.options;
         var methodNames = {};
         Object.keys(methods).forEach(function (methName) {
+            if (creatorInfo.noDispatch[methName] || creatorInfo.sequence[methName])
+                return;
             var actionName = actions_ComponentActions.getActionName(componentCreator, methName, options);
             methodNames[actionName] = methName;
         });
@@ -1315,10 +1320,7 @@ var actions_ComponentActions = (function () {
                 if (!(this instanceof component_Component))
                     throw new Error("Component method invoked with non-Component as 'this'. Bound 'this' argument is: " + this);
                 var oldMethod = methods[key];
-                if (creatorInfo.noDispatch[key]) {
-                    return oldMethod.call.apply(oldMethod, [this].concat(payload));
-                }
-                else {
+                if (!creatorInfo.noDispatch[key]) {
                     var compInfo = componentInfo_ComponentInfo.getInfo(this);
                     var action = {
                         type: ComponentActions.getActionName(creator, key, creatorInfo.options),
@@ -1326,6 +1328,9 @@ var actions_ComponentActions = (function () {
                         payload: payload
                     };
                     compInfo.dispatch(action);
+                }
+                if (creatorInfo.noDispatch[key] || creatorInfo.sequence[key]) {
+                    return oldMethod.call.apply(oldMethod, [this].concat(payload));
                 }
             };
         });
