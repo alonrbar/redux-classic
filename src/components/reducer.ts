@@ -3,11 +3,11 @@ import { Computed, Connect, IgnoreState } from '../decorators';
 import { ComponentInfo, CreatorInfo, getCreatorMethods } from '../info';
 import { ROOT_COMPONENT_PATH } from '../reduxApp';
 import { IMap, Listener, Method } from '../types';
-import { clearProperties, getMethods, isPrimitive, log, simpleCombineReducers } from '../utils';
+import { clearProperties, getMethods, isPlainObject, isPrimitive, log, simpleCombineReducers } from '../utils';
 import { ComponentActions, ReduxAppAction } from './actions';
 import { Component } from './component';
 
-// tslint:disable:member-ordering
+// tslint:disable:member-ordering ban-types
 
 export type ReducerCreator = (changeListener: Listener<Component>) => Reducer<object>;
 
@@ -39,34 +39,18 @@ export class ComponentReducer {
 
     public static createReducer(component: Component, componentCreator: object): ReducerCreator {
 
-        // method names lookup
-        const methods = getCreatorMethods(componentCreator);
         const creatorInfo = CreatorInfo.getInfo(componentCreator);
         if (!creatorInfo)
             throw new Error(`Inconsistent component '${componentCreator.constructor.name}'. The 'component' class decorator is missing.`);
 
-        const options = creatorInfo.options;
-        const methodNames: any = {};
-        Object.keys(methods).forEach(methName => {
-
-            // reducers does not handle 'noDispatch' and 'sequence' methods
-            if (creatorInfo.noDispatch[methName] || creatorInfo.sequence[methName])
-                return;
-                
-            var actionName = ComponentActions.getActionName(componentCreator, methName, options);
-            methodNames[actionName] = methName;
-        });
-
-        // state object prototype
+        const methods = ComponentReducer.createMethodsLookup(componentCreator, creatorInfo);
         const stateProto = ComponentReducer.createStateObjectPrototype(component, creatorInfo);
-
-        // component id
         const componentId = ComponentInfo.getInfo(component).id;
-
-        // the reducer
+        
         return (changeListener: Listener<Component>) => {
 
-            return (state: object, action: ReduxAppAction) => {
+            // the reducer
+            function reducer(state: object, action: ReduxAppAction) {
 
                 log.verbose(`[reducer] Reducer of: ${componentCreator.constructor.name}, action: ${action.type}`);
 
@@ -83,8 +67,7 @@ export class ComponentReducer {
                 }
 
                 // check if should use this reducer
-                const methodName = methodNames[action.type];
-                const actionReducer = methods[methodName];
+                const actionReducer = methods[action.type];
                 if (!actionReducer) {
                     log.verbose('[reducer] No matching action in this reducer, returning previous state');
                     return state;
@@ -100,6 +83,15 @@ export class ComponentReducer {
                 // return new state                
                 log.verbose('[reducer] Reducer invoked, returning new state');
                 return newState;
+            }
+
+            // reducer wrapper
+            return (state: object, action: ReduxAppAction) => {
+                let newState = reducer(state, action);
+                if (!isPrimitive(newState) && !isPlainObject(newState)) {
+                    newState = ComponentReducer.finalizeStateObject(newState, component);
+                }
+                return newState;
             };
         };
     }
@@ -112,9 +104,9 @@ export class ComponentReducer {
             const start = Date.now();
 
             context.invoked = true;
+            log.debug(`[rootReducer] Reducing action: ${action.type}.`);
 
-            var newState = reducer(state, action);
-            newState = ComponentReducer.finalizeState(newState, root);
+            const newState = reducer(state, action);
 
             const end = Date.now();
             log.debug(`[rootReducer] Reducer tree processed in ${end - start}ms.`);
@@ -126,17 +118,24 @@ export class ComponentReducer {
     //
     // private methods - state object
     //
+    
+    private static createMethodsLookup(componentCreator: object, creatorInfo: CreatorInfo): IMap<Function> {
+        
+        const allMethods = getCreatorMethods(componentCreator);        
 
-    /**
-     * Create a "state object". The state object receives it's properties from
-     * the current state and it's methods from the owning component. Methods
-     * that represent actions are replace with a throw call, while noDispatch
-     * methods are kept in place.
-     */
-    private static createStateObject(state: object, stateProto: object): object {
-        const stateObj = Object.create(stateProto);
-        Object.assign(stateObj, state);
-        return stateObj;
+        const options = creatorInfo.options;
+        const actionMethods: IMap<Function> = {};
+        Object.keys(allMethods).forEach(methName => {
+
+            // reducers does not handle 'noDispatch' and 'sequence' methods
+            if (creatorInfo.noDispatch[methName] || creatorInfo.sequence[methName])
+                return;
+
+            var actionName = ComponentActions.getActionName(componentCreator, methName, options);
+            actionMethods[actionName] = allMethods[methName];
+        });
+
+        return actionMethods;
     }
 
     /**
@@ -159,6 +158,32 @@ export class ComponentReducer {
         throw new Error("Only 'noDispatch' methods can be invoked inside actions.");
     }
 
+    /**
+     * Create a "state object". The state object receives it's properties from
+     * the current state and it's methods from the owning component. Methods
+     * that represent actions are replace with a throw call, while noDispatch
+     * methods are kept in place.
+     */
+    private static createStateObject(state: object, stateProto: object): object {
+        const stateObj = Object.create(stateProto);
+        Object.assign(stateObj, state);
+        return stateObj;
+    }
+
+    private static finalizeStateObject(state: object, component: Component): object {
+
+        log.verbose('[finalizeStateObject] finalizing state.');
+        let finalizedState = Object.assign({}, state);
+
+        const handledProps = {};
+        finalizedState = Connect.removeConnectedProps(finalizedState, component, handledProps);
+        finalizedState = Computed.removeComputedProps(finalizedState, component, handledProps);
+        finalizedState = IgnoreState.removeIgnoredProps(finalizedState, component, handledProps);
+
+        log.verbose('[finalizeStateObject] state finalized.');
+        return finalizedState;
+    }
+
     //
     // private methods - combine reducers
     //
@@ -179,7 +204,7 @@ export class ComponentReducer {
             return ComponentReducer.identityReducer;
 
         // get the root reducer
-        var rootReducer: Reducer<any>;
+        let rootReducer: Reducer<any>;
         const info = ComponentInfo.getInfo(obj as any);
         if (info) {
             rootReducer = info.reducerCreator(comp => {
@@ -198,7 +223,7 @@ export class ComponentReducer {
                 continue;
 
             // other objects
-            var newSubReducer = ComponentReducer.combineReducersRecursion((obj as any)[key], new CombineReducersContext({
+            const newSubReducer = ComponentReducer.combineReducersRecursion((obj as any)[key], new CombineReducersContext({
                 ...context,
                 path: (context.path === '' ? key : context.path + '.' + key)
             }));
@@ -206,11 +231,11 @@ export class ComponentReducer {
                 subReducers[key] = newSubReducer;
         }
 
-        var resultReducer = rootReducer;
+        let resultReducer = rootReducer;
 
         // combine reducers
         if (Object.keys(subReducers).length) {
-            var combinedSubReducer = simpleCombineReducers(subReducers);
+            const combinedSubReducer = simpleCombineReducers(subReducers);
 
             resultReducer = (state: object, action: ReduxAppAction) => {
 
@@ -244,45 +269,5 @@ export class ComponentReducer {
                 ...subStates
             };
         }
-    }
-
-    private static finalizeState(rootState: any, root: Component): any {
-        return ComponentReducer.finalizeStateRecursion(rootState, root, new Set());
-    }
-
-    private static finalizeStateRecursion(state: any, obj: any, visited: Set<any>): any {
-
-        // primitive properties are updated by their owner objects
-        if (isPrimitive(state) || isPrimitive(obj))
-            return state;
-
-        // prevent endless loops on circular references
-        if (visited.has(state))
-            return state;
-        visited.add(state);
-
-        const handledProps = {};
-        state = Connect.removeConnectedProps(state, obj, handledProps);
-        state = Computed.removeComputedProps(state, obj, handledProps);
-        state = IgnoreState.removeIgnoredProps(state, obj, handledProps);
-
-        // transform children
-        Object.keys(state).forEach(key => {
-
-            // skip already handled properties
-            if (handledProps.hasOwnProperty(key))
-                return;
-
-            var subState = state[key];
-            var subObj = obj[key];
-            var newSubState = ComponentReducer.finalizeStateRecursion(subState, subObj, visited);
-
-            // assign only if changed
-            if (newSubState !== subState) {
-                state[key] = newSubState;
-            }
-        });
-
-        return state;
     }
 }

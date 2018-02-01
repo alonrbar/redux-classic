@@ -62,20 +62,33 @@ export class Computed {
         });
     }
 
-    public static computeProps(components: Component[]): void {
+    /**
+     * Returns an array of components that were changed during props computation
+     * (at least one of their computed props has changed).
+     */
+    public static computeProps(components: Component[]): Component[] {
+        const changedComponents: Component[] = [];
+
         for (let comp of components) {
-            this.computeObjectProps(comp);
+            const isChanged = this.computeObjectProps(comp);
+            if (isChanged) {
+                changedComponents.push(comp);
+            }
         }
+
+        return changedComponents;
     }
 
     /**
      * Replace each computed property of 'obj' with it's current computed value.
+     * Returns 'true' if the component was changed (new computed value).
      */
-    private static computeObjectProps(obj: any): void {
+    private static computeObjectProps(obj: any): boolean {
+        let isChanged = false;
 
         const info = ClassInfo.getInfo(obj);
         if (!info)
-            return;
+            return isChanged;
 
         for (let propKey of Object.keys(info.computedGetters)) {
 
@@ -87,7 +100,10 @@ export class Computed {
             var oldValue = obj[propKey];
             if (newValue !== oldValue && (!globalOptions.computed.deepComparison || !isEqual(newValue, oldValue))) {
                 obj[propKey] = newValue;
+                isChanged = true;
             }
         }
+
+        return isChanged;
     }
 }

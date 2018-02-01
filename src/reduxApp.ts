@@ -57,6 +57,56 @@ export class ReduxApp<T extends object> {
     }
 
     /**
+     * @param type The type of the component.
+     * @param componentId The ID of the component (assuming the ID was assigned
+     * to the component by the 'withId' decorator). If not specified will get to
+     * the first available component of that type.
+     * @param appId The name of the ReduxApp instance to search in. If not
+     * specified will search in default app.
+     */
+    public static getComponent<T extends Function>(type: T, componentId?: string, appId?: string): T {
+        const applicationId = appId || DEFAULT_APP_NAME;
+        const app = appsRepository[applicationId];
+        if (!app) {
+            log.debug(`[ReduxApp] Application '${applicationId}' does not exist.`);
+            return undefined;
+        }
+
+        // get the component to connect
+        const warehouse = app.getTypeWarehouse(type);
+        if (componentId) {
+
+            // get by id
+            return warehouse.get(componentId);
+        } else {
+
+            // get the first value
+            return warehouse.values().next().value;
+        }
+    }
+
+    /**
+     * Whether or not the component was changed as a result of the last
+     * dispatched action.
+     * @param comp The component to check.
+     * @param appId The name of the ReduxApp instance to check against. If not
+     * specified will check against default app.
+     */
+    public static wasComponentChanged(comp: any, appId?: string): boolean {
+        const applicationId = appId || DEFAULT_APP_NAME;
+        const app = appsRepository[applicationId];
+        if (!app) {
+            log.debug(`[ReduxApp] Application '${applicationId}' does not exist.`);
+            return false;
+        }
+
+        if (app.allComponentsChanged)
+            return true;
+
+        return Object.values(app.changedComponents).includes(comp);
+    }
+
+    /**
      * INTERNAL: Should not appear on the public d.ts file.
      */
     public static registerComponent(comp: Component, creator: object, appName?: string): void {
@@ -85,7 +135,20 @@ export class ReduxApp<T extends object> {
 
     private readonly warehouse: AppWarehouse = new Map<Function, Map<any, any>>();
 
-    private initialStateUpdate = true;
+    private initialStateUpdated = false;
+
+    /**
+     * A map of components that were changed as a result of the last action dispatched.
+     */
+    private changedComponents: IMap<Component> = {};
+
+    /**
+     * Indicates whether all components were changed as a result of the last
+     * action dispatched. This value is of higher precedence than the
+     * 'changedComponents' property (i.e. it is the more accurate of that two
+     * properties and should always be checked first).
+     */
+    private allComponentsChanged = false;
 
     private subscriptionDisposer: () => void;
 
@@ -233,20 +296,28 @@ export class ReduxApp<T extends object> {
 
             // update the application tree
             const newState = this.store.getState();
-            if (this.initialStateUpdate || !reducersContext.invoked) {
+            if (!this.initialStateUpdated || !reducersContext.invoked) {
 
                 // initial state, state rehydration, time-travel debugging, etc. - update the entire tree
-                this.initialStateUpdate = false;
+                this.initialStateUpdated = true;
                 this.updateStateRecursion(this.root, newState, new UpdateContext({ forceRecursion: true }));
+                this.changedComponents = {};
+                this.allComponentsChanged = true;
             } else {
 
                 // standard update - update only changed components
                 this.updateChangedComponents({ [ROOT_COMPONENT_PATH]: newState }, reducersContext.changedComponents);
+                this.changedComponents = Object.assign({}, reducersContext.changedComponents);
+                this.allComponentsChanged = false;
             }
 
             // because computed props may be dependant on connected props their
             // calculation is postponed to after the entire app tree is up-to-date
-            Computed.computeProps(withComputedProps);
+            const changedByComputedProps = Computed.computeProps(withComputedProps);
+            for (let comp of changedByComputedProps) {
+                const path = Object.keys(allComponents).find(p => allComponents[p] === comp);
+                this.changedComponents[path] = comp;
+            }
 
             // reset reducers context
             reducersContext.reset();
