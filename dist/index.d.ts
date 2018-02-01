@@ -91,7 +91,7 @@ export function withId(id?: any): PropertyDecorator;
 //
 
 export class ReduxApp<T extends object> {
-    
+
     /**
      * Global redux-app options.
      */
@@ -100,7 +100,34 @@ export class ReduxApp<T extends object> {
     static createApp<T extends object>(appCreator: T, enhancer?: StoreEnhancer<T>): ReduxApp<T>;
     static createApp<T extends object>(appCreator: T, options: AppOptions, enhancer?: StoreEnhancer<T>): ReduxApp<T>;
     static createApp<T extends object>(appCreator: T, options: AppOptions, preloadedState: any, enhancer?: StoreEnhancer<T>): ReduxApp<T>;
-    
+
+    /**
+     * Get an existing ReduxApp instance.
+     * 
+     * @param appId The name of the ReduxApp instance to retrieve. If not
+     * specified will return the default app.
+     */
+    static getApp<T extends object = any>(appId?: string): ReduxApp<T>;
+
+    /**
+     * @param type The type of the component.
+     * @param componentId The ID of the component (assuming the ID was assigned
+     * to the component by the 'withId' decorator). If not specified will get to
+     * the first available component of that type.
+     * @param appId The name of the ReduxApp instance to search in. If not
+     * specified will search in default app.
+     */
+    static getComponent<T extends Function>(type: T, componentId?: string, appId?: string): T;
+
+    /**
+     * Whether or not the component was changed as a result of the last
+     * dispatched action.
+     * @param comp The component to check.
+     * @param appId The name of the ReduxApp instance to check against. If not
+     * specified will check against default app.
+     */
+    static wasComponentChanged(comp: any, appId?: string): boolean;
+
     readonly name: string;
     /**
      * The root component of the application.
@@ -110,7 +137,7 @@ export class ReduxApp<T extends object> {
      * The underlying redux store.
      */
     readonly store: Store<T>;
-    
+
     constructor(appCreator: T, enhancer?: StoreEnhancer<T>);
     constructor(appCreator: T, options: AppOptions, enhancer?: StoreEnhancer<T>);
     constructor(appCreator: T, options: AppOptions, preloadedState: any, enhancer?: StoreEnhancer<T>);

@@ -57,6 +57,20 @@ export class ReduxApp<T extends object> {
     }
 
     /**
+     * Get an existing ReduxApp instance.
+     * 
+     * @param appId The name of the ReduxApp instance to retrieve. If not
+     * specified will return the default app.
+     */
+    public static getApp<T extends object = any>(appId?: string): ReduxApp<T> {
+        const applicationId = appId || DEFAULT_APP_NAME;
+        const app = appsRepository[applicationId];
+        if (!app) 
+            log.debug(`[ReduxApp] Application '${applicationId}' does not exist.`);
+        return app;
+    }
+
+    /**
      * @param type The type of the component.
      * @param componentId The ID of the component (assuming the ID was assigned
      * to the component by the 'withId' decorator). If not specified will get to
@@ -65,12 +79,9 @@ export class ReduxApp<T extends object> {
      * specified will search in default app.
      */
     public static getComponent<T extends Function>(type: T, componentId?: string, appId?: string): T {
-        const applicationId = appId || DEFAULT_APP_NAME;
-        const app = appsRepository[applicationId];
-        if (!app) {
-            log.debug(`[ReduxApp] Application '${applicationId}' does not exist.`);
+        const app = ReduxApp.getApp(appId);
+        if (!app) 
             return undefined;
-        }
 
         // get the component to connect
         const warehouse = app.getTypeWarehouse(type);
@@ -93,12 +104,9 @@ export class ReduxApp<T extends object> {
      * specified will check against default app.
      */
     public static wasComponentChanged(comp: any, appId?: string): boolean {
-        const applicationId = appId || DEFAULT_APP_NAME;
-        const app = appsRepository[applicationId];
-        if (!app) {
-            log.debug(`[ReduxApp] Application '${applicationId}' does not exist.`);
-            return false;
-        }
+        const app = ReduxApp.getApp(appId);
+        if (!app) 
+            return undefined;
 
         if (app.allComponentsChanged)
             return true;
