@@ -1,7 +1,3 @@
-export interface IDisposable {
-    dispose(): void;
-}
-
 // tslint:disable-next-line:ban-types
 export type Method = Function;
 

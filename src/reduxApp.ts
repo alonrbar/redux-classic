@@ -5,7 +5,7 @@ import { ComponentInfo } from './info';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
 import { IMap, Listener } from './types';
 import { isPrimitive, log, toPlainObject } from './utils';
-var getProp = require('lodash.get');
+const getProp = require('lodash.get');
 
 // tslint:disable:ban-types
 
@@ -57,6 +57,46 @@ export class ReduxApp<T extends object> {
     }
 
     /**
+     * Get an existing ReduxApp instance.
+     * 
+     * @param appId The name of the ReduxApp instance to retrieve. If not
+     * specified will return the default app.
+     */
+    public static getApp<T extends object = any>(appId?: string): ReduxApp<T> {
+        const applicationId = appId || DEFAULT_APP_NAME;
+        const app = appsRepository[applicationId];
+        if (!app) 
+            log.debug(`[ReduxApp] Application '${applicationId}' does not exist.`);
+        return app;
+    }
+
+    /**
+     * @param type The type of the component.
+     * @param componentId The ID of the component (assuming the ID was assigned
+     * to the component by the 'withId' decorator). If not specified will get to
+     * the first available component of that type.
+     * @param appId The name of the ReduxApp instance to search in. If not
+     * specified will search in default app.
+     */
+    public static getComponent<T extends Function>(type: T, componentId?: string, appId?: string): T {
+        const app = ReduxApp.getApp(appId);
+        if (!app) 
+            return undefined;
+
+        // get the component to connect
+        const warehouse = app.getTypeWarehouse(type);
+        if (componentId) {
+
+            // get by id
+            return warehouse.get(componentId);
+        } else {
+
+            // get the first value
+            return warehouse.values().next().value;
+        }
+    }
+
+    /**
      * INTERNAL: Should not appear on the public d.ts file.
      */
     public static registerComponent(comp: Component, creator: object, appName?: string): void {
@@ -85,7 +125,7 @@ export class ReduxApp<T extends object> {
 
     private readonly warehouse: AppWarehouse = new Map<Function, Map<any, any>>();
 
-    private initialStateUpdate = true;
+    private initialStateUpdated = false;
 
     private subscriptionDisposer: () => void;
 
@@ -233,10 +273,10 @@ export class ReduxApp<T extends object> {
 
             // update the application tree
             const newState = this.store.getState();
-            if (this.initialStateUpdate || !reducersContext.invoked) {
+            if (!this.initialStateUpdated || !reducersContext.invoked) {
 
                 // initial state, state rehydration, time-travel debugging, etc. - update the entire tree
-                this.initialStateUpdate = false;
+                this.initialStateUpdated = true;
                 this.updateStateRecursion(this.root, newState, new UpdateContext({ forceRecursion: true }));
             } else {
 

@@ -11,33 +11,40 @@ export function component(ctor: Function): any;
 export function component(options: SchemaOptions): any;
 
 /**
+ * Method decorator. 
+ * 
+ * The method will dispatch an action with the corresponding name but the
+ * dispatched action will **not** trigger a reducer reaction. Instead, after the
+ * dispatch process is done the method will be invoked as a regular one
+ * (similarly to `noDispatch` methods).
+ */
+export function sequence(target: any, propertyKey: string | symbol): void;
+
+/**
+ * Method decorator.
+ * 
+ * Mark this method as a simple js method (not dispatching an action).
+ */
+export function noDispatch(target: any, propertyKey: string | symbol): void;
+
+/**
  * Property decorator.
  * 
  * Computed values are computed each time the store state is changed.
  */
 export function computed(target: any, propertyKey: string | symbol): void;
 
-export class ConnectOptions {
-    /**
-     * The name of the ReduxApp instance to connect to.
-     * If not specified will connect to default app.
-     */
-    app?: string;
-    /**
-     * The ID of the target component (assuming the ID was assigned to the
-     * component by the 'withId' decorator).
-     * If not specified will connect to the first available component of that type.
-     */
-    id?: any;
-    /**
-     * The 'connect' decorator uses a getter to connect to the it's target. By
-     * default the getter is replaced with a standard value (reference) once the
-     * first non-empty value is retrieved. Set this value to true to leave the
-     * getter in place.
-     * Default value: false
-     */
-    live?: boolean;
-}
+/**
+ * Property decorator.
+ */
+export function withId(target: object, propertyKey: string | symbol): void;
+export function withId(id?: any): PropertyDecorator;
+
+/**
+ * Property decorator.
+ * Instruct redux-app to not store this property in the store.
+ */
+export function ignoreState(target: object, propertyKey: string | symbol): void;
 
 /**
  * Property decorator. 
@@ -56,42 +63,16 @@ export class ConnectOptions {
 export function connect(options?: ConnectOptions): PropertyDecorator;
 export function connect(target: any, propertyKey: string | symbol): void;
 
-/**
- * Property decorator.
- * Instruct redux-app to not store this property in the store.
- */
-export function ignoreState(target: object, propertyKey: string | symbol): void;
-
-/**
- * Method decorator.
- * 
- * Instruct redux-app to keep this method as is and not to replace it with invocation of store.dispatch.
- */
-export function noDispatch(target: any, propertyKey: string | symbol): void;
-
-/**
- * Method decorator. 
- * 
- * The method will dispatch an action with the corresponding name but the
- * dispatched action will **not** trigger a reducer reaction. Instead, after the
- * dispatch process is done the method will be invoked as a regular one
- * (similarly to `noDispatch` methods).
- */
-export function sequence(target: any, propertyKey: string | symbol): void;
-
-/**
- * Property decorator.
- */
-export function withId(target: object, propertyKey: string | symbol): void;
-export function withId(id?: any): PropertyDecorator;
-
-
 //
 // ReduxApp
 //
 
 export class ReduxApp<T extends object> {
-    
+
+    //
+    // static members
+    //
+
     /**
      * Global redux-app options.
      */
@@ -100,7 +81,21 @@ export class ReduxApp<T extends object> {
     static createApp<T extends object>(appCreator: T, enhancer?: StoreEnhancer<T>): ReduxApp<T>;
     static createApp<T extends object>(appCreator: T, options: AppOptions, enhancer?: StoreEnhancer<T>): ReduxApp<T>;
     static createApp<T extends object>(appCreator: T, options: AppOptions, preloadedState: any, enhancer?: StoreEnhancer<T>): ReduxApp<T>;
-    
+
+    /**
+     * @param type The type of the component.
+     * @param componentId The ID of the component (assuming the ID was assigned
+     * to the component by the 'withId' decorator). If not specified will get to
+     * the first available component of that type.
+     * @param appId The name of the ReduxApp instance to search in. If not
+     * specified will search in default app.
+     */
+    static getComponent<T extends Function>(type: T, componentId?: string, appId?: string): T;    
+
+    //
+    // instance members
+    //
+
     readonly name: string;
     /**
      * The root component of the application.
@@ -110,7 +105,7 @@ export class ReduxApp<T extends object> {
      * The underlying redux store.
      */
     readonly store: Store<T>;
-    
+
     constructor(appCreator: T, enhancer?: StoreEnhancer<T>);
     constructor(appCreator: T, options: AppOptions, enhancer?: StoreEnhancer<T>);
     constructor(appCreator: T, options: AppOptions, preloadedState: any, enhancer?: StoreEnhancer<T>);
@@ -123,6 +118,18 @@ export class ReduxApp<T extends object> {
 //
 
 export function isInstanceOf(obj: any, type: Function): boolean;
+
+export function getMethods(obj: object | Function, bind = false): IMap<Method>;
+
+//
+// types
+//
+
+export type Method = Function;
+
+export interface IMap<T> { 
+    [key: string]: T;
+}
 
 //
 // Options
@@ -146,6 +153,28 @@ export class SchemaOptions {
      * Default value: true.
      */
     uppercaseActions?: boolean;
+}
+
+export class ConnectOptions {
+    /**
+     * The name of the ReduxApp instance to connect to.
+     * If not specified will connect to default app.
+     */
+    app?: string;
+    /**
+     * The ID of the target component (assuming the ID was assigned to the
+     * component by the 'withId' decorator).
+     * If not specified will connect to the first available component of that type.
+     */
+    id?: any;
+    /**
+     * The 'connect' decorator uses a getter to connect to the it's target. By
+     * default the getter is replaced with a standard value (reference) once the
+     * first non-empty value is retrieved. Set this value to true to leave the
+     * getter in place.
+     * Default value: false
+     */
+    live?: boolean;
 }
 
 export class ComputedOptions {

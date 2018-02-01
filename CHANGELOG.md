@@ -1,6 +1,13 @@
 # Change Log
 
-## [Unreleased](https://github.com/alonrbar/redux-app/tree/develop)
+## [1.11.0 - 2018-02-03](https://github.com/alonrbar/redux-app/tree/v1.11.0)
+
+### Added
+
+- New `ReduxApp` static method: `getComponent`. Primarily aimed for better
+  integration with React (check out the new react
+  [examples](https://github.com/alonrbar/redux-app-examples/blob/master/src/react)).
+- yarn.lock file.
 
 ### Changed
 
@@ -9,7 +16,8 @@
   role. First, it **dispatches** an action which is **ignored** by the reducer.
   Second, it's being invoked as a regular method as it used to. While this
   change should not have any actual impact on application behavior it makes it
-  easier to debug and track the flow of the application.
+  easier to debug and track the flow of the application (through the various
+  Redux loggers out there).
 
 ## [1.10.3 - 2017-12-21](https://github.com/alonrbar/redux-app/tree/v1.10.3)
 

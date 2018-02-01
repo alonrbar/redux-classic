@@ -3,7 +3,7 @@ import { CreatorInfo } from '../info';
 /**
  * Method decorator.
  * 
- * Instruct redux-app to keep this method as is and not to replace it with invocation of store.dispatch.
+ * Mark this method as a simple js method (not dispatching an action).
  */
 export function noDispatch(target: object, propertyKey: string | symbol): void {
     const info = CreatorInfo.getOrInitInfo(target);

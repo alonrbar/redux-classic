@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { ClassInfo } from '../../info';
-import { appsRepository } from '../../reduxApp';
+import { appsRepository, ReduxApp } from '../../reduxApp';
 import { accessorDescriptor, dataDescriptor, deferredDefineProperty, log } from '../../utils';
 import { ConnectOptions } from './connectOptions';
 
@@ -65,28 +65,7 @@ function connectDecorator(target: any, propertyKey: string | symbol, options?: C
     const newDescriptor = {
         get: function (this: any) {
 
-            const app = appsRepository[options.app];
-            if (!app) {
-                log.debug(`[connect] Application '${options.app}' does not exist. Property ${propertyKey} is not connected.`);
-                if (oldDescriptor && oldDescriptor.get) {
-                    return oldDescriptor.get();
-                } else {
-                    return value;
-                }
-            }
-
-            // get the component to connect
-            const warehouse = app.getTypeWarehouse(type);
-            var result: any;
-            if (options.id) {
-
-                // get by id
-                result = warehouse.get(options.id);
-            } else {
-
-                // get the first value
-                result = warehouse.values().next().value;
-            }
+            const result = ReduxApp.getComponent(type, options.id, options.app);
 
             // once connected, replace getter with regular data descriptor
             // (so that view frameworks such as Aurelia and Angular won't

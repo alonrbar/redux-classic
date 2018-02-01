@@ -289,7 +289,8 @@ function isPrimitive(val) {
     var type = typeof val;
     return type !== 'object' && type !== 'function';
 }
-function getMethods(obj) {
+function getMethods(obj, bind) {
+    if (bind === void 0) { bind = false; }
     if (!obj)
         return undefined;
     var proto;
@@ -309,8 +310,12 @@ function getMethods(obj) {
         var key = _a[_i];
         var desc = Object.getOwnPropertyDescriptor(proto, key);
         var hasGetter = desc && typeof desc.get === 'function';
-        if (!hasGetter && typeof proto[key] === 'function')
+        if (!hasGetter && typeof proto[key] === 'function') {
             methods[key] = proto[key];
+            if (bind) {
+                methods[key] = methods[key].bind(obj);
+            }
+        }
     }
     return methods;
 }
@@ -338,6 +343,17 @@ function getType(obj) {
 function getParentType(obj) {
     var type = getType(obj);
     return Object.getPrototypeOf(type.prototype).constructor;
+}
+function isPlainObject(obj) {
+    if (!obj)
+        return false;
+    if (typeof obj !== 'object')
+        return false;
+    if (typeof Object.getPrototypeOf === 'function') {
+        var proto = Object.getPrototypeOf(obj);
+        return proto === Object.prototype || proto === null;
+    }
+    return Object.prototype.toString.call(obj) === '[object Object]';
 }
 function toPlainObject(obj) {
     var json = JSON.stringify(obj, function (key, value) { return value === undefined ? null : value; });
@@ -456,7 +472,7 @@ var reduxApp_ReduxApp = (function () {
             params[_i - 1] = arguments[_i];
         }
         this.warehouse = new Map();
-        this.initialStateUpdate = true;
+        this.initialStateUpdated = false;
         var _a = this.resolveParameters(appCreator, params), options = _a.options, preLoadedState = _a.preLoadedState, enhancer = _a.enhancer;
         this.name = this.getAppName(options.name);
         if (appsRepository[this.name])
@@ -483,6 +499,25 @@ var reduxApp_ReduxApp = (function () {
             params[_i - 1] = arguments[_i];
         }
         return new (ReduxApp.bind.apply(ReduxApp, [void 0, appCreator].concat(params)))();
+    };
+    ReduxApp.getApp = function (appId) {
+        var applicationId = appId || DEFAULT_APP_NAME;
+        var app = appsRepository[applicationId];
+        if (!app)
+            log.debug("[ReduxApp] Application '" + applicationId + "' does not exist.");
+        return app;
+    };
+    ReduxApp.getComponent = function (type, componentId, appId) {
+        var app = ReduxApp.getApp(appId);
+        if (!app)
+            return undefined;
+        var warehouse = app.getTypeWarehouse(type);
+        if (componentId) {
+            return warehouse.get(componentId);
+        }
+        else {
+            return warehouse.values().next().value;
+        }
     };
     ReduxApp.registerComponent = function (comp, creator, appName) {
         appName = appName || DEFAULT_APP_NAME;
@@ -551,8 +586,8 @@ var reduxApp_ReduxApp = (function () {
         return function () {
             var start = Date.now();
             var newState = _this.store.getState();
-            if (_this.initialStateUpdate || !reducersContext.invoked) {
-                _this.initialStateUpdate = false;
+            if (!_this.initialStateUpdated || !reducersContext.invoked) {
+                _this.initialStateUpdated = true;
                 _this.updateStateRecursion(_this.root, newState, new UpdateContext({ forceRecursion: true }));
             }
             else {
@@ -767,24 +802,7 @@ function connectDecorator(target, propertyKey, options) {
     var oldDescriptor = Object.getOwnPropertyDescriptor(target, propertyKey);
     var newDescriptor = {
         get: function () {
-            var app = appsRepository[options.app];
-            if (!app) {
-                log.debug("[connect] Application '" + options.app + "' does not exist. Property " + propertyKey + " is not connected.");
-                if (oldDescriptor && oldDescriptor.get) {
-                    return oldDescriptor.get();
-                }
-                else {
-                    return value;
-                }
-            }
-            var warehouse = app.getTypeWarehouse(type);
-            var result;
-            if (options.id) {
-                result = warehouse.get(options.id);
-            }
-            else {
-                result = warehouse.values().next().value;
-            }
+            var result = reduxApp_ReduxApp.getComponent(type, options.id, options.app);
             if (result && !options.live) {
                 Object.defineProperty(this, propertyKey, dataDescriptor);
                 value = this[propertyKey] = result;
@@ -1025,18 +1043,10 @@ var reducer_ComponentReducer = (function () {
     function ComponentReducer() {
     }
     ComponentReducer.createReducer = function (component, componentCreator) {
-        var methods = getCreatorMethods(componentCreator);
         var creatorInfo = creatorInfo_CreatorInfo.getInfo(componentCreator);
         if (!creatorInfo)
             throw new Error("Inconsistent component '" + componentCreator.constructor.name + "'. The 'component' class decorator is missing.");
-        var options = creatorInfo.options;
-        var methodNames = {};
-        Object.keys(methods).forEach(function (methName) {
-            if (creatorInfo.noDispatch[methName] || creatorInfo.sequence[methName])
-                return;
-            var actionName = actions_ComponentActions.getActionName(componentCreator, methName, options);
-            methodNames[actionName] = methName;
-        });
+        var methods = ComponentReducer.createMethodsLookup(componentCreator, creatorInfo);
         var stateProto = ComponentReducer.createStateObjectPrototype(component, creatorInfo);
         var componentId = componentInfo_ComponentInfo.getInfo(component).id;
         return function (changeListener) {
@@ -1050,8 +1060,7 @@ var reducer_ComponentReducer = (function () {
                     log.verbose("[reducer] Component id and action.id don't match (" + componentId + " !== " + action.id + ")");
                     return state;
                 }
-                var methodName = methodNames[action.type];
-                var actionReducer = methods[methodName];
+                var actionReducer = methods[action.type];
                 if (!actionReducer) {
                     log.verbose('[reducer] No matching action in this reducer, returning previous state');
                     return state;
@@ -1069,6 +1078,7 @@ var reducer_ComponentReducer = (function () {
         return function (state, action) {
             var start = Date.now();
             context.invoked = true;
+            log.debug("[rootReducer] Reducing action: " + action.type + ".");
             var newState = reducer(state, action);
             newState = ComponentReducer.finalizeState(newState, root);
             var end = Date.now();
@@ -1076,10 +1086,17 @@ var reducer_ComponentReducer = (function () {
             return newState;
         };
     };
-    ComponentReducer.createStateObject = function (state, stateProto) {
-        var stateObj = Object.create(stateProto);
-        Object.assign(stateObj, state);
-        return stateObj;
+    ComponentReducer.createMethodsLookup = function (componentCreator, creatorInfo) {
+        var allMethods = getCreatorMethods(componentCreator);
+        var options = creatorInfo.options;
+        var actionMethods = {};
+        Object.keys(allMethods).forEach(function (methName) {
+            if (creatorInfo.noDispatch[methName] || creatorInfo.sequence[methName])
+                return;
+            var actionName = actions_ComponentActions.getActionName(componentCreator, methName, options);
+            actionMethods[actionName] = allMethods[methName];
+        });
+        return actionMethods;
     };
     ComponentReducer.createStateObjectPrototype = function (component, creatorInfo) {
         var stateProto = {};
@@ -1097,6 +1114,11 @@ var reducer_ComponentReducer = (function () {
     };
     ComponentReducer.actionInvokedError = function () {
         throw new Error("Only 'noDispatch' methods can be invoked inside actions.");
+    };
+    ComponentReducer.createStateObject = function (state, stateProto) {
+        var stateObj = Object.create(stateProto);
+        Object.assign(stateObj, state);
+        return stateObj;
     };
     ComponentReducer.combineReducersRecursion = function (obj, context) {
         if (isPrimitive(obj))
@@ -1127,10 +1149,10 @@ var reducer_ComponentReducer = (function () {
         }
         var resultReducer = rootReducer;
         if (Object.keys(subReducers).length) {
-            var combinedSubReducer = simpleCombineReducers(subReducers);
+            var combinedSubReducer_1 = simpleCombineReducers(subReducers);
             resultReducer = function (state, action) {
                 var thisState = rootReducer(state, action);
-                var subStates = combinedSubReducer(thisState, action);
+                var subStates = combinedSubReducer_1(thisState, action);
                 var combinedState = ComponentReducer.mergeState(thisState, subStates);
                 return combinedState;
             };
@@ -1383,6 +1405,8 @@ function isInstanceOf(obj, type) {
 /* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "GlobalOptions", function() { return GlobalOptions; });
 /* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "LogLevel", function() { return LogLevel; });
 /* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "ReduxApp", function() { return reduxApp_ReduxApp; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "getMethods", function() { return getMethods; });
+
 
 
 

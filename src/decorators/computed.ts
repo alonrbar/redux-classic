@@ -72,7 +72,6 @@ export class Computed {
      * Replace each computed property of 'obj' with it's current computed value.
      */
     private static computeObjectProps(obj: any): void {
-
         const info = ClassInfo.getInfo(obj);
         if (!info)
             return;
