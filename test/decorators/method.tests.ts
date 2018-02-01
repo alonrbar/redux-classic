@@ -1,9 +1,9 @@
 import { expect } from 'chai';
-import { component, noDispatch, ReduxApp } from 'src';
+import { component, method, ReduxApp } from 'src';
 
 // tslint:disable:no-unused-expression
 
-describe(nameof(noDispatch), () => {
+describe(nameof(method), () => {
 
     it("non-decorated method dispatches an action", () => {
 
@@ -34,7 +34,7 @@ describe(nameof(noDispatch), () => {
         class App {
             public value = 0;
 
-            @noDispatch
+            @method
             public increment() {
                 this.value = this.value + 1;
             }

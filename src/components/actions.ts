@@ -30,7 +30,7 @@ export class ComponentActions {
                 const oldMethod = methods[key];
 
                 // handle dispatch methods (use store dispatch)
-                if (!creatorInfo.noDispatch[key]) {                    
+                if (!creatorInfo.method[key]) {                    
                     const compInfo = ComponentInfo.getInfo(this);
                     const action: ReduxAppAction = {
                         type: ComponentActions.getActionName(creator, key, creatorInfo.options),
@@ -41,7 +41,7 @@ export class ComponentActions {
                 }
 
                 // handle non-dispatch methods (just call the function)
-                if (creatorInfo.noDispatch[key] || creatorInfo.sequence[key]) {                    
+                if (creatorInfo.method[key] || creatorInfo.sequence[key]) {                    
                     return oldMethod.call(this, ...payload);
                 }
             };

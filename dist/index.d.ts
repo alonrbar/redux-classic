@@ -11,33 +11,18 @@ export function component(ctor: Function): any;
 export function component(options: SchemaOptions): any;
 
 /**
+ * Method decorator.
+ * 
+ * Mark this method as a Redux action.
+ */
+export function action(target: object, propertyKey: string | symbol): void;
+
+/**
  * Property decorator.
  * 
  * Computed values are computed each time the store state is changed.
  */
 export function computed(target: any, propertyKey: string | symbol): void;
-
-export class ConnectOptions {
-    /**
-     * The name of the ReduxApp instance to connect to.
-     * If not specified will connect to default app.
-     */
-    app?: string;
-    /**
-     * The ID of the target component (assuming the ID was assigned to the
-     * component by the 'withId' decorator).
-     * If not specified will connect to the first available component of that type.
-     */
-    id?: any;
-    /**
-     * The 'connect' decorator uses a getter to connect to the it's target. By
-     * default the getter is replaced with a standard value (reference) once the
-     * first non-empty value is retrieved. Set this value to true to leave the
-     * getter in place.
-     * Default value: false
-     */
-    live?: boolean;
-}
 
 /**
  * Property decorator. 
@@ -65,7 +50,14 @@ export function ignoreState(target: object, propertyKey: string | symbol): void;
 /**
  * Method decorator.
  * 
- * Instruct redux-app to keep this method as is and not to replace it with invocation of store.dispatch.
+ * Mark this method as a simple js method (not dispatching an action).
+ */
+export function method(target: object, propertyKey: string | symbol): void;
+
+/**
+ * Method decorator.
+ * 
+ * Alias of 'method'.
  */
 export function noDispatch(target: any, propertyKey: string | symbol): void;
 
@@ -173,6 +165,28 @@ export class SchemaOptions {
      * Default value: true.
      */
     uppercaseActions?: boolean;
+}
+
+export class ConnectOptions {
+    /**
+     * The name of the ReduxApp instance to connect to.
+     * If not specified will connect to default app.
+     */
+    app?: string;
+    /**
+     * The ID of the target component (assuming the ID was assigned to the
+     * component by the 'withId' decorator).
+     * If not specified will connect to the first available component of that type.
+     */
+    id?: any;
+    /**
+     * The 'connect' decorator uses a getter to connect to the it's target. By
+     * default the getter is replaced with a standard value (reference) once the
+     * first non-empty value is retrieved. Set this value to true to leave the
+     * getter in place.
+     * Default value: false
+     */
+    live?: boolean;
 }
 
 export class ComputedOptions {

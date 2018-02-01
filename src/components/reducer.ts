@@ -128,7 +128,7 @@ export class ComponentReducer {
         Object.keys(allMethods).forEach(methName => {
 
             // reducers does not handle 'noDispatch' and 'sequence' methods
-            if (creatorInfo.noDispatch[methName] || creatorInfo.sequence[methName])
+            if (creatorInfo.method[methName] || creatorInfo.sequence[methName])
                 return;
 
             var actionName = ComponentActions.getActionName(componentCreator, methName, options);
@@ -145,7 +145,7 @@ export class ComponentReducer {
         const stateProto: IMap<Method> = {};
         const componentMethods = getMethods(component);
         for (let key of Object.keys(componentMethods)) {
-            if (creatorInfo.noDispatch[key]) {
+            if (creatorInfo.method[key]) {
                 stateProto[key] = componentMethods[key].bind(component);
             } else {
                 stateProto[key] = ComponentReducer.actionInvokedError;

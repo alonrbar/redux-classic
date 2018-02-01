@@ -339,6 +339,17 @@ function getParentType(obj) {
     var type = getType(obj);
     return Object.getPrototypeOf(type.prototype).constructor;
 }
+function isPlainObject(obj) {
+    if (!obj)
+        return false;
+    if (typeof obj !== 'object')
+        return false;
+    if (typeof Object.getPrototypeOf === 'function') {
+        var proto = Object.getPrototypeOf(obj);
+        return proto === Object.prototype || proto === null;
+    }
+    return Object.prototype.toString.call(obj) === '[object Object]';
+}
 function toPlainObject(obj) {
     var json = JSON.stringify(obj, function (key, value) { return value === undefined ? null : value; });
     return JSON.parse(json);
@@ -456,7 +467,9 @@ var reduxApp_ReduxApp = (function () {
             params[_i - 1] = arguments[_i];
         }
         this.warehouse = new Map();
-        this.initialStateUpdate = true;
+        this.initialStateUpdated = false;
+        this.changedComponents = {};
+        this.allComponentsChanged = false;
         var _a = this.resolveParameters(appCreator, params), options = _a.options, preLoadedState = _a.preLoadedState, enhancer = _a.enhancer;
         this.name = this.getAppName(options.name);
         if (appsRepository[this.name])
@@ -483,6 +496,33 @@ var reduxApp_ReduxApp = (function () {
             params[_i - 1] = arguments[_i];
         }
         return new (ReduxApp.bind.apply(ReduxApp, [void 0, appCreator].concat(params)))();
+    };
+    ReduxApp.getApp = function (appId) {
+        var applicationId = appId || DEFAULT_APP_NAME;
+        var app = appsRepository[applicationId];
+        if (!app)
+            log.debug("[ReduxApp] Application '" + applicationId + "' does not exist.");
+        return app;
+    };
+    ReduxApp.getComponent = function (type, componentId, appId) {
+        var app = ReduxApp.getApp(appId);
+        if (!app)
+            return undefined;
+        var warehouse = app.getTypeWarehouse(type);
+        if (componentId) {
+            return warehouse.get(componentId);
+        }
+        else {
+            return warehouse.values().next().value;
+        }
+    };
+    ReduxApp.wasComponentChanged = function (comp, appId) {
+        var app = ReduxApp.getApp(appId);
+        if (!app)
+            return undefined;
+        if (app.allComponentsChanged)
+            return true;
+        return Object.values(app.changedComponents).includes(comp);
     };
     ReduxApp.registerComponent = function (comp, creator, appName) {
         appName = appName || DEFAULT_APP_NAME;
@@ -551,14 +591,26 @@ var reduxApp_ReduxApp = (function () {
         return function () {
             var start = Date.now();
             var newState = _this.store.getState();
-            if (_this.initialStateUpdate || !reducersContext.invoked) {
-                _this.initialStateUpdate = false;
+            if (!_this.initialStateUpdated || !reducersContext.invoked) {
+                _this.initialStateUpdated = true;
                 _this.updateStateRecursion(_this.root, newState, new UpdateContext({ forceRecursion: true }));
+                _this.changedComponents = {};
+                _this.allComponentsChanged = true;
             }
             else {
                 _this.updateChangedComponents((_a = {}, _a[ROOT_COMPONENT_PATH] = newState, _a), reducersContext.changedComponents);
+                _this.changedComponents = Object.assign({}, reducersContext.changedComponents);
+                _this.allComponentsChanged = false;
             }
-            computed_Computed.computeProps(withComputedProps);
+            var changedByComputedProps = computed_Computed.computeProps(withComputedProps);
+            var _loop_1 = function (comp) {
+                var path = Object.keys(allComponents).find(function (p) { return allComponents[p] === comp; });
+                _this.changedComponents[path] = comp;
+            };
+            for (var _i = 0, changedByComputedProps_1 = changedByComputedProps; _i < changedByComputedProps_1.length; _i++) {
+                var comp = changedByComputedProps_1[_i];
+                _loop_1(comp);
+            }
             reducersContext.reset();
             var end = Date.now();
             log.debug("[updateState] Component tree updated in " + (end - start) + "ms.");
@@ -767,24 +819,7 @@ function connectDecorator(target, propertyKey, options) {
     var oldDescriptor = Object.getOwnPropertyDescriptor(target, propertyKey);
     var newDescriptor = {
         get: function () {
-            var app = appsRepository[options.app];
-            if (!app) {
-                log.debug("[connect] Application '" + options.app + "' does not exist. Property " + propertyKey + " is not connected.");
-                if (oldDescriptor && oldDescriptor.get) {
-                    return oldDescriptor.get();
-                }
-                else {
-                    return value;
-                }
-            }
-            var warehouse = app.getTypeWarehouse(type);
-            var result;
-            if (options.id) {
-                result = warehouse.get(options.id);
-            }
-            else {
-                result = warehouse.values().next().value;
-            }
+            var result = reduxApp_ReduxApp.getComponent(type, options.id, options.app);
             if (result && !options.live) {
                 Object.defineProperty(this, propertyKey, dataDescriptor);
                 value = this[propertyKey] = result;
@@ -869,15 +904,21 @@ var computed_Computed = (function () {
         });
     };
     Computed.computeProps = function (components) {
+        var changedComponents = [];
         for (var _i = 0, components_1 = components; _i < components_1.length; _i++) {
             var comp = components_1[_i];
-            this.computeObjectProps(comp);
+            var isChanged = this.computeObjectProps(comp);
+            if (isChanged) {
+                changedComponents.push(comp);
+            }
         }
+        return changedComponents;
     };
     Computed.computeObjectProps = function (obj) {
+        var isChanged = false;
         var info = classInfo_ClassInfo.getInfo(obj);
         if (!info)
-            return;
+            return isChanged;
         for (var _i = 0, _a = Object.keys(info.computedGetters); _i < _a.length; _i++) {
             var propKey = _a[_i];
             var getter = info.computedGetters[propKey];
@@ -885,8 +926,10 @@ var computed_Computed = (function () {
             var oldValue = obj[propKey];
             if (newValue !== oldValue && (!globalOptions.computed.deepComparison || !isEqual(newValue, oldValue))) {
                 obj[propKey] = newValue;
+                isChanged = true;
             }
         }
+        return isChanged;
     };
     Computed.placeholder = '<computed>';
     return Computed;
@@ -1025,22 +1068,14 @@ var reducer_ComponentReducer = (function () {
     function ComponentReducer() {
     }
     ComponentReducer.createReducer = function (component, componentCreator) {
-        var methods = getCreatorMethods(componentCreator);
         var creatorInfo = creatorInfo_CreatorInfo.getInfo(componentCreator);
         if (!creatorInfo)
             throw new Error("Inconsistent component '" + componentCreator.constructor.name + "'. The 'component' class decorator is missing.");
-        var options = creatorInfo.options;
-        var methodNames = {};
-        Object.keys(methods).forEach(function (methName) {
-            if (creatorInfo.noDispatch[methName] || creatorInfo.sequence[methName])
-                return;
-            var actionName = actions_ComponentActions.getActionName(componentCreator, methName, options);
-            methodNames[actionName] = methName;
-        });
+        var methods = ComponentReducer.createMethodsLookup(componentCreator, creatorInfo);
         var stateProto = ComponentReducer.createStateObjectPrototype(component, creatorInfo);
         var componentId = componentInfo_ComponentInfo.getInfo(component).id;
         return function (changeListener) {
-            return function (state, action) {
+            function reducer(state, action) {
                 log.verbose("[reducer] Reducer of: " + componentCreator.constructor.name + ", action: " + action.type);
                 if (state === undefined) {
                     log.verbose('[reducer] State is undefined, returning initial value');
@@ -1050,8 +1085,7 @@ var reducer_ComponentReducer = (function () {
                     log.verbose("[reducer] Component id and action.id don't match (" + componentId + " !== " + action.id + ")");
                     return state;
                 }
-                var methodName = methodNames[action.type];
-                var actionReducer = methods[methodName];
+                var actionReducer = methods[action.type];
                 if (!actionReducer) {
                     log.verbose('[reducer] No matching action in this reducer, returning previous state');
                     return state;
@@ -1061,6 +1095,13 @@ var reducer_ComponentReducer = (function () {
                 changeListener(component);
                 log.verbose('[reducer] Reducer invoked, returning new state');
                 return newState;
+            }
+            return function (state, action) {
+                var newState = reducer(state, action);
+                if (!isPrimitive(newState) && !isPlainObject(newState)) {
+                    newState = ComponentReducer.finalizeStateObject(newState, component);
+                }
+                return newState;
             };
         };
     };
@@ -1069,17 +1110,24 @@ var reducer_ComponentReducer = (function () {
         return function (state, action) {
             var start = Date.now();
             context.invoked = true;
+            log.debug("[rootReducer] Reducing action: " + action.type + ".");
             var newState = reducer(state, action);
-            newState = ComponentReducer.finalizeState(newState, root);
             var end = Date.now();
             log.debug("[rootReducer] Reducer tree processed in " + (end - start) + "ms.");
             return newState;
         };
     };
-    ComponentReducer.createStateObject = function (state, stateProto) {
-        var stateObj = Object.create(stateProto);
-        Object.assign(stateObj, state);
-        return stateObj;
+    ComponentReducer.createMethodsLookup = function (componentCreator, creatorInfo) {
+        var allMethods = getCreatorMethods(componentCreator);
+        var options = creatorInfo.options;
+        var actionMethods = {};
+        Object.keys(allMethods).forEach(function (methName) {
+            if (creatorInfo.noDispatch[methName] || creatorInfo.sequence[methName])
+                return;
+            var actionName = actions_ComponentActions.getActionName(componentCreator, methName, options);
+            actionMethods[actionName] = allMethods[methName];
+        });
+        return actionMethods;
     };
     ComponentReducer.createStateObjectPrototype = function (component, creatorInfo) {
         var stateProto = {};
@@ -1097,6 +1145,21 @@ var reducer_ComponentReducer = (function () {
     };
     ComponentReducer.actionInvokedError = function () {
         throw new Error("Only 'noDispatch' methods can be invoked inside actions.");
+    };
+    ComponentReducer.createStateObject = function (state, stateProto) {
+        var stateObj = Object.create(stateProto);
+        Object.assign(stateObj, state);
+        return stateObj;
+    };
+    ComponentReducer.finalizeStateObject = function (state, component) {
+        log.verbose('[finalizeStateObject] finalizing state.');
+        var finalizedState = Object.assign({}, state);
+        var handledProps = {};
+        finalizedState = connect_Connect.removeConnectedProps(finalizedState, component, handledProps);
+        finalizedState = computed_Computed.removeComputedProps(finalizedState, component, handledProps);
+        finalizedState = ignoreState_IgnoreState.removeIgnoredProps(finalizedState, component, handledProps);
+        log.verbose('[finalizeStateObject] state finalized.');
+        return finalizedState;
     };
     ComponentReducer.combineReducersRecursion = function (obj, context) {
         if (isPrimitive(obj))
@@ -1127,10 +1190,10 @@ var reducer_ComponentReducer = (function () {
         }
         var resultReducer = rootReducer;
         if (Object.keys(subReducers).length) {
-            var combinedSubReducer = simpleCombineReducers(subReducers);
+            var combinedSubReducer_1 = simpleCombineReducers(subReducers);
             resultReducer = function (state, action) {
                 var thisState = rootReducer(state, action);
-                var subStates = combinedSubReducer(thisState, action);
+                var subStates = combinedSubReducer_1(thisState, action);
                 var combinedState = ComponentReducer.mergeState(thisState, subStates);
                 return combinedState;
             };
@@ -1146,31 +1209,6 @@ var reducer_ComponentReducer = (function () {
         else {
             return reducer___assign({}, state, subStates);
         }
-    };
-    ComponentReducer.finalizeState = function (rootState, root) {
-        return ComponentReducer.finalizeStateRecursion(rootState, root, new Set());
-    };
-    ComponentReducer.finalizeStateRecursion = function (state, obj, visited) {
-        if (isPrimitive(state) || isPrimitive(obj))
-            return state;
-        if (visited.has(state))
-            return state;
-        visited.add(state);
-        var handledProps = {};
-        state = connect_Connect.removeConnectedProps(state, obj, handledProps);
-        state = computed_Computed.removeComputedProps(state, obj, handledProps);
-        state = ignoreState_IgnoreState.removeIgnoredProps(state, obj, handledProps);
-        Object.keys(state).forEach(function (key) {
-            if (handledProps.hasOwnProperty(key))
-                return;
-            var subState = state[key];
-            var subObj = obj[key];
-            var newSubState = ComponentReducer.finalizeStateRecursion(subState, subObj, visited);
-            if (newSubState !== subState) {
-                state[key] = newSubState;
-            }
-        });
-        return state;
     };
     ComponentReducer.identityReducer = function (state) { return state; };
     return ComponentReducer;
