@@ -1,5 +1,11 @@
 # Change Log
 
+## [Unreleased](https://github.com/alonrbar/redux-app/tree/develop)
+
+### Fixed
+
+- Fix `ReduxApp.getComponent` typings.
+
 ## [1.11.0 - 2018-02-03](https://github.com/alonrbar/redux-app/tree/v1.11.0)
 
 ### Added

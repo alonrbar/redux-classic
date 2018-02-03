@@ -3,7 +3,7 @@ import { CombineReducersContext, Component, ComponentCreationContext, ComponentR
 import { ComponentId, Computed, Connect, IgnoreState } from './decorators';
 import { ComponentInfo } from './info';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
-import { IMap, Listener } from './types';
+import { Constructor, IMap, Listener } from './types';
 import { isPrimitive, log, toPlainObject } from './utils';
 const getProp = require('lodash.get');
 
@@ -78,7 +78,7 @@ export class ReduxApp<T extends object> {
      * @param appId The name of the ReduxApp instance to search in. If not
      * specified will search in default app.
      */
-    public static getComponent<T extends Function>(type: T, componentId?: string, appId?: string): T {
+    public static getComponent<T>(type: Constructor<T>, componentId?: string, appId?: string): T {
         const app = ReduxApp.getApp(appId);
         if (!app) 
             return undefined;

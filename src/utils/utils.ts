@@ -15,6 +15,11 @@ export function isPrimitive(val: any): boolean {
     return type !== 'object' && type !== 'function';
 }
 
+/**
+ * @param obj 
+ * @param bind Whether or not to bind the returned methods to 'obj'. Default
+ * value: false.
+ */
 export function getMethods(obj: object | Function, bind = false): IMap<Method> {
     if (!obj)
         return undefined;
