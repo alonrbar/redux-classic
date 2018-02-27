@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import { component, connect, ReduxApp, withId } from 'src';
 import { Component } from 'src/components';
-import { Connect } from 'src/decorators';
 
 // tslint:disable:no-unused-expression
 
@@ -12,28 +11,27 @@ describe(nameof(connect), () => {
         @component
         class App {
             public source = new MyComponent();
-            public partOfApp = new PartOfApp();
         }
 
         @component
         class MyComponent {
         }
 
-        @component
-        class PartOfApp {
+        class Page1 {
             @connect
             public linkToSource: MyComponent;
         }
 
-        class Page {
+        class Page2 {
             @connect
             public linkToSource: MyComponent;
         }
 
-        // create some view model
-        const page = new Page();
+        // create some view models
+        const page1 = new Page1();
+        const page2 = new Page2();
 
-        expect(page.linkToSource).to.be.undefined;
+        expect(page1.linkToSource).to.be.undefined;
 
         // create the app
         const app = new ReduxApp(new App());
@@ -44,8 +42,8 @@ describe(nameof(connect), () => {
             expect(warehouse.size).to.eql(1);
 
             // assert reference
-            expect(app.root.partOfApp.linkToSource).to.equal(app.root.source);
-            expect(page.linkToSource).to.equal(app.root.source);
+            expect(page1.linkToSource).to.equal(app.root.source);
+            expect(page2.linkToSource).to.equal(app.root.source);
 
             // assert no getter side effects
             expect(warehouse.size).to.eql(1);
@@ -157,138 +155,6 @@ describe(nameof(connect), () => {
             // assert action works
             reduxApp.root.comp.increment();
             expect(page.connectMe.value).to.eql(1);
-
-        } finally {
-            reduxApp.dispose();
-        }
-    });
-
-    it("creates a connection between two components in the default app", () => {
-
-        @component
-        class MyComponent {
-            public value = 0;
-
-            public increment() {
-                this.value = this.value + 1;
-            }
-        }
-
-        @component
-        class Page1 {
-            @connect
-            public comp1: MyComponent;
-        }
-
-        class Page2 {
-            @connect
-            public comp2: MyComponent;
-        }
-
-        @component
-        class App {
-
-            public page1 = new Page1();
-            public page2 = new Page2();
-
-            public warehouse = {
-                components: {
-                    comp: new MyComponent()
-                }
-            };
-        }
-
-        // create the app
-        const plainApp = new App();
-
-        expect(plainApp.warehouse.components.comp.value).to.eql(0);
-        expect(plainApp.page1.comp1).to.be.undefined;
-        expect(plainApp.page2.comp2).to.be.undefined;
-
-        // elevate the app
-        const reduxApp = new ReduxApp(plainApp);
-        try {
-
-            // assert connected
-            expect(reduxApp.root.page1.comp1).to.equal(reduxApp.root.warehouse.components.comp);
-            expect(reduxApp.root.page1.comp1).to.be.instanceOf(Component);
-            expect(reduxApp.root.page1.comp1).to.equal(reduxApp.root.page2.comp2);
-
-            // validate values
-            expect(reduxApp.root.page1.comp1.value).to.eql(0);
-
-            // assert action works
-            reduxApp.root.page1.comp1.increment();
-            expect(reduxApp.root.page1.comp1.value).to.eql(1);
-            expect(reduxApp.root.page2.comp2.value).to.eql(1);
-            expect(reduxApp.root.warehouse.components.comp.value).to.eql(1);
-
-        } finally {
-            reduxApp.dispose();
-        }
-    });
-
-    it("creates a connection between two components in the same named app", () => {
-
-        const testAppName = 'connect-test-2';
-
-        @component
-        class MyComponent {
-            public value = 0;
-
-            public increment() {
-                this.value = this.value + 1;
-            }
-        }
-
-        @component
-        class Page1 {
-            @connect({ app: testAppName })
-            public comp1: MyComponent;
-        }
-
-        class Page2 {
-            @connect({ app: testAppName })
-            public comp2: MyComponent;
-        }
-
-        @component
-        class App {
-
-            public page1 = new Page1();
-            public page2 = new Page2();
-
-            public warehouse = {
-                components: {
-                    comp: new MyComponent()
-                }
-            };
-        }
-
-        // create the app
-        const plainApp = new App();
-
-        expect(plainApp.warehouse.components.comp.value).to.eql(0);
-        expect(plainApp.page1.comp1).to.be.undefined;
-        expect(plainApp.page2.comp2).to.be.undefined;
-
-        // elevate the app
-        const reduxApp = new ReduxApp(plainApp, { name: testAppName });
-        try {
-
-            // assert connected
-            expect(reduxApp.root.page1.comp1).to.equal(reduxApp.root.warehouse.components.comp);
-            expect(reduxApp.root.page1.comp1).to.be.instanceOf(Component);
-            expect(reduxApp.root.page1.comp1).to.equal(reduxApp.root.page2.comp2);
-
-            // validate values
-            expect(reduxApp.root.page1.comp1.value).to.eql(0);
-
-            // assert action works
-            reduxApp.root.page1.comp1.increment();
-            expect(reduxApp.root.page1.comp1.value).to.eql(1);
-            expect(reduxApp.root.page2.comp2.value).to.eql(1);
-            expect(reduxApp.root.warehouse.components.comp.value).to.eql(1);
 
         } finally {
             reduxApp.dispose();
@@ -520,58 +386,6 @@ describe(nameof(connect), () => {
 
         } finally {
             reduxApp.dispose();
-        }
-    });
-
-    it("connected components inside an app are not persisted on the store", () => {
-
-        const testAppName = 'connect-test-6';
-
-        @component
-        class MyComponent {
-            public value = 0;
-
-            public increment() {
-                this.value = this.value + 1;
-            }
-        }
-
-        @component
-        class Page1 {
-            @connect({ app: testAppName })
-            public linkToSource1: MyComponent;
-        }
-
-        class Page2 {
-            @connect({ app: testAppName })
-            public linkToSource2: MyComponent;
-        }
-
-        @component
-        class App {
-
-            public page1 = new Page1();
-            public page2 = new Page2();
-
-            public warehouse = {
-                components: {
-                    source: new MyComponent()
-                }
-            };
-        }
-
-        const app = new ReduxApp(new App(), { name: testAppName });
-        try {
-
-            app.root.page1.linkToSource1.increment();
-            app.root.page2.linkToSource2.increment();
-
-            expect(app.store.getState().warehouse.components.source.toString()).to.not.contain(Connect.placeholderPrefix, 'source replaced');
-            expect(app.store.getState().page1.linkToSource1.toString().startsWith(Connect.placeholderPrefix)).to.be.true;
-            expect(app.store.getState().page2.linkToSource2.toString().startsWith(Connect.placeholderPrefix)).to.be.true;
-
-        } finally {
-            app.dispose();
         }
     });
 

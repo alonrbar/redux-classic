@@ -1,6 +1,6 @@
 import { createStore, Store, StoreEnhancer } from 'redux';
 import { CombineReducersContext, Component, ComponentCreationContext, ComponentReducer } from './components';
-import { ComponentId, Computed, Connect, IgnoreState } from './decorators';
+import { ComponentId, Computed, IgnoreState } from './decorators';
 import { ComponentInfo } from './info';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
 import { Constructor, IMap, Listener } from './types';
@@ -335,7 +335,7 @@ export class ReduxApp<T extends object> {
         // convert to plain object (see comment on the option itself)
         if (globalOptions.convertToPlainObject)
             newState = toPlainObject(newState);
-
+            
         if (context.forceRecursion || (obj instanceof Component && newStateType === Object)) {
 
             // update if new state is a plain object (so to keep methods while updating props)
@@ -381,10 +381,6 @@ export class ReduxApp<T extends object> {
         // assign new state recursively
         var propsAssigned: string[] = [];
         Object.keys(newState).forEach(key => {
-
-            // state of connected components is update on their source
-            if (Connect.isConnectedProperty(obj, key))
-                return;
 
             // see comment about computed properties in updateState
             if (Computed.isComputedProperty(obj, key))

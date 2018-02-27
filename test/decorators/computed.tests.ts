@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { component, computed, connect, ReduxApp } from 'src';
+import { component, computed, ReduxApp } from 'src';
 import { Computed } from 'src/decorators';
 
 // tslint:disable:no-unused-expression
@@ -144,41 +144,5 @@ describe(nameof(computed), () => {
         } finally {
             app.dispose();
         }
-    });
-
-    it("computing from connected components inside the app works", () => {
-
-        @component
-        class App {
-            public greeter = new ComputedGreeter();
-            public connectedComputed = new ConnectedComputed();
-        }
-
-        @component
-        class ConnectedComputed {
-
-            @connect
-            public linkToGreeter: ComputedGreeter;
-
-            @computed
-            public get upperCaseGreeting(): string {
-                return this.linkToGreeter.welcomeString.toUpperCase();
-            }
-        }
-
-        const app = new ReduxApp(new App());
-        try {
-
-            expect(app.root.greeter.welcomeString).to.eql('hello undefined');
-            expect(app.root.connectedComputed.upperCaseGreeting).to.eql('HELLO UNDEFINED');
-
-            app.root.greeter.setName('Alon');
-
-            expect(app.root.greeter.welcomeString).to.eql('hello Alon');
-            expect(app.root.connectedComputed.upperCaseGreeting).to.eql('HELLO ALON');
-
-        } finally {
-            app.dispose();
-        }
-    });
+    });    
 });
