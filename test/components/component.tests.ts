@@ -55,6 +55,40 @@ describe(nameof(Component), () => {
             expect(root.first.second.third.some).to.be.an.instanceOf(Component);
         });
 
+        it("multiple components create from the same creator instance are pointing to the same component instance", () => {
+
+            class Root {
+                public link: IAmComponent;
+                public original = new IAmComponent();
+                public nested: NestedComponent;
+
+                constructor() {
+                    this.link = this.original;
+                    this.nested = new NestedComponent(this.link);
+                }
+            }
+
+            class NestedComponent {
+                constructor(public readonly link: IAmComponent) {
+                }
+            }
+
+            class IAmComponent {
+
+                @action
+                public dispatchMe() {
+                    // noop
+                }
+            }
+
+            // create component tree
+            const store = new FakeStore();
+            const root: any = Component.create(store, new Root());
+
+            expect(root.link).to.equal(root.original);
+            expect(root.original).to.equal(root.nested.link);
+        });
+
         it("components nested inside standard objects are connected to store's dispatch function", () => {
 
             class Root {

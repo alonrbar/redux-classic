@@ -177,9 +177,9 @@ describe(nameof(ReduxApp), () => {
     describe('updateState', () => {
 
         it("component tree is not updated when 'updateState' options is turned off", () => {
-            
+
             class App {
-                
+
                 public num = 0;
 
                 @action
@@ -313,6 +313,55 @@ describe(nameof(ReduxApp), () => {
             // after dispatching
             app.root.first.second.third.some.dispatchMe();
             expect(app.root.first.second.third.some.value).to.eql(1);
+
+            app.dispose();
+        });
+
+        it("actions of a component are invoked only once, even if it appears several time in the tree", () => {
+
+            class Root {
+                public link: IAmComponent;
+                public original = new IAmComponent();
+                public nested: NestedComponent;
+
+                constructor() {
+                    this.link = this.original;
+                    this.nested = new NestedComponent(this.link);
+                }
+            }
+
+            class NestedComponent {
+                constructor(public readonly link: IAmComponent) {
+                }
+            }
+
+            let count = 0;
+            class IAmComponent {
+
+                public value = 0;
+
+                @action
+                public dispatchMe() {
+                    count++;
+                    this.value = this.value + 1;
+                }
+            }
+
+            // create component tree
+            const app = new ReduxApp(new Root());
+
+            // before dispatching
+            expect(count).to.eql(0);
+            expect(app.root.link.value).to.eql(0);
+            expect(app.root.original.value).to.eql(0);
+            expect(app.root.nested.link.value).to.eql(0);
+
+            // after dispatching
+            app.root.link.dispatchMe();
+            expect(count).to.eql(1, 'count is not 1');
+            expect(app.root.link.value).to.eql(1, 'link.value is not 1');
+            expect(app.root.original.value).to.eql(1, 'original.value is not 1');
+            expect(app.root.nested.link.value).to.eql(1, 'nested.link.value is not 1');
 
             app.dispose();
         });
