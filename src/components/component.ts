@@ -1,5 +1,5 @@
 import { Store } from 'redux';
-import { ComponentId, Connect } from '../decorators';
+import { ComponentId } from '../decorators';
 import { ClassInfo, ComponentInfo, CreatorInfo } from '../info';
 import { globalOptions } from '../options';
 import { ReduxApp, ROOT_COMPONENT_PATH } from '../reduxApp';
@@ -92,9 +92,6 @@ export class Component {
         selfClassInfo.computedGetters = creatorClassInfo.computedGetters;
         selfClassInfo.ignoreState = creatorClassInfo.ignoreState;
 
-        // connected props
-        Connect.setupConnectedProps(component, selfClassInfo, creator, creatorClassInfo);
-
         // dispatch
         selfInfo.dispatch = store.dispatch;
 
@@ -116,10 +113,6 @@ export class Component {
         // traverse object children
         const searchIn = creator || obj;
         for (let key of Object.keys(searchIn)) {
-
-            const connectionInfo = Connect.isConnectedProperty(obj, key);
-            if (connectionInfo)
-                continue;
 
             var subPath = context.path + '.' + key;
 

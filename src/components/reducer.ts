@@ -1,5 +1,5 @@
 import { Reducer, ReducersMapObject } from 'redux';
-import { Computed, Connect, IgnoreState } from '../decorators';
+import { Computed, IgnoreState } from '../decorators';
 import { ComponentInfo, CreatorInfo, getCreatorMethods } from '../info';
 import { ROOT_COMPONENT_PATH } from '../reduxApp';
 import { IMap, Listener, Method } from '../types';
@@ -196,15 +196,11 @@ export class ComponentReducer {
         const subReducers: ReducersMapObject = {};
         for (let key of Object.keys(obj)) {
 
-            // connected components are modified only by their source
-            if (Connect.isConnectedProperty(obj, key))
-                continue;
-
-            // other objects
             const newSubReducer = ComponentReducer.combineReducersRecursion((obj as any)[key], new CombineReducersContext({
                 ...context,
                 path: (context.path === '' ? key : context.path + '.' + key)
             }));
+
             if (typeof newSubReducer === 'function')
                 subReducers[key] = newSubReducer;
         }
@@ -265,7 +261,6 @@ export class ComponentReducer {
         visited.add(state);
 
         const handledProps = {};
-        state = Connect.removeConnectedProps(state, obj, handledProps);
         state = Computed.removeComputedProps(state, obj, handledProps);
         state = IgnoreState.removeIgnoredProps(state, obj, handledProps);
 
