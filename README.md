@@ -176,14 +176,16 @@ export class App {
 
 #### connect
 
-One of the most useful features of redux-app is the ability to `connect` components. Connected components are *references* to other components.
-The connection is achieved using a "smart getter".
+If you're using redux-app with Angular or Aurelia you may need an alternative to react-redux's connect.
+This is what this decorator is all about.
+
+Connected components are *references* to other components. The connection is achieved using a "smart getter".
 It is smart in that sense that it waits for the target component to be available and than replace itself
 (i.e. the getter) with a simple reference to the target object, thus preventing further unnecessary invocations of the getter.
 
 You can use IDs to connect to a specific component or omit the ID to connect to the first instance that redux-app finds.
 
-You can connect a view to parts of the app tree, as shown in the next example. You can also connect two, or more, components to a single source inside your app tree. To see a working example of the latter checkout the [examples](https://github.com/alonrbar/redux-app-examples) repository.
+You can connect a view to parts of the app tree, as shown in the next example. ~~You can also connect two, or more, components to a single source inside your app tree. To see a working example of the latter checkout the [examples](https://github.com/alonrbar/redux-app-examples) repository.~~ Connecting two components inside the app tree is deprecated.
 
 **Remember**: When connecting components there should always be at least one non-connected instance of that component in your ReduxApp tree (a.k.a. the "source" component).
 
@@ -245,6 +247,8 @@ To do that just declare a getter and decorate it with the `computed` decorator. 
 with regular values and will take care of updating it after each change to the relevant state.
 
 **Note:** As everything else, computed value getters should also be pure and should not mutate other parts of the state.
+
+**Note:** It is currently not possible to reliably compute values out of other `computed` values.
 
 Example:
 

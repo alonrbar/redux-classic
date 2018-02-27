@@ -2,6 +2,19 @@
 
 ## [Unreleased](https://github.com/alonrbar/redux-app/tree/develop)
 
+## [1.11.1 - 2018-27-2](https://github.com/alonrbar/redux-app/tree/v1.11.1)
+
+### Deprecated
+
+- The use of `connect` inside the application tree is deprecated. Connection
+  from outside the application tree will still be supported (do note however
+  that `connect` will move to separate package in the future).
+  There are several reasons for that: it is a source of bugs, it makes other
+  features harder to implement and it encourages a pseudo dependency injection
+  anti-pattern (DI is great, the pseudo form that `connect` encourage is bad. If
+  you want to use DI you should use a proper DI container. As a side note I plan
+  on publishing my own custom container as a package in the future).
+
 ### Fixed
 
 - Fix `ReduxApp.getComponent` typings.
