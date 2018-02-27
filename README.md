@@ -87,7 +87,7 @@ Although redux-app embraces a new syntax it still adheres to [the three principa
 
 - The store is still the single source of truth. An automatic process propagates it to the components, similarly to what happens in react-redux.
 - The state is still read only. **Don't mutate the component's state directly**, only via actions (methods).
-- Changes are made with pure functions so **keep your actions pure**.
+- Changes are made with pure functions so keep your actions pure.
 
 ### Features
 
