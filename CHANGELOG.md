@@ -6,9 +6,11 @@
 
 ### Deprecated
 
-- The use of `connect` inside the application tree is deprecated. Connection
-  from outside the application tree will still be supported (do note however
-  that `connect` will move to separate package in the future).
+- The use of `connect` inside the application tree is deprecated and **will be
+  remove in the next version**. Connection from outside the application tree
+  will still be supported (do note however that `connect` will move to separate
+  package in the future).
+
   There are several reasons for that: it is a source of bugs, it makes other
   features harder to implement and it encourages a pseudo dependency injection
   anti-pattern (DI is great, the pseudo form that `connect` encourage is bad. If
