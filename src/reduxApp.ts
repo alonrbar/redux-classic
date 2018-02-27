@@ -4,7 +4,7 @@ import { ComponentId, Computed, IgnoreState } from './decorators';
 import { ComponentInfo } from './info';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
 import { IMap, Listener } from './types';
-import { isPrimitive, log, toPlainObject } from './utils';
+import { isPrimitive, log } from './utils';
 var getProp = require('lodash.get');
 
 // tslint:disable:ban-types
@@ -370,10 +370,6 @@ export class ReduxApp<T extends object> {
 
         // update
         const newStateType = newState.constructor;
-
-        // convert to plain object (see comment on the option itself)
-        if (globalOptions.convertToPlainObject)
-            newState = toPlainObject(newState);
 
         if (context.forceRecursion || (obj instanceof Component && newStateType === Object)) {
 
