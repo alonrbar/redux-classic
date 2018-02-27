@@ -64,7 +64,7 @@ export class ReduxApp<T extends object> {
      * @param appId The name of the ReduxApp instance to search in. If not
      * specified will search in default app.
      */
-    static getComponent<T extends Function>(type: T, componentId?: string, appId?: string): T;
+    static getComponent<T>(type: Constructor<T>, componentId?: string, appId?: string): T;
 
     readonly name: string;
     /**
@@ -88,6 +88,27 @@ export class ReduxApp<T extends object> {
 //
 
 export function isInstanceOf(obj: any, type: Function): boolean;
+
+/**
+ * @param obj 
+ * @param bind Whether or not to bind the returned methods to 'obj'. Default
+ * value: false.
+ */
+export function getMethods(obj: object | Function, bind?: boolean): IMap<Method>;
+
+//
+// types
+//
+  
+export type Method = Function;
+  
+export interface Constructor<T> {
+    new(...args: any[]): T;
+}
+
+export interface IMap<T> { 
+    [key: string]: T;
+}
 
 //
 // Options

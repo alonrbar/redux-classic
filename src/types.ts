@@ -2,10 +2,15 @@ export interface IDisposable {
     dispose(): void;
 }
 
-// tslint:disable-next-line:ban-types
+// tslint:disable:ban-types interface-name
+
 export type Method = Function;
 
 export type Getter = () => any;
+
+export interface Constructor<T> {
+    new(...args: any[]): T;
+}
 
 export interface IMap<T> { 
     [key: string]: T;
