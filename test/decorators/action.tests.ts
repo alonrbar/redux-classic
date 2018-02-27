@@ -1,17 +1,17 @@
 import { expect } from 'chai';
-import { component, method, ReduxApp } from 'src';
+import { ReduxApp, action } from 'src';
 
 // tslint:disable:no-unused-expression
 
-describe(nameof(method), () => {
+describe(nameof(action), () => {
 
-    it("non-decorated method dispatches an action", () => {
+    it("decorated method dispatches an action", () => {
 
-        @component
         class App {
 
             public value = 0;
 
+            @action
             public increment() {
                 this.value = this.value + 1;
             }
@@ -28,13 +28,11 @@ describe(nameof(method), () => {
         app.dispose();
     });
 
-    it("decorated method does not dispatch an action", () => {
+    it("non-decorated method does not dispatch an action", () => {
 
-        @component
         class App {
             public value = 0;
 
-            @method
             public increment() {
                 this.value = this.value + 1;
             }

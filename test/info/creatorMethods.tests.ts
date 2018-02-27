@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { component } from 'src';
+import { action } from 'src';
 import { getCreatorMethods } from 'src/info';
 
 describe('creator methods', () => {
@@ -7,12 +7,14 @@ describe('creator methods', () => {
 
         it("returns own methods of a component", () => {
 
-            @component
             class MyComponent {
+                
+                @action
                 public foo() {
                     // noop
                 }
 
+                @action
                 public bar() {
                     // noop
                 }
@@ -27,15 +29,15 @@ describe('creator methods', () => {
 
         it("returns own and inherited methods of a component", () => {
 
-            @component
             class BaseComponent {
+                @action
                 public bar() {
                     // noop
                 }
             }
 
-            @component
             class DerivedComponent extends BaseComponent {
+                @action
                 public foo() {
                     // noop
                 }
@@ -50,15 +52,15 @@ describe('creator methods', () => {
 
         it("does not return inherited methods of a component when 'inheritance' is set to false", () => {
 
-            @component
             class BaseComponent {
+                @action
                 public bar() {
                     // noop
                 }
             }
 
-            @component
             class DerivedComponent extends BaseComponent {
+                @action
                 public foo() {
                     // noop
                 }
@@ -73,14 +75,14 @@ describe('creator methods', () => {
 
         it("does not return methods of non-component base class, even if 'inheritance' is set to true", () => {
 
-            class BaseComponent {
+            class BaseNonComponent {
                 public bar() {
                     // noop
                 }
             }
 
-            @component
-            class DerivedComponent extends BaseComponent {
+            class DerivedComponent extends BaseNonComponent {
+                @action
                 public foo() {
                     // noop
                 }

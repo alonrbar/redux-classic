@@ -1,5 +1,5 @@
 import { Store } from 'redux';
-import { ComponentId, Connect } from '../decorators';
+import { ComponentId } from '../decorators';
 import { ClassInfo, ComponentInfo, CreatorInfo } from '../info';
 import { globalOptions } from '../options';
 import { ReduxApp, ROOT_COMPONENT_PATH } from '../reduxApp';
@@ -31,8 +31,9 @@ export class Component {
 
         context = Object.assign(new ComponentCreationContext(), context);
 
-        // create the component        
-        var ComponentClass = Component.getComponentClass(creator);  // tslint:disable-line:variable-name
+        // create the component
+        CreatorInfo.getOrInitInfo(creator);
+        const ComponentClass = Component.getComponentClass(creator);  // tslint:disable-line:variable-name
         const component = new ComponentClass(store, creator, context as ComponentCreationContext);
 
         // register it on it's containing app
@@ -42,7 +43,7 @@ export class Component {
     }
 
     private static getComponentClass(creator: object): typeof Component {
-        var info = CreatorInfo.getInfo(creator);
+        const info = CreatorInfo.getInfo(creator);
         if (!info.componentClass) {
             info.componentClass = Component.createComponentClass(creator);
             info.originalClass = creator.constructor;
@@ -92,9 +93,6 @@ export class Component {
         selfClassInfo.computedGetters = creatorClassInfo.computedGetters;
         selfClassInfo.ignoreState = creatorClassInfo.ignoreState;
 
-        // connected props
-        Connect.setupConnectedProps(component, selfClassInfo, creator, creatorClassInfo);
-
         // dispatch
         selfInfo.dispatch = store.dispatch;
 
@@ -116,10 +114,6 @@ export class Component {
         // traverse object children
         const searchIn = creator || obj;
         for (let key of Object.keys(searchIn)) {
-
-            const connectionInfo = Connect.isConnectedProperty(obj, key);
-            if (connectionInfo)
-                continue;
 
             var subPath = context.path + '.' + key;
 

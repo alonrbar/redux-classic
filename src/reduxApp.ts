@@ -1,6 +1,6 @@
 import { createStore, Store, StoreEnhancer } from 'redux';
 import { CombineReducersContext, Component, ComponentCreationContext, ComponentReducer } from './components';
-import { ComponentId, Computed, Connect, IgnoreState } from './decorators';
+import { ComponentId, Computed, IgnoreState } from './decorators';
 import { ComponentInfo } from './info';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
 import { IMap, Listener } from './types';
@@ -319,7 +319,7 @@ export class ReduxApp<T extends object> {
                 this.allComponentsChanged = false;
             }
 
-            // because computed props may be dependant on connected props their
+            // because computed props may be dependant on other components props their
             // calculation is postponed to after the entire app tree is up-to-date
             const changedByComputedProps = Computed.computeProps(withComputedProps);
             for (let comp of changedByComputedProps) {
@@ -420,10 +420,6 @@ export class ReduxApp<T extends object> {
         // assign new state recursively
         var propsAssigned: string[] = [];
         Object.keys(newState).forEach(key => {
-
-            // state of connected components is update on their source
-            if (Connect.isConnectedProperty(obj, key))
-                return;
 
             // see comment about computed properties in updateState
             if (Computed.isComputedProperty(obj, key))

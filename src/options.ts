@@ -20,7 +20,7 @@ export class SchemaOptions {
      * 'INCREMENT_COUNTER'.
      * Default value: true.
      */
-    public uppercaseActions? = true;
+    public uppercaseActions? = false;
 }
 
 //

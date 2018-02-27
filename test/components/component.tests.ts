@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { component, noDispatch } from 'src';
+import { action } from 'src';
 import { Component } from 'src/components';
 import { ComponentInfo } from 'src/info';
 import { FakeStore } from '../testTypes';
@@ -12,7 +12,6 @@ describe(nameof(Component), () => {
 
         it("does not throw on null values", () => {
 
-            @component
             class Root {
                 public value: string = null;
             }
@@ -23,7 +22,6 @@ describe(nameof(Component), () => {
 
         it("components nested inside standard objects are constructed", () => {
 
-            @component
             class Root {
                 public first = {
                     second: new Level2()
@@ -38,8 +36,9 @@ describe(nameof(Component), () => {
                 public some = new ThisIsAComponent();
             }
 
-            @component
             class ThisIsAComponent {
+
+                @action
                 public dispatchMe() {
                     /* noop */
                 }
@@ -49,12 +48,15 @@ describe(nameof(Component), () => {
             const store = new FakeStore();
             const root: any = Component.create(store, new Root());
 
+            expect(root).to.be.an.instanceOf(Component); // root is always a component
+            expect(root.first).to.not.be.an.instanceOf(Component);
+            expect(root.first.second).to.not.be.an.instanceOf(Component);
+            expect(root.first.second.third).to.not.be.an.instanceOf(Component);
             expect(root.first.second.third.some).to.be.an.instanceOf(Component);
         });
 
         it("components nested inside standard objects are connected to store's dispatch function", () => {
 
-            @component
             class Root {
                 public first = {
                     second: new Level2()
@@ -69,8 +71,9 @@ describe(nameof(Component), () => {
                 public some = new ThisIsAComponent();
             }
 
-            @component
             class ThisIsAComponent {
+
+                @action
                 public dispatchMe() {
                     /* noop */
                 }
@@ -94,7 +97,6 @@ describe(nameof(Component), () => {
 
         it("standard object nested inside components are not connected to store's dispatch function", () => {
 
-            @component
             class Root {
                 public first = {
                     second: new Level2()
@@ -110,6 +112,7 @@ describe(nameof(Component), () => {
             }
 
             class ThisIsNotAComponent {
+
                 public dispatchMe() {
                     /* noop */
                 }
@@ -130,21 +133,22 @@ describe(nameof(Component), () => {
 
         it("two different component classes with the same method name has separate methods", () => {
 
-            @component
             class Root {
                 public first = new First();
                 public second = new Second();
             }
 
-            @component
             class First {
+
+                @action
                 public foo() {
                     return 'First foo';
                 }
             }
 
-            @component
             class Second {
+
+                @action
                 public foo() {
                     return 'Second foo';
                 }
@@ -157,8 +161,9 @@ describe(nameof(Component), () => {
 
         it("two component instances of the same class has the same methods", () => {
 
-            @component
             class TheComponent {
+
+                @action
                 public foo() {
                     return 5;
                 }
@@ -172,15 +177,17 @@ describe(nameof(Component), () => {
 
         it("derived component dispatches parent actions with derived namespace", () => {
 
-            @component
             class Base {
+
+                @action
                 public bar() {
                     // noop
                 }
             }
 
-            @component
             class Derived extends Base {
+
+                @action
                 public foo() {
                     // noop
                 }
@@ -189,7 +196,7 @@ describe(nameof(Component), () => {
             // fake store
             const store = new FakeStore();
             var dispatchedAction: any;
-            (store.dispatch as any) = (action: any) => { dispatchedAction = action; };
+            (store.dispatch as any) = (actionObject: any) => { dispatchedAction = actionObject; };
 
             // create component tree
             const comp: any = Component.create(store, new Derived());
@@ -210,15 +217,16 @@ describe(nameof(Component), () => {
 
         it("throws when invoking an action from within another action", () => {
 
-            @component
             class Person {
 
                 public name: string;
 
+                @action
                 public changeName(name: string) {
                     this.name = name;
                 }
 
+                @action
                 public shouldThrow() {
                     this.changeName('something');
                 }
@@ -229,42 +237,19 @@ describe(nameof(Component), () => {
             const info = ComponentInfo.getInfo(comp);
             const reducer = info.reducerCreator(() => { /* noop */ });
 
-            expect(() => reducer({}, { type: 'PERSON.SHOULD_THROW' })).to.throw;
+            expect(() => reducer({}, { type: 'Person.shouldThrow' })).to.throw(Error);
         });
 
-        it("throws when invoking an action from within another action (implicit call)", () => {
+        it("does not throw when invoking regular methods from within actions", () => {
 
-            @component
-            class Person {
-
-                public name: string;
-
-                public changeName(name: string) {
-                    this.name = name;
-                }
-
-                public shouldThrow() {
-                    this.changeName('something');
-                }
-            }
-
-            const store = new FakeStore();
-            const comp = Component.create(store, new Person()) as Person;
-
-            expect(() => comp.changeName('alon')).to.throw;
-        });
-
-        it("does not throw when invoking noDispatch methods from within actions", () => {
-
-            @component
             class Person {
                 public name: string;
 
+                @action
                 public changeName(name: string) {
                     this.name = this.toUpperCase(name);
                 }
 
-                @noDispatch
                 public toUpperCase(str: string) {
                     return str.toUpperCase();
                 }
@@ -275,31 +260,9 @@ describe(nameof(Component), () => {
             const info = ComponentInfo.getInfo(comp);
             const reducer = info.reducerCreator(() => { /* noop */ });
 
-            var newState = reducer({}, { type: 'PERSON.CHANGE_NAME', payload: ['alon'] }) as any;
+            var newState = reducer({}, { type: 'Person.changeName', payload: ['alon'] }) as any;
 
             expect(newState.name).to.eql('ALON');
-        });
-
-        it("does not throw when invoking noDispatch methods from within actions (implicit call)", () => {
-
-            @component
-            class Person {
-                public name: string;
-
-                public changeName(name: string) {
-                    this.name = this.toUpperCase(name);
-                }
-
-                @noDispatch
-                public toUpperCase(str: string) {
-                    return str.toUpperCase();
-                }
-            }
-
-            const store = new FakeStore();
-            const comp = Component.create(store, new Person()) as Person;
-
-            comp.changeName('alon');
         });
     });
 });

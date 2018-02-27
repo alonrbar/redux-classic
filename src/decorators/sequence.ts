@@ -10,5 +10,5 @@ import { CreatorInfo } from '../info';
  */
 export function sequence(target: object, propertyKey: string | symbol): void {
     const info = CreatorInfo.getOrInitInfo(target);
-    info.sequence[propertyKey] = true;
+    info.sequences[propertyKey] = true;
 }

@@ -1,5 +1,5 @@
 import { Reducer, ReducersMapObject } from 'redux';
-import { Computed, Connect, IgnoreState } from '../decorators';
+import { Computed, IgnoreState } from '../decorators';
 import { ComponentInfo, CreatorInfo, getCreatorMethods } from '../info';
 import { ROOT_COMPONENT_PATH } from '../reduxApp';
 import { IMap, Listener, Method } from '../types';
@@ -125,14 +125,9 @@ export class ComponentReducer {
 
         const options = creatorInfo.options;
         const actionMethods: IMap<Function> = {};
-        Object.keys(allMethods).forEach(methName => {
-
-            // reducers does not handle 'noDispatch' and 'sequence' methods
-            if (creatorInfo.method[methName] || creatorInfo.sequence[methName])
-                return;
-
-            var actionName = ComponentActions.getActionName(componentCreator, methName, options);
-            actionMethods[actionName] = allMethods[methName];
+        Object.keys(creatorInfo.actions).forEach(originalActionName => {
+            const normalizedActionName = ComponentActions.getActionName(componentCreator, originalActionName, options);
+            actionMethods[normalizedActionName] = allMethods[originalActionName];
         });
 
         return actionMethods;
@@ -145,9 +140,11 @@ export class ComponentReducer {
         const stateProto: IMap<Method> = {};
         const componentMethods = getMethods(component);
         for (let key of Object.keys(componentMethods)) {
-            if (creatorInfo.method[key]) {
+            if (!creatorInfo.actions[key]) {
+                // regular method
                 stateProto[key] = componentMethods[key].bind(component);
             } else {
+                // action
                 stateProto[key] = ComponentReducer.actionInvokedError;
             }
         }
@@ -176,7 +173,6 @@ export class ComponentReducer {
         let finalizedState = Object.assign({}, state);
 
         const handledProps = {};
-        finalizedState = Connect.removeConnectedProps(finalizedState, component, handledProps);
         finalizedState = Computed.removeComputedProps(finalizedState, component, handledProps);
         finalizedState = IgnoreState.removeIgnoredProps(finalizedState, component, handledProps);
 
@@ -217,10 +213,6 @@ export class ComponentReducer {
         // gather the sub-reducers
         const subReducers: ReducersMapObject = {};
         for (let key of Object.keys(obj)) {
-
-            // connected components are modified only by their source
-            if (Connect.isConnectedProperty(obj, key))
-                continue;
 
             // other objects
             const newSubReducer = ComponentReducer.combineReducersRecursion((obj as any)[key], new CombineReducersContext({

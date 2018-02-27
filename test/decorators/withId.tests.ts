@@ -1,11 +1,13 @@
 import { expect } from 'chai';
-import { component, ReduxApp, withId } from 'src';
+import { action, ReduxApp, withId } from 'src';
 
 describe('withId', () => {
 
-    @component
     class Counter {
+        
         public value = 0;
+
+        @action
         public increment() {
             this.value = this.value + 1;
         }
@@ -13,7 +15,6 @@ describe('withId', () => {
 
     it("syncs components with the same id but not others", () => {
 
-        @component
         class App {
 
             @withId(88)
@@ -43,7 +44,6 @@ describe('withId', () => {
 
         const iAmAnId = {};
 
-        @component
         class Level1First {
             public nested = new Level2First();
         }
@@ -52,7 +52,6 @@ describe('withId', () => {
             public nested = new Level3First();
         }
 
-        @component
         class Level3First {
             @withId(iAmAnId)
             public counter = new Counter();
@@ -62,18 +61,15 @@ describe('withId', () => {
             public nested = new Level2Second();
         }
 
-        @component
         class Level2Second {
             public nested = new Level3Second();
         }
 
-        @component
         class Level3Second {
             @withId(iAmAnId)
             public counter = new Counter();
         }
 
-        @component
         class App {
             public first = new Level1First();
             public second = new Level1Second();
@@ -93,7 +89,6 @@ describe('withId', () => {
 
     it("multiple components decorated with no parameters (auto-id) are not synced with one another", () => {
 
-        @component
         class App {
 
             @withId

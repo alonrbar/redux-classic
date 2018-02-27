@@ -53,7 +53,7 @@ export class CreatorInfo {
     public originalClass: Function;
     public componentClass: typeof Component;
     public options: SchemaOptions;
-    public method: IMap<boolean> = {};
-    public sequence: IMap<boolean> = {};
+    public actions: IMap<boolean> = {};
+    public sequences: IMap<boolean> = {};
     public childIds: any = {};
 }

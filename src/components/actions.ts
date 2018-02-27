@@ -29,8 +29,8 @@ export class ComponentActions {
 
                 const oldMethod = methods[key];
 
-                // handle dispatch methods (use store dispatch)
-                if (!creatorInfo.method[key]) {                    
+                // handle actions and sequences (use store dispatch)
+                if (creatorInfo.actions[key] || creatorInfo.sequences[key]) {
                     const compInfo = ComponentInfo.getInfo(this);
                     const action: ReduxAppAction = {
                         type: ComponentActions.getActionName(creator, key, creatorInfo.options),
@@ -40,8 +40,8 @@ export class ComponentActions {
                     compInfo.dispatch(action);
                 }
 
-                // handle non-dispatch methods (just call the function)
-                if (creatorInfo.method[key] || creatorInfo.sequence[key]) {                    
+                // handle regular methods (just call the function)
+                if (!creatorInfo.actions[key]) {
                     return oldMethod.call(this, ...payload);
                 }
             };

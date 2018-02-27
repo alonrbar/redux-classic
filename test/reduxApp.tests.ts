@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { component, ReduxApp } from 'src';
+import { action, ReduxApp } from 'src';
 import { Component } from 'src/components';
 
 // tslint:disable:no-unused-expression
@@ -10,7 +10,6 @@ describe(nameof(ReduxApp), () => {
 
         it("does not throw on null values", () => {
 
-            @component
             class Root {
                 public value: string = null;
             }
@@ -22,7 +21,6 @@ describe(nameof(ReduxApp), () => {
 
         it("components nested inside standard objects are constructed", () => {
 
-            @component
             class Root {
                 public first = {
                     second: new Level2()
@@ -37,8 +35,8 @@ describe(nameof(ReduxApp), () => {
                 public some = new ThisIsAComponent();
             }
 
-            @component
             class ThisIsAComponent {
+                @action
                 public dispatchMe() {
                     /* noop */
                 }
@@ -55,9 +53,8 @@ describe(nameof(ReduxApp), () => {
             }
         });
 
-        it("handles pre-loaded state", () => {
+        it("handles pre-loaded state of nested component", () => {
 
-            @component
             class Root {
                 public first = {
                     second: new Level2()
@@ -68,11 +65,11 @@ describe(nameof(ReduxApp), () => {
                 public theComponent = new ThisIsAComponent();
             }
 
-            @component
             class ThisIsAComponent {
 
                 public value: string = 'before';
 
+                @action
                 public changeValue() {
                     this.value = 'after';
                 }
@@ -106,13 +103,58 @@ describe(nameof(ReduxApp), () => {
             app.dispose();
         });
 
+        it("handles pre-loaded state of plain class instances", () => {
+
+            class Root {
+                public first = {
+                    second: new Level2()
+                };
+            }
+
+            class Level2 {
+                public theComponent = new ThisIsAComponent();
+            }
+
+            class ThisIsAComponent {
+
+                public value: string = 'before';
+
+                public changeValue() {
+                    this.value = 'after';
+                }
+            }
+
+            const preLoadedState = {
+                first: {
+                    second: {
+                        theComponent: {
+                            value: 'I am here!'
+                        }
+                    }
+                }
+            };
+
+            // create component tree
+            const root = new Root();
+            expect(root.first.second.theComponent.value).to.eql('before');
+
+            // create the app
+            const app = new ReduxApp(root, undefined, preLoadedState);
+            expect(app.root.first.second.theComponent.value).to.eql('I am here!');
+
+            // verify state is updating
+            app.root.first.second.theComponent.changeValue();
+            expect(app.root.first.second.theComponent.value).to.eql('after');
+
+            app.dispose();
+        });
+
         it("arrays of objects from the app creator are stored in the store state", () => {
 
             class Some {
 
             }
 
-            @component
             class Root {
                 public arr: Some[];
 
@@ -135,9 +177,12 @@ describe(nameof(ReduxApp), () => {
     describe('updateState', () => {
 
         it("component tree is not updated when 'updateState' options is turned off", () => {
-            @component
+            
             class App {
+                
                 public num = 0;
+
+                @action
                 public increment() {
                     this.num = this.num + 1;
                 }
@@ -156,9 +201,11 @@ describe(nameof(ReduxApp), () => {
 
         it("store still updates when 'updateState' options is turned off", () => {
 
-            @component
             class App {
+
                 public num = 0;
+
+                @action
                 public increment() {
                     this.num = this.num + 1;
                 }
@@ -178,11 +225,11 @@ describe(nameof(ReduxApp), () => {
         it('removes component properties that do not exists on the new state', () => {
 
             // create the component
-            @component
             class MyComponent {
                 public prop1: string = undefined;
                 public prop2: string = undefined;
 
+                @action
                 public setAndRemove() {
                     delete this.prop1;
                     this.prop2 = 'hello';
@@ -208,11 +255,11 @@ describe(nameof(ReduxApp), () => {
         it('does not remove component properties that exists on the new state but are undefined', () => {
 
             // create the component
-            @component
             class MyComponent {
                 public prop1: string = undefined;
                 public prop2: string = undefined;
 
+                @action
                 public updateProp2Only() {
                     this.prop2 = 'hello';
                 }
@@ -233,7 +280,6 @@ describe(nameof(ReduxApp), () => {
 
         it("components nested inside standard objects are synced with the store's state", () => {
 
-            @component
             class Root {
                 public first = {
                     second: new Level2()
@@ -248,11 +294,11 @@ describe(nameof(ReduxApp), () => {
                 public some = new ThisIsAComponent();
             }
 
-            @component
             class ThisIsAComponent {
 
                 public value = 0;
 
+                @action
                 public dispatchMe() {
                     this.value = 1;
                 }
@@ -273,7 +319,6 @@ describe(nameof(ReduxApp), () => {
 
         it("methods of components nested inside standard objects can be invoked multiple times", () => {
 
-            @component
             class Root {
                 public first = {
                     second: new Level2()
@@ -288,9 +333,10 @@ describe(nameof(ReduxApp), () => {
                 public counter = new Counter();
             }
 
-            @component
             class Counter {
                 public value = 0;
+
+                @action
                 public increment() {
                     this.value = this.value + 1;
                 }
@@ -312,18 +358,20 @@ describe(nameof(ReduxApp), () => {
 
         it("adds, removes and updates objects in an array", () => {
 
-            @component
             class App {
                 public items: Item[] = [];
 
+                @action
                 public push() {
                     this.items = this.items.concat(new Item());
                 }
 
+                @action
                 public pop() {
                     this.items = this.items.slice(0, this.items.length - 1);
                 }
 
+                @action
                 public incrementIndex(index: number) {
                     this.items = this.items.map((item, i) => {
                         if (i === index) {
@@ -338,6 +386,7 @@ describe(nameof(ReduxApp), () => {
                     });
                 }
 
+                @action
                 public updateFirstItem(newValue: number) {
                     const newItem = new Item();
                     newItem.value = newValue;

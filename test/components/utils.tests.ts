@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { component, isInstanceOf } from 'src';
+import { action, isInstanceOf } from 'src';
 import { Component } from 'src/components';
 import { FakeStore } from '../testTypes';
 
@@ -10,7 +10,6 @@ describe('component utils', () => {
 
         it("returns true on an instance of a simple class", () => {
 
-            @component
             class MyComponent {
                 public value = 'hi';
             }
@@ -22,9 +21,14 @@ describe('component utils', () => {
 
         it("returns true on a component", () => {
 
-            @component
             class MyComponent {
+                
                 public value = 'hi';
+
+                @action
+                public myAction() {
+                    // noop
+                }
             }
 
             const myComponent = Component.create(new FakeStore(), new MyComponent());
@@ -34,12 +38,10 @@ describe('component utils', () => {
 
         it("returns false on an instance of a simple class", () => {
 
-            @component
             class MyComponent {
                 public value = 'hi';
             }
 
-            @component
             class OtherComponent {
                 public value = 'hi';
             }
@@ -51,14 +53,24 @@ describe('component utils', () => {
 
         it("returns false on a component", () => {
 
-            @component
             class MyComponent {
+                
                 public value = 'hi';
+
+                @action
+                public myAction() {
+                    // noop
+                }
             }
 
-            @component
             class OtherComponent {
+                
                 public value = 'hi';
+
+                @action
+                public myAction() {
+                    // noop
+                }
             }
 
             const myComponent = Component.create(new FakeStore(), new MyComponent());
