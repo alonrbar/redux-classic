@@ -4,7 +4,7 @@ import { ClassInfo, ComponentInfo, CreatorInfo } from '../info';
 import { globalOptions } from '../options';
 import { ROOT_COMPONENT_PATH } from '../reduxApp';
 import { IMap } from '../types';
-import { isPrimitive, log } from '../utils';
+import { assignProperties, DescriptorType, isPrimitive, log } from '../utils';
 import { ComponentActions } from './actions';
 import { ComponentReducer } from './reducer';
 
@@ -73,10 +73,7 @@ export class Component {
     private static createSelf(component: Component, store: Store<object>, creator: object, context: ComponentCreationContext): void {
 
         // regular js props (including getters and setters)
-        for (let key of Object.getOwnPropertyNames(creator)) {
-            var desc = Object.getOwnPropertyDescriptor(creator, key);
-            Object.defineProperty(component, key, desc);
-        }
+        assignProperties(component, creator, [DescriptorType.Field, DescriptorType.Property]);
 
         // init component info        
         const selfInfo = ComponentInfo.initInfo(component);

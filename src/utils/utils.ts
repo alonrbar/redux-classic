@@ -3,55 +3,77 @@ import { IMap, Method } from '../types';
 
 // tslint:disable:ban-types
 
-/**
- * Return true if 'val' is primitive. For the sake of this test 'null' and
- * 'undefined' are considered primitives.
- */
-export function isPrimitive(val: any): boolean {
-    if (!val)
-        return true;
+export function clearProperties(obj: any): void {
+    const keys = Object.keys(obj);
+    for (let key of keys) {
+        delete obj[key];
+    }
+}
 
-    const type = typeof val;
-    return type !== 'object' && type !== 'function';
+export enum DescriptorType {
+    None = "None",
+    Field = "Field",
+    /** 
+     * Properties with getter.
+     */
+    Property = "Property",
+    Method = "Method"
 }
 
 /**
- * @param obj 
- * @param bind Whether or not to bind the returned methods to 'obj'. Default
- * value: false.
+ * Get own and inherited property descriptor (except those of Object).
  */
-export function getMethods(obj: object | Function, bind = false): IMap<Method> {
-    if (!obj)
-        return undefined;
+export function getAllPropertyDescriptors(obj: any, descriptorTypes?: DescriptorType[]): IMap<PropertyDescriptor> {
+    const result: IMap<PropertyDescriptor> = {};
 
-    var proto: any;
-    if (typeof obj === 'object') {
-        proto = Object.getPrototypeOf(obj);
-    } else if (typeof obj === 'function') {
-        proto = obj.prototype;
-    } else {
-        throw new Error("Expected an object or a function. Got: " + obj);
-    }
+    while (obj.constructor !== Object) {
 
-    if (!proto)
-        return undefined;
+        // get descriptor of current type
+        let descriptors: IMap<PropertyDescriptor> = Object.getOwnPropertyDescriptors(obj);
 
-    var methods: any = {};
-    for (let key of Object.keys(proto)) {
+        // filter by descriptor type
+        if (descriptorTypes && descriptorTypes.length) {
+            const filteredDescriptors: IMap<PropertyDescriptor> = {};
 
-        // avoid invoking getters
-        var desc = Object.getOwnPropertyDescriptor(proto, key);
-        var hasGetter = desc && typeof desc.get === 'function';
+            for (const key of Object.keys(descriptors)) {
+                for (const flag of descriptorTypes) {
+                    let shouldAdd = false;
+                    switch (flag) {
+                        case DescriptorType.None:
+                            break;
+                        case DescriptorType.Field:
+                            shouldAdd = (typeof descriptors[key].value !== 'function' && typeof descriptors[key].get !== 'function');
+                            break;
+                        case DescriptorType.Property:
+                            shouldAdd = (typeof descriptors[key].get === 'function');
+                            break;
+                        case DescriptorType.Method:
+                            shouldAdd = (typeof descriptors[key].value === 'function' && typeof descriptors[key].get !== 'function');
+                            break;
+                        default:
+                            throw new Error("Property flag not supported: " + flag);
+                    }
 
-        if (!hasGetter && typeof proto[key] === 'function') {
-            methods[key] = proto[key];
-            if (bind) {
-                methods[key] = methods[key].bind(obj);
+                    if (shouldAdd)
+                        filteredDescriptors[key] = descriptors[key];
+                }
             }
+
+            descriptors = filteredDescriptors;
         }
+
+        // store in result
+        Object.assign(result, descriptors);
+
+        // repeat with prototype
+        obj = getPrototype(obj);
     }
 
-    return methods;
+    // a "constructor" property is always retrieved as part of the result
+    if (result.constructor)
+        delete result.constructor;
+
+    return result;
 }
 
 export function getConstructorOwnProp(obj: object, key: symbol | string): any {
@@ -66,6 +88,49 @@ export function getConstructorOwnProp(obj: object, key: symbol | string): any {
     }
 
     return undefined;
+}
+
+/**
+ * @param obj 
+ * @param bind Whether or not to bind the returned methods to 'obj'. Default value: false.
+ */
+export function getMethods(obj: object | Function, bind = false): IMap<Method> {
+    const methodDescriptors = getAllPropertyDescriptors(obj, [DescriptorType.Method]);
+    const methods: IMap<Method> = {};
+    for (const key of Object.keys(methodDescriptors)) {
+        methods[key] = methodDescriptors[key].value;
+        if (bind) {
+            methods[key] = methods[key].bind(obj);
+        }
+    }
+    return methods;
+}
+
+export function assignProperties(target: object, source: object, descriptorTypes?: DescriptorType[]): object {
+    const descriptors = getAllPropertyDescriptors(source, descriptorTypes);
+    for (const key of Object.keys(descriptors)) {
+        Object.defineProperty(target, key, descriptors[key]);
+    }
+    return target;
+}
+
+export function getParentType(obj: object | Function): Function {
+
+    // get own type
+    var type = getType(obj);
+
+    // get parent type
+    return Object.getPrototypeOf(type.prototype).constructor;
+}
+
+export function getPrototype(obj: object | Function): object {
+    if (typeof obj === 'object') {
+        return Object.getPrototypeOf(obj);
+    } else if (typeof obj === 'function') {
+        return obj.prototype;
+    } else {
+        throw new Error("Expected an object or a function. Got: " + obj);
+    }
 }
 
 /**
@@ -86,15 +151,6 @@ export function getType(obj: object | Function): Function {
         return Object.getPrototypeOf(obj).constructor;
 
     throw new Error("Expected an object or a function. Got: " + obj);
-}
-
-export function getParentType(obj: object | Function) {
-
-    // get own type
-    var type = getType(obj);
-
-    // get parent type
-    return Object.getPrototypeOf(type.prototype).constructor;
 }
 
 /**
@@ -124,9 +180,14 @@ export function isPlainObject(obj: any) {
     return Object.prototype.toString.call(obj) === '[object Object]';
 }
 
-export function clearProperties(obj: any): void {
-    const keys = Object.keys(obj);
-    for (let key of keys) {
-        delete obj[key];
-    }
+/**
+ * Return true if 'val' is primitive. For the sake of this test 'null' and
+ * 'undefined' are considered primitives.
+ */
+export function isPrimitive(val: any): boolean {
+    if (!val)
+        return true;
+
+    const type = typeof val;
+    return type !== 'object' && type !== 'function';
 }

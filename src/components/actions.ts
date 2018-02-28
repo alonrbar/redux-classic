@@ -1,7 +1,8 @@
 import { Action } from 'redux';
-import { ComponentInfo, CreatorInfo, getCreatorMethods } from '../info';
-import { globalOptions, ActionOptions } from '../options';
+import { ComponentInfo, CreatorInfo } from '../info';
+import { ActionOptions, globalOptions } from '../options';
 import { IMap, Method } from '../types';
+import { getMethods } from '../utils';
 import { Component } from './component';
 var snakecase = require('lodash.snakecase');
 
@@ -14,7 +15,7 @@ export interface ReduxAppAction extends Action {
 export class ComponentActions {
 
     public static createActions(creator: object): IMap<Method> {
-        const methods = getCreatorMethods(creator);
+        const methods = getMethods(creator);
         if (!methods)
             return undefined;
 

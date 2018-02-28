@@ -8,7 +8,7 @@ import { FakeStore } from '../testTypes';
 
 describe(nameof(Component), () => {
 
-    describe('constructor', () => {
+    describe('create', () => {
 
         it("does not throw on null values", () => {
 
@@ -92,7 +92,7 @@ describe(nameof(Component), () => {
         it("circular references does not result in an endless loop", () => {
 
             class Root {
-                
+
                 public originalComp = new CanBeCircularComponent();
                 public circularComp: CircularComponentHolder;
 
@@ -294,6 +294,28 @@ describe(nameof(Component), () => {
             expect(dispatchedAction).to.not.be.undefined;
             expect(dispatchedAction.type).be.a('string');
             expect(dispatchedAction.type.toLowerCase()).to.include(nameof(Derived).toLowerCase());
+        });
+
+        it('component getters are preserved', () => {
+
+            class MyComponent {
+
+                public get prop1(): string {
+                    return 'hi';
+                }
+                public prop2: string = undefined;
+
+                @action
+                public updateProp2Only() {
+                    this.prop2 = 'hello';
+                }
+            }
+
+            const store = new FakeStore();
+            const comp = Component.create(store, new MyComponent());
+
+            expect(comp).to.haveOwnProperty('prop1');
+            expect(comp).to.haveOwnProperty('prop2');
         });
     });
 

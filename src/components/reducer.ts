@@ -1,9 +1,9 @@
 import { Reducer, ReducersMapObject } from 'redux';
 import { IgnoreState } from '../decorators';
-import { ComponentInfo, CreatorInfo, getCreatorMethods } from '../info';
+import { ComponentInfo, CreatorInfo } from '../info';
 import { ROOT_COMPONENT_PATH } from '../reduxApp';
-import { IMap, Listener, Method } from '../types';
-import { clearProperties, getMethods, isPlainObject, isPrimitive, log, simpleCombineReducers } from '../utils';
+import { IMap, Listener } from '../types';
+import { assignProperties, clearProperties, DescriptorType, getMethods, isPlainObject, isPrimitive, log, simpleCombineReducers } from '../utils';
 import { ComponentActions, ReduxAppAction } from './actions';
 import { Component } from './component';
 
@@ -121,7 +121,7 @@ export class ComponentReducer {
     
     private static createMethodsLookup(componentCreator: object, creatorInfo: CreatorInfo): IMap<Function> {
         
-        const allMethods = getCreatorMethods(componentCreator);        
+        const allMethods = getMethods(componentCreator);        
 
         const actionMethods: IMap<Function> = {};
         Object.keys(creatorInfo.actions).forEach(originalActionName => {
@@ -136,14 +136,18 @@ export class ComponentReducer {
      * See description of 'createStateObject'.
      */
     private static createStateObjectPrototype(component: Component, creatorInfo: CreatorInfo): object {
-        const stateProto: IMap<Method> = {};
+
+        // assign properties
+        const stateProto: any = assignProperties({}, component, [DescriptorType.Property]);
+
+        // assign methods
         const componentMethods = getMethods(component);
         for (let key of Object.keys(componentMethods)) {
             if (!creatorInfo.actions[key]) {
                 // regular method
                 stateProto[key] = componentMethods[key].bind(component);
             } else {
-                // action
+                // action (not allowed)
                 stateProto[key] = ComponentReducer.actionInvokedError;
             }
         }
@@ -157,7 +161,7 @@ export class ComponentReducer {
     /**
      * Create a "state object". The state object receives it's properties from
      * the current state and it's methods from the owning component. Methods
-     * that represent actions are replace with a throw call, while noDispatch
+     * that represent actions are replace with a throw call, while regular
      * methods are kept in place.
      */
     private static createStateObject(state: object, stateProto: object): object {

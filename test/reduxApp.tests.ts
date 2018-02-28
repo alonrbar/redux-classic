@@ -295,6 +295,38 @@ describe(nameof(ReduxApp), () => {
             }
         });
 
+        it('does not remove component getters', () => {
+
+            // create the component
+            class MyComponent {
+
+                public get prop1(): string {
+                    return 'hi';
+                }
+                public prop2: string = undefined;
+
+                @action
+                public updateProp2Only() {
+                    this.prop2 = 'hello';
+                }
+            }
+            const app = new ReduxApp(new MyComponent());
+            try {
+
+                // test before
+                expect(app.root).to.haveOwnProperty('prop1');
+                expect(app.root).to.haveOwnProperty('prop2');
+
+                // test after
+                app.root.updateProp2Only();
+                expect(app.root).to.haveOwnProperty('prop1');
+                expect(app.root).to.haveOwnProperty('prop2');
+
+            } finally {
+                app.dispose();
+            }
+        });
+
         it("components nested inside standard objects are synced with the store's state", () => {
 
             class Root {

@@ -1,7 +1,36 @@
 import { expect } from 'chai';
-import { getMethods, getParentType, getType } from 'src/utils';
+import { getAllPropertyDescriptors, getMethods, getParentType, getType } from 'src/utils';
 
 describe('utils', () => {
+
+    describe(nameof(getAllPropertyDescriptors), () => {
+
+        it("returns all property descriptors of an object", () => {
+
+            class MyClass {
+
+                public prop = '';
+
+                public foo() {
+                    // noop
+                }
+
+                public bar() {
+                    // noop
+                }
+            }
+
+            const obj = new MyClass();
+            const descriptors = getAllPropertyDescriptors(obj);
+
+            expect(Object.keys(descriptors).length).to.eql(3);
+
+            expect(descriptors).to.haveOwnProperty('prop');
+            expect(descriptors).to.haveOwnProperty('foo');
+            expect(descriptors).to.haveOwnProperty('bar');
+        });
+
+    });
 
     describe(nameof(getMethods), () => {
 
@@ -44,35 +73,6 @@ describe('utils', () => {
 
             expect(methods).to.haveOwnProperty('foo');
             expect(methods).to.haveOwnProperty('bar');
-        });
-
-    });
-
-    describe(nameof(getType), () => {
-
-        it("returns the type of an object", () => {
-
-            class MyClass {
-            }
-
-            const obj = new MyClass();
-            const type = getType(obj);
-
-            expect(type).to.equal(MyClass);
-        });
-
-        it("returns the type of an object of derived type", () => {
-
-            class Base {
-            }
-
-            class Derived extends Base {
-            }
-
-            const obj = new Derived();
-            const type = getType(obj);
-
-            expect(type).to.equal(Derived);
         });
 
     });
@@ -136,6 +136,35 @@ describe('utils', () => {
             // grand parent type
             const grandParentType = getParentType(parentType);
             expect(grandParentType).to.equal(Base);
+        });
+
+    });
+
+    describe(nameof(getType), () => {
+
+        it("returns the type of an object", () => {
+
+            class MyClass {
+            }
+
+            const obj = new MyClass();
+            const type = getType(obj);
+
+            expect(type).to.equal(MyClass);
+        });
+
+        it("returns the type of an object of derived type", () => {
+
+            class Base {
+            }
+
+            class Derived extends Base {
+            }
+
+            const obj = new Derived();
+            const type = getType(obj);
+
+            expect(type).to.equal(Derived);
         });
 
     });
