@@ -7,9 +7,9 @@ import { getConstructorOwnProp } from '../utils';
 
 /**
  * Metadata information stored on "component creators" - classes that were
- * decorated with the @component decorator. Since it is common to all instances
- * it is stored on the class constructor. It is used for the most part in the
- * component creation process.
+ * decorated with one of the component decorators (@action, @sequence, etc.).
+ * Since it is common to all instances it is stored on the class constructor. It
+ * is used for the most part in the component creation process.
  */
 export class CreatorInfo {
 

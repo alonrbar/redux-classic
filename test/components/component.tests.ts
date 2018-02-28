@@ -55,7 +55,7 @@ describe(nameof(Component), () => {
             expect(root.first.second.third.some).to.be.an.instanceOf(Component);
         });
 
-        it("multiple components create from the same creator instance are pointing to the same component instance", () => {
+        it("multiple components created from the same creator instance are pointing to the same component instance", () => {
 
             class Root {
                 public link: IAmComponent;
@@ -87,6 +87,56 @@ describe(nameof(Component), () => {
 
             expect(root.link).to.equal(root.original);
             expect(root.original).to.equal(root.nested.link);
+        });
+
+        it("circular references does not result in an endless loop", () => {
+
+            class Root {
+                
+                public originalComp = new CanBeCircularComponent();
+                public circularComp: CircularComponentHolder;
+
+                public originalObj = new CanBeCircularObject();
+                public circularObj: CircularObjectHolder;
+
+                constructor() {
+                    this.circularComp = new CircularComponentHolder(this.originalComp);
+                    this.circularObj = new CircularObjectHolder(this.originalObj);
+                }
+            }
+
+            class CircularComponentHolder {
+                constructor(public readonly original: CanBeCircularComponent) {
+                    original.circle = this;
+                }
+            }
+
+            class CanBeCircularComponent {
+
+                public circle: CircularComponentHolder;
+
+                @action
+                public dispatchMe() {
+                    // noop
+                }
+            }
+
+            class CircularObjectHolder {
+                constructor(public readonly original: CanBeCircularObject) {
+                    original.circle = this;
+                }
+            }
+
+            class CanBeCircularObject {
+                public circle: CircularObjectHolder;
+            }
+
+            // create component tree
+            const store = new FakeStore();
+            const root: Root = (Component.create(store, new Root()) as any);
+
+            expect(root.circularComp.original).to.equal(root.originalComp, 'different components');
+            expect(root.circularObj.original).to.equal(root.originalObj, 'different objects');
         });
 
         it("components nested inside standard objects are connected to store's dispatch function", () => {

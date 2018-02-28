@@ -87,19 +87,6 @@ export class ReduxApp<T extends object> {
                 throw new Error(`Component not found. Type: ${type.name}.`);
             return comp;
         }
-    }    
-
-    /**
-     * INTERNAL: Should not appear on the public d.ts file.
-     */
-    public static registerComponent(comp: Component, creator: object, appName?: string): void {
-        appName = appName || DEFAULT_APP_NAME;
-        const app = appsRepository[appName];
-        if (app) {  // this check exists for test reason only - in some unit tests we create orphan components that are not part of any app...
-            const warehouse = app.getTypeWarehouse(creator.constructor);
-            const key = ComponentInfo.getInfo(comp).id || ComponentId.nextAvailableId();
-            warehouse.set(key, comp);
-        }
     }
 
     /**
@@ -162,6 +149,7 @@ export class ReduxApp<T extends object> {
         const creationContext = new ComponentCreationContext({ appName: this.name });
         const rootComponent = Component.create(this.store, appCreator, creationContext);
         this.root = (rootComponent as any);
+        this.registerComponents(creationContext.createdComponents);
 
         // create the root reducer
         const reducersContext = new CombineReducersContext({
@@ -191,18 +179,9 @@ export class ReduxApp<T extends object> {
         }
     }
 
-    /**
-     * INTERNAL: Should not appear on the public d.ts file.
-     */
-    public getTypeWarehouse(type: Function): Map<any, any> {
-        if (!this.warehouse.has(type))
-            this.warehouse.set(type, new Map());
-        return this.warehouse.get(type);
-    }
-
     //
     // private utils
-    //
+    //    
 
     private resolveParameters(appCreator: any, params: any[]) {
         var result: {
@@ -259,6 +238,21 @@ export class ReduxApp<T extends object> {
         } else {
             return DEFAULT_APP_NAME + '_' + (++appsCount);
         }
+    }
+
+    private registerComponents(components: IMap<Component>): void {
+        for (const comp of Object.values(components)) {
+            const compInfo = ComponentInfo.getInfo(comp);
+            const warehouse = this.getTypeWarehouse(compInfo.originalClass);
+            const key = compInfo.id || ComponentId.nextAvailableId();
+            warehouse.set(key, comp);
+        }
+    }
+
+    private getTypeWarehouse(type: Function): Map<any, any> {
+        if (!this.warehouse.has(type))
+            this.warehouse.set(type, new Map());
+        return this.warehouse.get(type);
     }
 
     //

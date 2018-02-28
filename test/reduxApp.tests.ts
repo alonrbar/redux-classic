@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { action, ReduxApp } from 'src';
+import { action, ReduxApp, withId } from 'src';
 import { Component } from 'src/components';
 
 // tslint:disable:no-unused-expression
@@ -92,15 +92,19 @@ describe(nameof(ReduxApp), () => {
 
             // create the app
             const app = new ReduxApp(root, undefined, preLoadedState);
-            expect(app.root.first.second.theComponent).to.be.an.instanceOf(Component);
-            expect(app.root.first.second.theComponent.value).to.eql('I am here!');
+            try {
 
-            // verify state is updating
-            app.root.first.second.theComponent.changeValue();
-            expect(app.root.first.second.theComponent).to.be.an.instanceOf(Component);
-            expect(app.root.first.second.theComponent.value).to.eql('after');
+                expect(app.root.first.second.theComponent).to.be.an.instanceOf(Component);
+                expect(app.root.first.second.theComponent.value).to.eql('I am here!');
 
-            app.dispose();
+                // verify state is updating
+                app.root.first.second.theComponent.changeValue();
+                expect(app.root.first.second.theComponent).to.be.an.instanceOf(Component);
+                expect(app.root.first.second.theComponent.value).to.eql('after');
+
+            } finally {
+                app.dispose();
+            }
         });
 
         it("handles pre-loaded state of plain class instances", () => {
@@ -140,13 +144,17 @@ describe(nameof(ReduxApp), () => {
 
             // create the app
             const app = new ReduxApp(root, undefined, preLoadedState);
-            expect(app.root.first.second.theComponent.value).to.eql('I am here!');
+            try {
 
-            // verify state is updating
-            app.root.first.second.theComponent.changeValue();
-            expect(app.root.first.second.theComponent.value).to.eql('after');
+                expect(app.root.first.second.theComponent.value).to.eql('I am here!');
 
-            app.dispose();
+                // verify state is updating
+                app.root.first.second.theComponent.changeValue();
+                expect(app.root.first.second.theComponent.value).to.eql('after');
+
+            } finally {
+                app.dispose();
+            }
         });
 
         it("arrays of objects from the app creator are stored in the store state", () => {
@@ -189,14 +197,17 @@ describe(nameof(ReduxApp), () => {
             }
 
             const app = new ReduxApp(new App(), { updateState: false });
+            try {
 
-            expect(app.root.num).to.eq(0);
+                expect(app.root.num).to.eq(0);
 
-            app.root.increment();
+                app.root.increment();
 
-            expect(app.root.num).to.eq(0);
+                expect(app.root.num).to.eq(0);
 
-            app.dispose();
+            } finally {
+                app.dispose();
+            }
         });
 
         it("store still updates when 'updateState' options is turned off", () => {
@@ -212,14 +223,17 @@ describe(nameof(ReduxApp), () => {
             }
 
             const app = new ReduxApp(new App(), { updateState: false });
+            try {
 
-            expect(app.store.getState().num).to.eq(0);
+                expect(app.store.getState().num).to.eq(0);
 
-            app.root.increment();
+                app.root.increment();
 
-            expect(app.store.getState().num).to.eq(1);
+                expect(app.store.getState().num).to.eq(1);
 
-            app.dispose();
+            } finally {
+                app.dispose();
+            }
         });
 
         it('removes component properties that do not exists on the new state', () => {
@@ -265,17 +279,20 @@ describe(nameof(ReduxApp), () => {
                 }
             }
             const app = new ReduxApp(new MyComponent());
+            try {
 
-            // test before
-            expect(app.root).to.haveOwnProperty('prop1');
-            expect(app.root).to.haveOwnProperty('prop2');
+                // test before
+                expect(app.root).to.haveOwnProperty('prop1');
+                expect(app.root).to.haveOwnProperty('prop2');
 
-            // test after
-            app.root.updateProp2Only();
-            expect(app.root).to.haveOwnProperty('prop1');
-            expect(app.root).to.haveOwnProperty('prop2');
+                // test after
+                app.root.updateProp2Only();
+                expect(app.root).to.haveOwnProperty('prop1');
+                expect(app.root).to.haveOwnProperty('prop2');
 
-            app.dispose();
+            } finally {
+                app.dispose();
+            }
         });
 
         it("components nested inside standard objects are synced with the store's state", () => {
@@ -306,15 +323,18 @@ describe(nameof(ReduxApp), () => {
 
             // create component tree
             const app = new ReduxApp(new Root());
+            try {
 
-            // before dispatching
-            expect(app.root.first.second.third.some.value).to.eql(0);
+                // before dispatching
+                expect(app.root.first.second.third.some.value).to.eql(0);
 
-            // after dispatching
-            app.root.first.second.third.some.dispatchMe();
-            expect(app.root.first.second.third.some.value).to.eql(1);
+                // after dispatching
+                app.root.first.second.third.some.dispatchMe();
+                expect(app.root.first.second.third.some.value).to.eql(1);
 
-            app.dispose();
+            } finally {
+                app.dispose();
+            }
         });
 
         it("actions of a component are invoked only once, even if it appears several time in the tree", () => {
@@ -349,21 +369,24 @@ describe(nameof(ReduxApp), () => {
 
             // create component tree
             const app = new ReduxApp(new Root());
+            try {
 
-            // before dispatching
-            expect(count).to.eql(0);
-            expect(app.root.link.value).to.eql(0);
-            expect(app.root.original.value).to.eql(0);
-            expect(app.root.nested.link.value).to.eql(0);
+                // before dispatching
+                expect(count).to.eql(0);
+                expect(app.root.link.value).to.eql(0);
+                expect(app.root.original.value).to.eql(0);
+                expect(app.root.nested.link.value).to.eql(0);
 
-            // after dispatching
-            app.root.link.dispatchMe();
-            expect(count).to.eql(1, 'count is not 1');
-            expect(app.root.link.value).to.eql(1, 'link.value is not 1');
-            expect(app.root.original.value).to.eql(1, 'original.value is not 1');
-            expect(app.root.nested.link.value).to.eql(1, 'nested.link.value is not 1');
+                // after dispatching
+                app.root.link.dispatchMe();
+                expect(count).to.eql(1, 'count is not 1');
+                expect(app.root.link.value).to.eql(1, 'link.value is not 1');
+                expect(app.root.original.value).to.eql(1, 'original.value is not 1');
+                expect(app.root.nested.link.value).to.eql(1, 'nested.link.value is not 1');
 
-            app.dispose();
+            } finally {
+                app.dispose();
+            }
         });
 
         it("methods of components nested inside standard objects can be invoked multiple times", () => {
@@ -393,16 +416,19 @@ describe(nameof(ReduxApp), () => {
 
             // create component tree
             const app = new ReduxApp(new Root());
+            try {
 
-            expect(app.root.first.second.third.counter.value).to.eql(0);
-            app.root.first.second.third.counter.increment();
-            expect(app.root.first.second.third.counter.value).to.eql(1);
-            app.root.first.second.third.counter.increment();
-            expect(app.root.first.second.third.counter.value).to.eql(2);
-            app.root.first.second.third.counter.increment();
-            expect(app.root.first.second.third.counter.value).to.eql(3);
+                expect(app.root.first.second.third.counter.value).to.eql(0);
+                app.root.first.second.third.counter.increment();
+                expect(app.root.first.second.third.counter.value).to.eql(1);
+                app.root.first.second.third.counter.increment();
+                expect(app.root.first.second.third.counter.value).to.eql(2);
+                app.root.first.second.third.counter.increment();
+                expect(app.root.first.second.third.counter.value).to.eql(3);
 
-            app.dispose();
+            } finally {
+                app.dispose();
+            }
         });
 
         it("adds, removes and updates objects in an array", () => {
@@ -448,38 +474,119 @@ describe(nameof(ReduxApp), () => {
             }
 
             const app = new ReduxApp(new App());
+            try {
 
-            // push
+                // push
 
-            expect(app.root.items.length).to.eql(0);
+                expect(app.root.items.length).to.eql(0);
 
-            app.root.push();
-            app.root.push();
-            app.root.push();
-            app.root.push();
-            app.root.push();
+                app.root.push();
+                app.root.push();
+                app.root.push();
+                app.root.push();
+                app.root.push();
 
-            expect(app.root.items.length).to.eql(5);
+                expect(app.root.items.length).to.eql(5);
 
-            // update
+                // update
 
-            app.root.incrementIndex(3);
-            expect(app.root.items[4].value).to.eql(0);
-            expect(app.root.items[3].value).to.eql(1);
-            expect(app.root.items[2].value).to.eql(0);
+                app.root.incrementIndex(3);
+                expect(app.root.items[4].value).to.eql(0);
+                expect(app.root.items[3].value).to.eql(1);
+                expect(app.root.items[2].value).to.eql(0);
 
-            // pop
+                // pop
 
-            app.root.pop();
-            expect(app.root.items.length).to.eql(4);
-            expect(app.root.items[3].value).to.eql(1);
-            expect(app.root.items[2].value).to.eql(0);
+                app.root.pop();
+                expect(app.root.items.length).to.eql(4);
+                expect(app.root.items[3].value).to.eql(1);
+                expect(app.root.items[2].value).to.eql(0);
 
-            // update
+                // update
 
-            expect(app.root.items[0].value).to.eql(0);
-            app.root.updateFirstItem(5);
-            expect(app.root.items[0].value).to.eql(5);
+                expect(app.root.items[0].value).to.eql(0);
+                app.root.updateFirstItem(5);
+                expect(app.root.items[0].value).to.eql(5);
+
+            } finally {
+                app.dispose();
+            }
+        });
+    });
+
+    describe('getComponent', () => {
+
+        it("retrieves a component by type", () => {
+
+            class Root {
+                public comp = new MyComponent();
+                public otherComp = new MyOtherComponent();
+            }
+
+            class MyComponent {
+
+                @action
+                public myAction() {
+                    // noop
+                }
+            }
+
+            class MyOtherComponent {
+
+                @action
+                public myAction() {
+                    // noop
+                }
+            }
+
+            const appId = Math.random().toString();
+            const app = new ReduxApp(new Root(), { name: appId });
+            try {
+
+                const comp = ReduxApp.getComponent(MyComponent, undefined, appId);
+                expect(comp).to.equal(app.root.comp);
+                expect(comp).to.not.equal(app.root.otherComp);
+            } finally {
+                app.dispose();
+            }
+        });
+
+        it("retrieves a component by type and id", () => {
+
+            class Root {
+                @withId('first comp')
+                public comp1 = new MyComponent();
+                @withId('second comp')
+                public comp2 = new MyComponent();
+                public otherComp = new MyOtherComponent();
+            }
+
+            class MyComponent {
+
+                @action
+                public myAction() {
+                    // noop
+                }
+            }
+
+            class MyOtherComponent {
+
+                @action
+                public myAction() {
+                    // noop
+                }
+            }
+
+            const appId = Math.random().toString();
+            const app = new ReduxApp(new Root(), { name: appId });
+            try {
+
+                const comp = ReduxApp.getComponent(MyComponent, 'second comp', appId);
+                expect(comp).to.equal(app.root.comp2);
+                expect(comp).to.not.equal(app.root.otherComp);
+            } finally {
+                app.dispose();
+            }
         });
     });
 });

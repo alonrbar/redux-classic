@@ -2,18 +2,19 @@ import { Store } from 'redux';
 import { ComponentId } from '../decorators';
 import { ClassInfo, ComponentInfo, CreatorInfo } from '../info';
 import { globalOptions } from '../options';
-import { ReduxApp, ROOT_COMPONENT_PATH } from '../reduxApp';
+import { ROOT_COMPONENT_PATH } from '../reduxApp';
 import { IMap } from '../types';
 import { isPrimitive, log } from '../utils';
 import { ComponentActions } from './actions';
 import { ComponentReducer } from './reducer';
 
 export class ComponentCreationContext {
-    
-    public visited = new Set();
+
+    public visitedNodes = new Set();
+    public visitedCreators = new Map<object, Component>();
     public path = ROOT_COMPONENT_PATH;
     public appName: string;
-    public parentCreator: object;    
+    public parentCreator: object;
     public createdComponents: IMap<Component> = {};
 
     constructor(initial?: Partial<ComponentCreationContext>) {
@@ -35,9 +36,6 @@ export class Component {
         CreatorInfo.getOrInitInfo(creator);
         const ComponentClass = Component.getComponentClass(creator);  // tslint:disable-line:variable-name
         const component = new ComponentClass(store, creator, context as ComponentCreationContext);
-
-        // register it on it's containing app
-        ReduxApp.registerComponent(component, creator, context.appName);
 
         return component;
     }
@@ -99,19 +97,19 @@ export class Component {
         selfInfo.reducerCreator = ComponentReducer.createReducer(component, creator);
     }
 
-    private static createSubComponents(obj: any, store: Store<object>, creator: object, context: ComponentCreationContext): void {
+    private static createSubComponents(treeNode: any, store: Store<object>, creator: object, context: ComponentCreationContext): void {
 
         // no need to search inside primitives
-        if (isPrimitive(obj))
+        if (isPrimitive(treeNode))
             return;
 
         // prevent endless loops on circular references
-        if (context.visited.has(obj))
+        if (context.visitedNodes.has(treeNode))
             return;
-        context.visited.add(obj);
+        context.visitedNodes.add(treeNode);
 
-        // traverse object children
-        const searchIn = creator || obj;
+        // traverse children
+        const searchIn = creator || treeNode;
         for (let key of Object.keys(searchIn)) {
 
             var subPath = context.path + '.' + key;
@@ -119,16 +117,24 @@ export class Component {
             var subCreator = searchIn[key];
             if (CreatorInfo.getInfo(subCreator)) {
 
-                // child is sub-component
-                obj[key] = Component.create(store, subCreator, {
-                    ...context,
-                    parentCreator: creator,
-                    path: subPath
-                });
+                if (context.visitedCreators.has(subCreator)) {
+
+                    // child is an existing sub-component
+                    treeNode[key] = context.visitedCreators.get(subCreator);
+
+                } else {
+
+                    // child is a new sub-component                    
+                    treeNode[key] = Component.create(store, subCreator, {
+                        ...context,
+                        parentCreator: creator,
+                        path: subPath
+                    });
+                }
             } else {
 
                 // child is regular object, nothing special to do with it
-                Component.createSubComponents(obj[key], store, null, {
+                Component.createSubComponents(treeNode[key], store, null, {
                     ...context,
                     parentCreator: null,
                     path: subPath
@@ -147,11 +153,11 @@ export class Component {
             throw new Error(`Argument '${nameof(creator)}' is not a component creator. Did you forget to use the decorator?`);
 
         Component.createSelf(this, store, creator, context);
-        Component.createSubComponents(this, store, creator, context);
-
         context.createdComponents[context.path] = this;
-        
+        context.visitedCreators.set(creator, this);
         log.verbose(`[Component] New ${creator.constructor.name} component created. Path: ${context.path}`);
+
+        Component.createSubComponents(this, store, creator, context);
     }
 
     // 
