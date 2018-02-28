@@ -1,9 +1,9 @@
 
 //
-// schema options
+// action options
 //
 
-export class SchemaOptions {
+export class ActionOptions {
     /**
      * Add the class name of the object that holds the action to the action name.
      * Format: <class name><separator><action name>
@@ -21,20 +21,6 @@ export class SchemaOptions {
      * Default value: true.
      */
     public uppercaseActions? = false;
-}
-
-//
-// computed options
-//
-
-export class ComputedOptions {
-    /**
-     * Whether to perform deep comparison or a simple equality comparison
-     * before updating computed values. Using deep comparison has a small
-     * additional performance cost.
-     * Default value: true.
-     */
-    public deepComparison = true;
 }
 
 //
@@ -86,14 +72,9 @@ export class GlobalOptions {
      */
     public emitClassNames = false;    
     /**
-     * Global defaults.
-     * Options supplied explicitly via the decorator will override options specified here.
+     * Customize actions naming.
      */
-    public schema = new SchemaOptions();
-    /**
-     * Customize `computed` properties behavior.
-     */
-    public computed = new ComputedOptions();
+    public action = new ActionOptions();
 }
 
 export const globalOptions = new GlobalOptions();

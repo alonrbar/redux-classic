@@ -1,5 +1,4 @@
 import { Component } from '../components';
-import { SchemaOptions } from '../options';
 import { CREATOR_INFO, getOwnSymbol, getSymbol, setSymbol } from '../symbols';
 import { IMap } from '../types';
 import { getConstructorOwnProp } from '../utils';
@@ -52,7 +51,6 @@ export class CreatorInfo {
 
     public originalClass: Function;
     public componentClass: typeof Component;
-    public options: SchemaOptions;
     public actions: IMap<boolean> = {};
     public sequences: IMap<boolean> = {};
     public childIds: any = {};

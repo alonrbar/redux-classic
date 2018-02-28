@@ -1,11 +1,11 @@
 import { createStore, Store, StoreEnhancer } from 'redux';
 import { CombineReducersContext, Component, ComponentCreationContext, ComponentReducer } from './components';
-import { ComponentId, Computed, IgnoreState } from './decorators';
+import { ComponentId, IgnoreState } from './decorators';
 import { ComponentInfo } from './info';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
 import { Constructor, IMap, Listener } from './types';
 import { isPrimitive, log } from './utils';
-var getProp = require('lodash.get');
+const getProp = require('lodash.get');
 
 // tslint:disable:ban-types
 
@@ -71,41 +71,23 @@ export class ReduxApp<T extends object> {
             throw new Error(`App not found (id: '${appId || DEFAULT_APP_NAME}')`);
 
         // get the component
-        const comp = ReduxApp.tryGetComponent(type, componentId, appId);
-        if (!comp)
-            throw new Error(`Component not found. Type: ${type.name}.${componentId ? `' Id: '${componentId}'.` : ''}`);
-        return comp;
-    }
-
-    /**
-     * @param type The type of the component.
-     * @param componentId The ID of the component (assuming the ID was assigned
-     * to the component by the 'withId' decorator). If not specified will get to
-     * the first available component of that type.
-     * @param appId The name of the ReduxApp instance to search in. If not
-     * specified will search in default app.
-     * @returns {undefined} If not found.
-     */
-    public static tryGetComponent<T>(type: Constructor<T>, componentId?: string, appId?: string): T {
-        if (!type)
-            throw new Error(`Invalid component type: ${type}.`);
-
-        const app = ReduxApp.getApp(appId);
-        if (!app)
-            return undefined;
-
-        // get the component
         const warehouse = app.getTypeWarehouse(type);
         if (componentId) {
 
             // get by id
-            return warehouse.get(componentId);
+            const comp = warehouse.get(componentId);
+            if (!comp)
+                throw new Error(`Component not found. Type: ${type.name}. Id: '${componentId}'.`);
+            return comp;
         } else {
 
             // get the first value
-            return warehouse.values().next().value;
+            const comp = warehouse.values().next().value;
+            if (!comp)
+                throw new Error(`Component not found. Type: ${type.name}.`);
+            return comp;
         }
-    }
+    }    
 
     /**
      * INTERNAL: Should not appear on the public d.ts file.
@@ -152,11 +134,6 @@ export class ReduxApp<T extends object> {
 
     private initialStateUpdated = false;
 
-    /**
-     * A map of components that were changed as a result of the last action dispatched.
-     */
-    private changedComponents: IMap<Component> = {};
-
     private subscriptionDisposer: () => void;
 
     //
@@ -194,7 +171,7 @@ export class ReduxApp<T extends object> {
 
         // update the store
         if (options.updateState) {
-            const stateListener = this.updateState(creationContext.createdComponents, reducersContext);
+            const stateListener = this.updateState(reducersContext);
             this.subscriptionDisposer = this.store.subscribe(stateListener);
         }
         this.store.replaceReducer(rootReducer);
@@ -288,10 +265,7 @@ export class ReduxApp<T extends object> {
     // update state
     //
 
-    private updateState(allComponents: IMap<Component>, reducersContext: CombineReducersContext): Listener {
-
-        const withComputedProps = Computed.filterComponents(Object.values(allComponents));
-
+    private updateState(reducersContext: CombineReducersContext): Listener {
         return () => {
 
             //
@@ -308,20 +282,10 @@ export class ReduxApp<T extends object> {
                 // initial state, state rehydration, time-travel debugging, etc. - update the entire tree
                 this.initialStateUpdated = true;
                 this.updateStateRecursion(this.root, newState, new UpdateContext({ forceRecursion: true }));
-                this.changedComponents = {};
             } else {
 
                 // standard update - update only changed components
                 this.updateChangedComponents({ [ROOT_COMPONENT_PATH]: newState }, reducersContext.changedComponents);
-                this.changedComponents = Object.assign({}, reducersContext.changedComponents);
-            }
-
-            // because computed props may be dependant on other components props their
-            // calculation is postponed to after the entire app tree is up-to-date
-            const changedByComputedProps = Computed.computeProps(withComputedProps);
-            for (let comp of changedByComputedProps) {
-                const path = Object.keys(allComponents).find(p => allComponents[p] === comp);
-                this.changedComponents[path] = comp;
             }
 
             // reset reducers context
@@ -413,10 +377,6 @@ export class ReduxApp<T extends object> {
         // assign new state recursively
         var propsAssigned: string[] = [];
         Object.keys(newState).forEach(key => {
-
-            // see comment about computed properties in updateState
-            if (Computed.isComputedProperty(obj, key))
-                return;
 
             if (IgnoreState.isIgnoredProperty(obj, key))
                 return;

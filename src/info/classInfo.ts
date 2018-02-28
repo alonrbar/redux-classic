@@ -1,5 +1,5 @@
 import { CLASS_INFO, getSymbol, setSymbol } from '../symbols';
-import { Getter, IMap } from '../types';
+import { IMap } from '../types';
 
 /**
  * Metadata stored on instances of regular and/or component classes.
@@ -26,7 +26,5 @@ export class ClassInfo {
         return info;
     }
 
-    public computedGetters: IMap<Getter> = {};
-    public connectedProps: IMap<boolean> = {};
     public ignoreState: IMap<boolean> = {};
 }

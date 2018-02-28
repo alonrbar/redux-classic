@@ -1,6 +1,6 @@
 import { Action } from 'redux';
 import { ComponentInfo, CreatorInfo, getCreatorMethods } from '../info';
-import { globalOptions, SchemaOptions } from '../options';
+import { globalOptions, ActionOptions } from '../options';
 import { IMap, Method } from '../types';
 import { Component } from './component';
 var snakecase = require('lodash.snakecase');
@@ -33,7 +33,7 @@ export class ComponentActions {
                 if (creatorInfo.actions[key] || creatorInfo.sequences[key]) {
                     const compInfo = ComponentInfo.getInfo(this);
                     const action: ReduxAppAction = {
-                        type: ComponentActions.getActionName(creator, key, creatorInfo.options),
+                        type: ComponentActions.getActionName(creator, key),
                         id: (compInfo ? compInfo.id : undefined),
                         payload: payload
                     };
@@ -50,8 +50,8 @@ export class ComponentActions {
         return componentActions;
     }
 
-    public static getActionName(creator: object, methodName: string, options?: SchemaOptions): string {
-        options = Object.assign(new SchemaOptions(), globalOptions.schema, options);
+    public static getActionName(creator: object, methodName: string): string {
+        const options = Object.assign(new ActionOptions(), globalOptions.action);
 
         var actionName = methodName;
         var actionNamespace = creator.constructor.name;

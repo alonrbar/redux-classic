@@ -90,7 +90,6 @@ export class Component {
 
         selfInfo.id = ComponentId.getComponentId(context.parentCreator, context.path);
         selfInfo.originalClass = creatorInfo.originalClass;
-        selfClassInfo.computedGetters = creatorClassInfo.computedGetters;
         selfClassInfo.ignoreState = creatorClassInfo.ignoreState;
 
         // dispatch

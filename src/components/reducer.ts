@@ -1,5 +1,5 @@
 import { Reducer, ReducersMapObject } from 'redux';
-import { Computed, IgnoreState } from '../decorators';
+import { IgnoreState } from '../decorators';
 import { ComponentInfo, CreatorInfo, getCreatorMethods } from '../info';
 import { ROOT_COMPONENT_PATH } from '../reduxApp';
 import { IMap, Listener, Method } from '../types';
@@ -123,10 +123,9 @@ export class ComponentReducer {
         
         const allMethods = getCreatorMethods(componentCreator);        
 
-        const options = creatorInfo.options;
         const actionMethods: IMap<Function> = {};
         Object.keys(creatorInfo.actions).forEach(originalActionName => {
-            const normalizedActionName = ComponentActions.getActionName(componentCreator, originalActionName, options);
+            const normalizedActionName = ComponentActions.getActionName(componentCreator, originalActionName);
             actionMethods[normalizedActionName] = allMethods[originalActionName];
         });
 
@@ -173,7 +172,6 @@ export class ComponentReducer {
         let finalizedState = Object.assign({}, state);
 
         const handledProps = {};
-        finalizedState = Computed.removeComputedProps(finalizedState, component, handledProps);
         finalizedState = IgnoreState.removeIgnoredProps(finalizedState, component, handledProps);
 
         log.verbose('[finalizeStateObject] state finalized.');

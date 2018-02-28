@@ -12,19 +12,6 @@ import { Store, StoreEnhancer } from 'redux';
 export function action(target: object, propertyKey: string | symbol): void;
 
 /**
- * Property decorator.
- * 
- * Computed values are computed each time the store state is changed.
- */
-export function computed(target: any, propertyKey: string | symbol): void;
-
-/**
- * Property decorator.
- * Instruct redux-app to not store this property in the store.
- */
-export function ignoreState(target: object, propertyKey: string | symbol): void;
-
-/**
  * Method decorator. 
  * 
  * The method will dispatch an action with the corresponding name but the
@@ -40,6 +27,11 @@ export function sequence(target: any, propertyKey: string | symbol): void;
 export function withId(target: object, propertyKey: string | symbol): void;
 export function withId(id?: any): PropertyDecorator;
 
+/**
+ * Property decorator.
+ * Instruct redux-app to not store this property in the store.
+ */
+export function ignoreState(target: object, propertyKey: string | symbol): void;
 
 //
 // ReduxApp
@@ -114,7 +106,7 @@ export interface IMap<T> {
 // Options
 //
 
-export class SchemaOptions {
+export class ActionOptions {
     /**
      * Add the class name of the object that holds the action to the action name.
      * Format: <class name><separator><action name>
@@ -132,16 +124,6 @@ export class SchemaOptions {
      * Default value: false.
      */
     uppercaseActions?: boolean;
-}
-
-export class ComputedOptions {
-    /**
-     * Whether to perform deep comparison or a simple equality comparison
-     * before updating computed values. Using deep comparison has a small
-     * additional performance cost.
-     * Default value: true.
-     */
-    deepComparison: boolean;
 }
 
 export class AppOptions {
@@ -171,14 +153,9 @@ export class GlobalOptions {
      */
     emitClassNames: boolean;    
     /**
-     * Global defaults.
-     * Options supplied explicitly via the decorator will override options specified here.
+     * Customize actions naming.
      */
-    schema: SchemaOptions;
-    /**
-     * Customize `computed` properties behavior.
-     */
-    computed: ComputedOptions;
+    action: ActionOptions;
 }
 
 export enum LogLevel {
