@@ -583,6 +583,7 @@ describe(nameof(ReduxApp), () => {
 
                 const comp = ReduxApp.getComponent(MyComponent, 'second comp', appId);
                 expect(comp).to.equal(app.root.comp2);
+                expect(comp).to.not.equal(app.root.comp1);
                 expect(comp).to.not.equal(app.root.otherComp);
             } finally {
                 app.dispose();
