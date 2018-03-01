@@ -175,8 +175,7 @@ export class ComponentReducer {
         log.verbose('[finalizeStateObject] finalizing state.');
         let finalizedState = Object.assign({}, state);
 
-        const handledProps = {};
-        finalizedState = IgnoreState.removeIgnoredProps(finalizedState, component, handledProps);
+        finalizedState = IgnoreState.removeIgnoredProps(finalizedState, component);
 
         log.verbose('[finalizeStateObject] state finalized.');
         return finalizedState;

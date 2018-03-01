@@ -1,5 +1,4 @@
 import { ClassInfo } from '../info';
-import { IMap } from '../types';
 
 /**
  * Property decorator.
@@ -18,20 +17,16 @@ export class IgnoreState {
         return info && info.ignoreState[propKey];
     }
 
-    public static removeIgnoredProps(state: any, obj: any, ignoredProps: IMap<any>): any {
+    public static removeIgnoredProps(state: any, obj: any): any {
 
         const info = ClassInfo.getInfo(obj);
         if (!info)
             return state;
 
-        // populate output parameter
-        Object.assign(ignoredProps, info.ignoreState);
-
         // remove ignored props
-        const newState = Object.assign({}, state);
         for (let propKey of Object.keys(info.ignoreState)) {
-            delete newState[propKey];
+            delete state[propKey];
         }
-        return newState;
+        return state;
     }
 }
