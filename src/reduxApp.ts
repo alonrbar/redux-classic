@@ -355,25 +355,34 @@ export class ReduxApp<T extends object> {
 
         // delete anything not in the new state
         var propsDeleted: string[] = [];
-        Object.keys(obj).forEach(key => {
+        for (const key of Object.keys(obj)) {
 
             if (IgnoreState.isIgnoredProperty(obj, key))
-                return;
+                continue;
 
             if (!newState.hasOwnProperty(key)) {
+
+                // don't remove getters
+                const desc = Object.getOwnPropertyDescriptor(obj, key);
+                if (desc && typeof desc.get === 'function')
+                    continue;
+
+                // warn when removing function properties
                 if (typeof obj[key] === 'function')
                     log.warn(`[updateState] Function property removed in path: ${context.path}.${key}. Consider using a method instead.`);
+
+                // remove
                 delete obj[key];
                 propsDeleted.push(key);
             }
-        });
+        }
 
         // assign new state recursively
         var propsAssigned: string[] = [];
-        Object.keys(newState).forEach(key => {
+        for (const key of Object.keys(newState)) {
 
             if (IgnoreState.isIgnoredProperty(obj, key))
-                return;
+                continue;
 
             var subState = newState[key];
             var subObj = obj[key];
@@ -389,7 +398,7 @@ export class ReduxApp<T extends object> {
                 obj[key] = newSubObj;
                 propsAssigned.push(key);
             }
-        });
+        }
 
         // report changes
         if (propsAssigned.length || propsDeleted.length) {

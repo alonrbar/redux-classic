@@ -184,147 +184,253 @@ describe(nameof(ReduxApp), () => {
 
     describe('updateState', () => {
 
-        it("component tree is not updated when 'updateState' options is turned off", () => {
+        describe('updateState option', () => {
 
-            class App {
+            it("component tree is not updated when 'updateState' options is turned off", () => {
 
-                public num = 0;
-
-                @action
-                public increment() {
-                    this.num = this.num + 1;
+                class App {
+    
+                    public num = 0;
+    
+                    @action
+                    public increment() {
+                        this.num = this.num + 1;
+                    }
                 }
-            }
+    
+                const app = new ReduxApp(new App(), { updateState: false });
+                try {
+    
+                    expect(app.root.num).to.eq(0);
+    
+                    app.root.increment();
+    
+                    expect(app.root.num).to.eq(0);
+    
+                } finally {
+                    app.dispose();
+                }
+            });
+    
+            it("store still updates when 'updateState' options is turned off", () => {
+    
+                class App {
+    
+                    public num = 0;
+    
+                    @action
+                    public increment() {
+                        this.num = this.num + 1;
+                    }
+                }
+    
+                const app = new ReduxApp(new App(), { updateState: false });
+                try {
+    
+                    expect(app.store.getState().num).to.eq(0);
+    
+                    app.root.increment();
+    
+                    expect(app.store.getState().num).to.eq(1);
+    
+                } finally {
+                    app.dispose();
+                }
+            });
 
-            const app = new ReduxApp(new App(), { updateState: false });
-            try {
-
-                expect(app.root.num).to.eq(0);
-
-                app.root.increment();
-
-                expect(app.root.num).to.eq(0);
-
-            } finally {
-                app.dispose();
-            }
         });
 
-        it("store still updates when 'updateState' options is turned off", () => {
+        describe('properties', () => {
 
-            class App {
+            it('removes component properties that do not exists on the new state', () => {
 
-                public num = 0;
-
-                @action
-                public increment() {
-                    this.num = this.num + 1;
+                // create the component
+                class MyComponent {
+                    public prop1: string = undefined;
+                    public prop2: string = undefined;
+    
+                    @action
+                    public setAndRemove() {
+                        delete this.prop1;
+                        this.prop2 = 'hello';
+                    }
                 }
-            }
+                const app = new ReduxApp(new MyComponent());
+                try {
+    
+                    // test before
+                    expect(app.root).to.haveOwnProperty('prop1');
+                    expect(app.root).to.haveOwnProperty('prop2');
+    
+                    // test after
+                    app.root.setAndRemove();
+                    expect(app.root).to.not.haveOwnProperty('prop1');
+                    expect(app.root).to.haveOwnProperty('prop2');
+    
+                } finally {
+                    app.dispose();
+                }
+            });
+    
+            it('does not remove component properties that exists on the new state but are undefined', () => {
+    
+                // create the component
+                class MyComponent {
+                    public prop1: string = undefined;
+                    public prop2: string = undefined;
+    
+                    @action
+                    public updateProp2Only() {
+                        this.prop2 = 'hello';
+                    }
+                }
+                const app = new ReduxApp(new MyComponent());
+                try {
+    
+                    // test before
+                    expect(app.root).to.haveOwnProperty('prop1');
+                    expect(app.root).to.haveOwnProperty('prop2');
+    
+                    // test after
+                    app.root.updateProp2Only();
+                    expect(app.root).to.haveOwnProperty('prop1');
+                    expect(app.root).to.haveOwnProperty('prop2');
+    
+                } finally {
+                    app.dispose();
+                }
+            });
+    
+            it('does not remove component getters', () => {
+    
+                // create the component
+                class MyComponent {
+    
+                    public get prop1(): string {
+                        return 'hi';
+                    }
+                    public prop2: string = undefined;
+    
+                    @action
+                    public updateProp2Only() {
+                        this.prop2 = 'hello';
+                    }
+                }
+                const app = new ReduxApp(new MyComponent());
+                try {
+    
+                    // test before
+                    expect(app.root).to.haveOwnProperty('prop1');
+                    expect(app.root).to.haveOwnProperty('prop2');
+    
+                    // test after
+                    app.root.updateProp2Only();
+                    expect(app.root).to.haveOwnProperty('prop1');
+                    expect(app.root).to.haveOwnProperty('prop2');
+    
+                } finally {
+                    app.dispose();
+                }
+            });
 
-            const app = new ReduxApp(new App(), { updateState: false });
-            try {
-
-                expect(app.store.getState().num).to.eq(0);
-
-                app.root.increment();
-
-                expect(app.store.getState().num).to.eq(1);
-
-            } finally {
-                app.dispose();
-            }
         });
 
-        it('removes component properties that do not exists on the new state', () => {
+        describe('actions', () => {
+            
+            it("actions of a component are invoked only once, even if it appears several time in the tree", () => {
 
-            // create the component
-            class MyComponent {
-                public prop1: string = undefined;
-                public prop2: string = undefined;
-
-                @action
-                public setAndRemove() {
-                    delete this.prop1;
-                    this.prop2 = 'hello';
+                class Root {
+                    public link: IAmComponent;
+                    public original = new IAmComponent();
+                    public nested: NestedComponent;
+    
+                    constructor() {
+                        this.link = this.original;
+                        this.nested = new NestedComponent(this.link);
+                    }
                 }
-            }
-            const app = new ReduxApp(new MyComponent());
-            try {
-
-                // test before
-                expect(app.root).to.haveOwnProperty('prop1');
-                expect(app.root).to.haveOwnProperty('prop2');
-
-                // test after
-                app.root.setAndRemove();
-                expect(app.root).to.not.haveOwnProperty('prop1');
-                expect(app.root).to.haveOwnProperty('prop2');
-
-            } finally {
-                app.dispose();
-            }
-        });
-
-        it('does not remove component properties that exists on the new state but are undefined', () => {
-
-            // create the component
-            class MyComponent {
-                public prop1: string = undefined;
-                public prop2: string = undefined;
-
-                @action
-                public updateProp2Only() {
-                    this.prop2 = 'hello';
+    
+                class NestedComponent {
+                    constructor(public readonly link: IAmComponent) {
+                    }
                 }
-            }
-            const app = new ReduxApp(new MyComponent());
-            try {
-
-                // test before
-                expect(app.root).to.haveOwnProperty('prop1');
-                expect(app.root).to.haveOwnProperty('prop2');
-
-                // test after
-                app.root.updateProp2Only();
-                expect(app.root).to.haveOwnProperty('prop1');
-                expect(app.root).to.haveOwnProperty('prop2');
-
-            } finally {
-                app.dispose();
-            }
-        });
-
-        it('does not remove component getters', () => {
-
-            // create the component
-            class MyComponent {
-
-                public get prop1(): string {
-                    return 'hi';
+    
+                let count = 0;
+                class IAmComponent {
+    
+                    public value = 0;
+    
+                    @action
+                    public dispatchMe() {
+                        count++;
+                        this.value = this.value + 1;
+                    }
                 }
-                public prop2: string = undefined;
-
-                @action
-                public updateProp2Only() {
-                    this.prop2 = 'hello';
+    
+                // create component tree
+                const app = new ReduxApp(new Root());
+                try {
+    
+                    // before dispatching
+                    expect(count).to.eql(0);
+                    expect(app.root.link.value).to.eql(0);
+                    expect(app.root.original.value).to.eql(0);
+                    expect(app.root.nested.link.value).to.eql(0);
+    
+                    // after dispatching
+                    app.root.link.dispatchMe();
+                    expect(count).to.eql(1, 'count is not 1');
+                    expect(app.root.link.value).to.eql(1, 'link.value is not 1');
+                    expect(app.root.original.value).to.eql(1, 'original.value is not 1');
+                    expect(app.root.nested.link.value).to.eql(1, 'nested.link.value is not 1');
+    
+                } finally {
+                    app.dispose();
                 }
-            }
-            const app = new ReduxApp(new MyComponent());
-            try {
+            });
+    
+            it("actions of a component nested inside standard objects can be invoked multiple times", () => {
+    
+                class Root {
+                    public first = {
+                        second: new Level2()
+                    };
+                }
+    
+                class Level2 {
+                    public third = new Level3();
+                }
+    
+                class Level3 {
+                    public counter = new Counter();
+                }
+    
+                class Counter {
+                    public value = 0;
+    
+                    @action
+                    public increment() {
+                        this.value = this.value + 1;
+                    }
+                }
+    
+                // create component tree
+                const app = new ReduxApp(new Root());
+                try {
+    
+                    expect(app.root.first.second.third.counter.value).to.eql(0);
+                    app.root.first.second.third.counter.increment();
+                    expect(app.root.first.second.third.counter.value).to.eql(1);
+                    app.root.first.second.third.counter.increment();
+                    expect(app.root.first.second.third.counter.value).to.eql(2);
+                    app.root.first.second.third.counter.increment();
+                    expect(app.root.first.second.third.counter.value).to.eql(3);
+    
+                } finally {
+                    app.dispose();
+                }
+            });
 
-                // test before
-                expect(app.root).to.haveOwnProperty('prop1');
-                expect(app.root).to.haveOwnProperty('prop2');
-
-                // test after
-                app.root.updateProp2Only();
-                expect(app.root).to.haveOwnProperty('prop1');
-                expect(app.root).to.haveOwnProperty('prop2');
-
-            } finally {
-                app.dispose();
-            }
         });
 
         it("components nested inside standard objects are synced with the store's state", () => {
@@ -367,101 +473,7 @@ describe(nameof(ReduxApp), () => {
             } finally {
                 app.dispose();
             }
-        });
-
-        it("actions of a component are invoked only once, even if it appears several time in the tree", () => {
-
-            class Root {
-                public link: IAmComponent;
-                public original = new IAmComponent();
-                public nested: NestedComponent;
-
-                constructor() {
-                    this.link = this.original;
-                    this.nested = new NestedComponent(this.link);
-                }
-            }
-
-            class NestedComponent {
-                constructor(public readonly link: IAmComponent) {
-                }
-            }
-
-            let count = 0;
-            class IAmComponent {
-
-                public value = 0;
-
-                @action
-                public dispatchMe() {
-                    count++;
-                    this.value = this.value + 1;
-                }
-            }
-
-            // create component tree
-            const app = new ReduxApp(new Root());
-            try {
-
-                // before dispatching
-                expect(count).to.eql(0);
-                expect(app.root.link.value).to.eql(0);
-                expect(app.root.original.value).to.eql(0);
-                expect(app.root.nested.link.value).to.eql(0);
-
-                // after dispatching
-                app.root.link.dispatchMe();
-                expect(count).to.eql(1, 'count is not 1');
-                expect(app.root.link.value).to.eql(1, 'link.value is not 1');
-                expect(app.root.original.value).to.eql(1, 'original.value is not 1');
-                expect(app.root.nested.link.value).to.eql(1, 'nested.link.value is not 1');
-
-            } finally {
-                app.dispose();
-            }
-        });
-
-        it("methods of components nested inside standard objects can be invoked multiple times", () => {
-
-            class Root {
-                public first = {
-                    second: new Level2()
-                };
-            }
-
-            class Level2 {
-                public third = new Level3();
-            }
-
-            class Level3 {
-                public counter = new Counter();
-            }
-
-            class Counter {
-                public value = 0;
-
-                @action
-                public increment() {
-                    this.value = this.value + 1;
-                }
-            }
-
-            // create component tree
-            const app = new ReduxApp(new Root());
-            try {
-
-                expect(app.root.first.second.third.counter.value).to.eql(0);
-                app.root.first.second.third.counter.increment();
-                expect(app.root.first.second.third.counter.value).to.eql(1);
-                app.root.first.second.third.counter.increment();
-                expect(app.root.first.second.third.counter.value).to.eql(2);
-                app.root.first.second.third.counter.increment();
-                expect(app.root.first.second.third.counter.value).to.eql(3);
-
-            } finally {
-                app.dispose();
-            }
-        });
+        });        
 
         it("adds, removes and updates objects in an array", () => {
 
