@@ -30,6 +30,32 @@ describe('utils', () => {
             expect(descriptors).to.haveOwnProperty('bar');
         });
 
+        it("descriptors of derived class overrides descriptor of base class", () => {
+
+            let message = '';
+
+            class Base {
+                public foo() {
+                    message = 'foo base';
+                }
+            }
+
+            class Derived extends Base {
+                public foo() {
+                    message = 'foo derived';
+                }
+            }
+
+            const obj = new Derived();
+            const descriptors = getAllPropertyDescriptors(obj);
+
+            expect(Object.keys(descriptors).length).to.eql(1);
+            expect(descriptors).to.haveOwnProperty('foo');
+
+            obj.foo();
+            expect(message).to.eql('foo derived');
+        });
+
     });
 
     describe(nameof(getMethods), () => {

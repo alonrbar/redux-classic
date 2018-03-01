@@ -183,7 +183,7 @@ You can leverage the following ReduxApp static method to connect your state comp
 ReduxApp.getComponent(componentType, componentId?, appId?)
 ```
 
-We can use IDs to retrieve a specific component or omit the ID to get the first instance that redux-app finds.
+You can use IDs to retrieve a specific component or omit the ID to get the first instance that redux-app finds.
 
 #### React
 

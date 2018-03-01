@@ -325,7 +325,7 @@ function getAllPropertyDescriptors(obj, descriptorTypes) {
             }
             descriptors = filteredDescriptors;
         }
-        Object.assign(result, descriptors);
+        result = Object.assign(descriptors, result);
         obj = getPrototype(obj);
     }
     if (result.constructor)

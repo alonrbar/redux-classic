@@ -39,7 +39,7 @@ export function defineProperties(target: object, source: object, descriptorTypes
  * Get own and inherited property descriptor (except those of Object).
  */
 export function getAllPropertyDescriptors(obj: any, descriptorTypes?: DescriptorType[]): IMap<PropertyDescriptor> {
-    const result: IMap<PropertyDescriptor> = {};
+    let result: IMap<PropertyDescriptor> = {};
 
     while (obj.constructor !== Object) {
 
@@ -78,7 +78,7 @@ export function getAllPropertyDescriptors(obj: any, descriptorTypes?: Descriptor
         }
 
         // store in result
-        Object.assign(result, descriptors);
+        result = Object.assign(descriptors, result);
 
         // repeat with prototype
         obj = getPrototype(obj);
