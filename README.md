@@ -70,7 +70,7 @@ _Reading the source tip #1: There are two main classes in redux-app. The first i
 ## Documentation
 
 - [Stay Pure](#stay-pure)
-- [Features](#features)
+- Features
   - [Async Actions](#async-actions)
   - [Multiple Components of the Same Type](#multiple-components-of-the-same-type)
   - [Computed Values ("selectors")](#computed-values)
@@ -78,10 +78,10 @@ _Reading the source tip #1: There are two main classes in redux-app. The first i
   - [Connect to a view](#connect-to-a-view)
     - [React](#react)
     - [Angular and others](#angular-and-others)
-- [Utilities](#utilities)
-  - [`isInstanceOf`](#isinstanceof)
+- Utilities
+  - [isInstanceOf](#isinstanceof)
 - [Applying Enhancers (devtools, etc.)](#applying-enhancers)
-- [Options](#options)
+- Options
   - [App Options](#app-options)
   - [Global Options](#global-options)
 - [Changelog](https://github.com/alonrbar/redux-app/blob/master/CHANGELOG.md)
@@ -94,9 +94,7 @@ Although redux-app embraces a new syntax it still adheres to [the three principa
 - The state is still read only. **Don't mutate the component's state directly**, only via actions (methods).
 - Changes are made with pure functions so keep your actions pure.
 
-### Features
-
-#### Async Actions
+### Async Actions
 
 Async actions (thunks, sagas, epics...) and side effects are handled in redux-app by using the `sequence` decorator.
 What it does is to tell redux-app that the decorated method acts (almost) as a plain old javascript method. We say _almost_ since while the method body is executed regularly it still dispatches an action so it's still easy to track and log.
@@ -150,7 +148,7 @@ class MyComponent {
 }
 ```
 
-#### Multiple Components of the Same Type
+### Multiple Components of the Same Type
 
 The role of the `withId` decorator is double. From one hand, it enables the co-existence of two (or more) instances of the same component, each with it's own separate state. From the other hand, it is used to keep two separate components in sync. Every component, when dispatching an action attaches it's ID to the action payload. The reducer in it's turn reacts only to actions targeting it's component ID.
 The 'id' argument of the decorator can be anything (string, number, object, etc.).
@@ -177,7 +175,7 @@ export class App {
 }
 ```
 
-#### Connect to a view
+### Connect to a view
 
 You can leverage the following ReduxApp static method to connect your state components to your view:
 
@@ -187,7 +185,7 @@ ReduxApp.getComponent(componentType, componentId?, appId?)
 
 We can use IDs to retrieve a specific component or omit the ID to get the first instance that redux-app finds.
 
-##### React
+#### React
 
 _working example can be found on the [redux-app-examples](https://github.com/alonrbar/redux-app-examples) page_
 
@@ -220,7 +218,7 @@ const synced = autoSync(Counter)(MyReactCounter);
 export { synced as MyReactComponent };
 ```
 
-##### Angular and others
+#### Angular and others
 
 _working example can be found on the [redux-app-examples](https://github.com/alonrbar/redux-app-examples) page_
 
@@ -234,7 +232,7 @@ class MyCounterView {
 }
 ```
 
-#### Computed Values
+### Computed Values
 
 To calculate values from other parts of the components state instead of using a fancy selector function you can simply use a standard javascript getter.
 
@@ -260,7 +258,7 @@ class ComputedGreeter {
 }
 ```
 
-#### Ignoring Parts of the State
+### Ignoring Parts of the State
 
 You can use the `ignoreState` decorator to prevent particular properties of your components to be stored in the store.
 
@@ -286,9 +284,7 @@ console.log(app.root); // { storeMe: 'hello', ignoreMe: 'not stored' }
 console.log(app.store.getState()); // { storeMe: 'hello' }
 ```
 
-### Utilities
-
-#### isInstanceOf
+### isInstanceOf
 
 We've already said that classes decorated with the `component` decorator are being replaced at runtime
 with a generated subclass of the base Component class. This means you lose the ability to have assertions
@@ -344,9 +340,7 @@ Example:
 const app = new ReduxApp(new App(), devToolsEnhancer(undefined));
 ```
 
-### Options
-
-#### App Options
+### App Options
 
 ```javascript
 export class AppOptions {
@@ -371,7 +365,7 @@ Usage:
 const app = new ReduxApp(new App(), { updateState: false }, devToolsEnhancer(undefined));
 ```
 
-#### Global Options
+### Global Options
 
 Available global options:
 
