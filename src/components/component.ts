@@ -1,7 +1,6 @@
 import { Store } from 'redux';
 import { ComponentId } from '../decorators';
 import { ClassInfo, ComponentInfo, CreatorInfo } from '../info';
-import { globalOptions } from '../options';
 import { ROOT_COMPONENT_PATH } from '../reduxApp';
 import { IMap } from '../types';
 import { defineProperties, DescriptorType, isPrimitive, log } from '../utils';
@@ -49,19 +48,16 @@ export class Component {
         return info.componentClass;
     }
 
-    private static createComponentClass(creator: object) {
+    private static createComponentClass(creator: object): typeof Component {
 
-        // declare new class
-        class ComponentClass extends Component {
-            public __originalClassName__ = creator.constructor.name; // tslint:disable-line:variable-name
-
-            constructor(store: Store<any>, creatorArg: object, context: ComponentCreationContext) {
-                super(store, creatorArg, context);
-
-                if (!globalOptions.emitClassNames)
-                    delete this.__originalClassName__;
-            }
-        }
+        // create new component class
+        const componentClassFactory = new Function(
+            'initCallback', 
+            `"use strict";return function ${creator.constructor.name}_ReduxAppComponent() { initCallback(this, arguments); }`
+        );
+        const ComponentClass = componentClassFactory((self: any, args: any) => Component.apply(self, args));  // tslint:disable-line:variable-name
+        ComponentClass.prototype = Object.create(Component.prototype);
+        ComponentClass.prototype.constructor = ComponentClass;
 
         // patch it's prototype
         const actions = ComponentActions.createActions(creator);

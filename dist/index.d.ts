@@ -147,12 +147,6 @@ export class GlobalOptions {
      */
     logLevel: LogLevel;
     /**
-     * When set to 'true' every component will have an additional __originalClassName__ property.
-     * May be useful for debugging.
-     * Default value: false.
-     */
-    emitClassNames: boolean;    
-    /**
      * Customize actions naming.
      */
     action: ActionOptions;

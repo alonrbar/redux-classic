@@ -200,7 +200,6 @@ var LogLevel;
 var GlobalOptions = (function () {
     function GlobalOptions() {
         this.logLevel = LogLevel.Warn;
-        this.emitClassNames = false;
         this.action = new ActionOptions();
     }
     return GlobalOptions;
@@ -1003,16 +1002,6 @@ var reducer_ComponentReducer = (function () {
 
 
 // CONCATENATED MODULE: ./src/components/component.ts
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 var component___assign = (this && this.__assign) || Object.assign || function(t) {
     for (var s, i = 1, n = arguments.length; i < n; i++) {
         s = arguments[i];
@@ -1021,7 +1010,6 @@ var component___assign = (this && this.__assign) || Object.assign || function(t)
     }
     return t;
 };
-
 
 
 
@@ -1065,17 +1053,10 @@ var component_Component = (function () {
         return info.componentClass;
     };
     Component.createComponentClass = function (creator) {
-        var ComponentClass = (function (_super) {
-            __extends(ComponentClass, _super);
-            function ComponentClass(store, creatorArg, context) {
-                var _this = _super.call(this, store, creatorArg, context) || this;
-                _this.__originalClassName__ = creator.constructor.name;
-                if (!globalOptions.emitClassNames)
-                    delete _this.__originalClassName__;
-                return _this;
-            }
-            return ComponentClass;
-        }(Component));
+        var componentClassFactory = new Function('initCallback', "\"use strict\";return function " + creator.constructor.name + "_ReduxAppComponent() { initCallback(this, arguments); }");
+        var ComponentClass = componentClassFactory(function (self, args) { return Component.apply(self, args); });
+        ComponentClass.prototype = Object.create(Component.prototype);
+        ComponentClass.prototype.constructor = ComponentClass;
         var actions = actions_ComponentActions.createActions(creator);
         Object.assign(ComponentClass.prototype, actions);
         return ComponentClass;

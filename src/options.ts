@@ -66,12 +66,6 @@ export class GlobalOptions {
      */
     public logLevel = LogLevel.Warn;
     /**
-     * When set to 'true' every component will have an additional __originalClassName__ property.
-     * Can be useful for debugging.
-     * Default value: false.
-     */
-    public emitClassNames = false;    
-    /**
      * Customize actions naming.
      */
     public action = new ActionOptions();
