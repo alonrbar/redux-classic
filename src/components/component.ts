@@ -1,6 +1,6 @@
 import { Store } from 'redux';
 import { ComponentId } from '../decorators';
-import { ClassInfo, ComponentInfo, CreatorInfo } from '../info';
+import { ClassInfo, ComponentInfo, ComponentTemplateInfo } from '../info';
 import { ROOT_COMPONENT_PATH } from '../reduxApp';
 import { IMap } from '../types';
 import { defineProperties, DescriptorType, isPrimitive, log } from '../utils';
@@ -10,10 +10,10 @@ import { ComponentReducer } from './reducer';
 export class ComponentCreationContext {
 
     public visitedNodes = new Set();
-    public visitedCreators = new Map<object, Component>();
+    public visitedTemplates = new Map<object, Component>();
     public path = ROOT_COMPONENT_PATH;
     public appName: string;
-    public parentCreator: object;
+    public parentTemplate: object;
     public createdComponents: IMap<Component> = {};
 
     constructor(initial?: Partial<ComponentCreationContext>) {
@@ -27,70 +27,70 @@ export class Component {
     // static methods
     //
 
-    public static create(store: Store<any>, creator: object, context?: ComponentCreationContext): Component {
+    public static create(store: Store<any>, template: object, context?: ComponentCreationContext): Component {
 
         context = Object.assign(new ComponentCreationContext(), context);
 
         // create the component
-        CreatorInfo.getOrInitInfo(creator);
-        const ComponentClass = Component.getComponentClass(creator);  // tslint:disable-line:variable-name
-        const component = new ComponentClass(store, creator, context as ComponentCreationContext);
+        ComponentTemplateInfo.getOrInitInfo(template);
+        const ComponentClass = Component.getComponentClass(template);  // tslint:disable-line:variable-name
+        const component = new ComponentClass(store, template, context as ComponentCreationContext);
 
         return component;
     }
 
-    private static getComponentClass(creator: object): typeof Component {
-        const info = CreatorInfo.getInfo(creator);
+    private static getComponentClass(template: object): typeof Component {
+        const info = ComponentTemplateInfo.getInfo(template);
         if (!info.componentClass) {
-            info.componentClass = Component.createComponentClass(creator);
-            info.originalClass = creator.constructor;
+            info.componentClass = Component.createComponentClass(template);
+            info.originalClass = template.constructor;
         }
         return info.componentClass;
     }
 
-    private static createComponentClass(creator: object): typeof Component {
+    private static createComponentClass(template: object): typeof Component {
 
         // create new component class
         const componentClassFactory = new Function(
             'initCallback', 
-            `"use strict";return function ${creator.constructor.name}_ReduxAppComponent() { initCallback(this, arguments); }`
+            `"use strict";return function ${template.constructor.name}_ReduxAppComponent() { initCallback(this, arguments); }`
         );
         const ComponentClass = componentClassFactory((self: any, args: any) => Component.apply(self, args));  // tslint:disable-line:variable-name
         ComponentClass.prototype = Object.create(Component.prototype);
         ComponentClass.prototype.constructor = ComponentClass;
 
         // patch it's prototype
-        const actions = ComponentActions.createActions(creator);
+        const actions = ComponentActions.createActions(template);
         Object.assign(ComponentClass.prototype, actions);
 
         return ComponentClass;
     }
 
-    private static createSelf(component: Component, store: Store<object>, creator: object, context: ComponentCreationContext): void {
+    private static createSelf(component: Component, store: Store<object>, template: object, context: ComponentCreationContext): void {
 
         // regular js props (including getters and setters)
-        defineProperties(component, creator, [DescriptorType.Field, DescriptorType.Property]);
+        defineProperties(component, template, [DescriptorType.Field, DescriptorType.Property]);
 
         // init component info        
         const selfInfo = ComponentInfo.initInfo(component);
         const selfClassInfo = ClassInfo.getOrInitInfo(component);
 
-        // copy info from creator
-        const creatorInfo = CreatorInfo.getInfo(creator);
-        const creatorClassInfo = ClassInfo.getInfo(creator) || new ClassInfo();
+        // copy info from template
+        const templateInfo = ComponentTemplateInfo.getInfo(template);
+        const templateClassInfo = ClassInfo.getInfo(template) || new ClassInfo();
 
-        selfInfo.id = ComponentId.getComponentId(context.parentCreator, context.path);
-        selfInfo.originalClass = creatorInfo.originalClass;
-        selfClassInfo.ignoreState = creatorClassInfo.ignoreState;
+        selfInfo.id = ComponentId.getComponentId(context.parentTemplate, context.path);
+        selfInfo.originalClass = templateInfo.originalClass;
+        selfClassInfo.ignoreState = templateClassInfo.ignoreState;
 
         // dispatch
         selfInfo.dispatch = store.dispatch;
 
         // reducer
-        selfInfo.reducerCreator = ComponentReducer.createReducer(component, creator);
+        selfInfo.reducerCreator = ComponentReducer.createReducer(component, template);
     }
 
-    private static createSubComponents(treeNode: any, store: Store<object>, creator: object, context: ComponentCreationContext): void {
+    private static createSubComponents(treeNode: any, store: Store<object>, template: object, context: ComponentCreationContext): void {
 
         // no need to search inside primitives
         if (isPrimitive(treeNode))
@@ -102,25 +102,25 @@ export class Component {
         context.visitedNodes.add(treeNode);
 
         // traverse children
-        const searchIn = creator || treeNode;
+        const searchIn = template || treeNode;
         for (let key of Object.keys(searchIn)) {
 
             var subPath = context.path + '.' + key;
 
-            var subCreator = searchIn[key];
-            if (CreatorInfo.getInfo(subCreator)) {
+            var subTemplate = searchIn[key];
+            if (ComponentTemplateInfo.getInfo(subTemplate)) {
 
-                if (context.visitedCreators.has(subCreator)) {
+                if (context.visitedTemplates.has(subTemplate)) {
 
                     // child is an existing sub-component
-                    treeNode[key] = context.visitedCreators.get(subCreator);
+                    treeNode[key] = context.visitedTemplates.get(subTemplate);
 
                 } else {
 
                     // child is a new sub-component                    
-                    treeNode[key] = Component.create(store, subCreator, {
+                    treeNode[key] = Component.create(store, subTemplate, {
                         ...context,
-                        parentCreator: creator,
+                        parentTemplate: template,
                         path: subPath
                     });
                 }
@@ -129,7 +129,7 @@ export class Component {
                 // child is regular object, nothing special to do with it
                 Component.createSubComponents(treeNode[key], store, null, {
                     ...context,
-                    parentCreator: null,
+                    parentTemplate: null,
                     path: subPath
                 });
             }
@@ -140,17 +140,17 @@ export class Component {
     // constructor
     //
 
-    private constructor(store: Store<any>, creator: object, context: ComponentCreationContext) {
+    private constructor(store: Store<any>, template: object, context: ComponentCreationContext) {
 
-        if (!CreatorInfo.getInfo(creator))
-            throw new Error(`Argument '${nameof(creator)}' is not a component creator. Did you forget to use the decorator?`);
+        if (!ComponentTemplateInfo.getInfo(template))
+            throw new Error(`Argument '${nameof(template)}' is not a component template. Did you forget to use the decorator?`);
 
-        Component.createSelf(this, store, creator, context);
+        Component.createSelf(this, store, template, context);
         context.createdComponents[context.path] = this;
-        context.visitedCreators.set(creator, this);
-        log.verbose(`[Component] New ${creator.constructor.name} component created. Path: ${context.path}`);
+        context.visitedTemplates.set(template, this);
+        log.verbose(`[Component] New ${template.constructor.name} component created. Path: ${context.path}`);
 
-        Component.createSubComponents(this, store, creator, context);
+        Component.createSubComponents(this, store, template, context);
     }
 
     // 

@@ -1,6 +1,6 @@
 import { Reducer, ReducersMapObject } from 'redux';
 import { IgnoreState } from '../decorators';
-import { ComponentInfo, CreatorInfo } from '../info';
+import { ComponentInfo, ComponentTemplateInfo } from '../info';
 import { ROOT_COMPONENT_PATH } from '../reduxApp';
 import { IMap, Listener } from '../types';
 import { clearProperties, defineProperties, DescriptorType, getMethods, isPlainObject, isPrimitive, log, simpleCombineReducers } from '../utils';
@@ -37,14 +37,14 @@ export class ComponentReducer {
     // public methods
     //
 
-    public static createReducer(component: Component, componentCreator: object): ReducerCreator {
+    public static createReducer(component: Component, componentTemplate: object): ReducerCreator {
 
-        const creatorInfo = CreatorInfo.getInfo(componentCreator);
-        if (!creatorInfo)
-            throw new Error(`Inconsistent component '${componentCreator.constructor.name}'. The 'component' class decorator is missing.`);
+        const templateInfo = ComponentTemplateInfo.getInfo(componentTemplate);
+        if (!templateInfo)
+            throw new Error(`Inconsistent component '${componentTemplate.constructor.name}'. The 'component' class decorator is missing.`);
 
-        const methods = ComponentReducer.createMethodsLookup(componentCreator, creatorInfo);
-        const stateProto = ComponentReducer.createStateObjectPrototype(component, creatorInfo);
+        const methods = ComponentReducer.createMethodsLookup(componentTemplate, templateInfo);
+        const stateProto = ComponentReducer.createStateObjectPrototype(component, templateInfo);
         const componentId = ComponentInfo.getInfo(component).id;
 
         return (changeListener: Listener<Component>) => {
@@ -52,7 +52,7 @@ export class ComponentReducer {
             // the reducer
             function reducer(state: object, action: ReduxAppAction) {
 
-                log.verbose(`[reducer] Reducer of: ${componentCreator.constructor.name}, action: ${action.type}`);
+                log.verbose(`[reducer] Reducer of: ${componentTemplate.constructor.name}, action: ${action.type}`);
 
                 // initial state
                 if (state === undefined) {
@@ -119,13 +119,13 @@ export class ComponentReducer {
     // private methods - state object
     //
 
-    private static createMethodsLookup(componentCreator: object, creatorInfo: CreatorInfo): IMap<Function> {
+    private static createMethodsLookup(componentTemplate: object, templateInfo: ComponentTemplateInfo): IMap<Function> {
 
-        const allMethods = getMethods(componentCreator);
+        const allMethods = getMethods(componentTemplate);
 
         const actionMethods: IMap<Function> = {};
-        Object.keys(creatorInfo.actions).forEach(originalActionName => {
-            const normalizedActionName = ComponentActions.getActionName(componentCreator, originalActionName);
+        Object.keys(templateInfo.actions).forEach(originalActionName => {
+            const normalizedActionName = ComponentActions.getActionName(componentTemplate, originalActionName);
             actionMethods[normalizedActionName] = allMethods[originalActionName];
         });
 
@@ -135,7 +135,7 @@ export class ComponentReducer {
     /**
      * See description of 'createStateObject'.
      */
-    private static createStateObjectPrototype(component: Component, creatorInfo: CreatorInfo): object {
+    private static createStateObjectPrototype(component: Component, templateInfo: ComponentTemplateInfo): object {
 
         // assign properties
         const stateProto: any = defineProperties({}, component, [DescriptorType.Property]);
@@ -143,7 +143,7 @@ export class ComponentReducer {
         // assign methods
         const componentMethods = getMethods(component);
         for (let key of Object.keys(componentMethods)) {
-            if (!creatorInfo.actions[key]) {
+            if (!templateInfo.actions[key]) {
                 // regular method
                 stateProto[key] = componentMethods[key].bind(component);
             } else {

@@ -49,11 +49,11 @@ export class ReduxApp<T extends object> {
      */
     public static options: GlobalOptions = globalOptions;
 
-    public static createApp<T extends object>(appCreator: T, enhancer?: StoreEnhancer<T>): ReduxApp<T>;
-    public static createApp<T extends object>(appCreator: T, options: AppOptions, enhancer?: StoreEnhancer<T>): ReduxApp<T>;
-    public static createApp<T extends object>(appCreator: T, options: AppOptions, preloadedState: any, enhancer?: StoreEnhancer<T>): ReduxApp<T>;
-    public static createApp<T extends object>(appCreator: T, ...params: any[]): ReduxApp<T> {
-        return new ReduxApp(appCreator, ...params);
+    public static createApp<T extends object>(appTemplate: T, enhancer?: StoreEnhancer<T>): ReduxApp<T>;
+    public static createApp<T extends object>(appTemplate: T, options: AppOptions, enhancer?: StoreEnhancer<T>): ReduxApp<T>;
+    public static createApp<T extends object>(appTemplate: T, options: AppOptions, preloadedState: any, enhancer?: StoreEnhancer<T>): ReduxApp<T>;
+    public static createApp<T extends object>(appTemplate: T, ...params: any[]): ReduxApp<T> {
+        return new ReduxApp(appTemplate, ...params);
     }
 
     /**
@@ -127,13 +127,13 @@ export class ReduxApp<T extends object> {
     // constructor
     //
 
-    constructor(appCreator: T, enhancer?: StoreEnhancer<T>);
-    constructor(appCreator: T, options: AppOptions, enhancer?: StoreEnhancer<T>);
-    constructor(appCreator: T, options: AppOptions, preloadedState: any, enhancer?: StoreEnhancer<T>);
-    constructor(appCreator: T, ...params: any[]) {
+    constructor(appTemplate: T, enhancer?: StoreEnhancer<T>);
+    constructor(appTemplate: T, options: AppOptions, enhancer?: StoreEnhancer<T>);
+    constructor(appTemplate: T, options: AppOptions, preloadedState: any, enhancer?: StoreEnhancer<T>);
+    constructor(appTemplate: T, ...params: any[]) {
 
         // handle different overloads
-        var { options, preLoadedState, enhancer } = this.resolveParameters(appCreator, params);
+        var { options, preLoadedState, enhancer } = this.resolveParameters(appTemplate, params);
 
         // assign name and register self
         this.name = this.getAppName(options.name);
@@ -147,7 +147,7 @@ export class ReduxApp<T extends object> {
 
         // create the app
         const creationContext = new ComponentCreationContext({ appName: this.name });
-        const rootComponent = Component.create(this.store, appCreator, creationContext);
+        const rootComponent = Component.create(this.store, appTemplate, creationContext);
         this.root = (rootComponent as any);
         this.registerComponents(creationContext.createdComponents);
 
@@ -183,7 +183,7 @@ export class ReduxApp<T extends object> {
     // private utils
     //    
 
-    private resolveParameters(appCreator: any, params: any[]) {
+    private resolveParameters(appTemplate: any, params: any[]) {
         var result: {
             options?: AppOptions,
             preLoadedState?: T,
@@ -194,7 +194,7 @@ export class ReduxApp<T extends object> {
 
             // no parameters
             result.options = new AppOptions();
-            result.preLoadedState = appCreator;
+            result.preLoadedState = appTemplate;
 
         } else if (params.length === 1) {
 
@@ -203,13 +203,13 @@ export class ReduxApp<T extends object> {
                 // only enhancer
                 result.options = new AppOptions();
                 result.enhancer = params[0];
-                result.preLoadedState = appCreator;
+                result.preLoadedState = appTemplate;
 
             } else {
 
                 // only options
                 result.options = Object.assign(new AppOptions(), params[0]);
-                result.preLoadedState = appCreator;
+                result.preLoadedState = appTemplate;
 
             }
         } else if (params.length === 2) {

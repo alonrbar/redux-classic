@@ -1,4 +1,4 @@
-import { CreatorInfo } from '../info';
+import { ComponentTemplateInfo } from '../info';
 import { AUTO_ID } from '../symbols';
 import { log } from '../utils';
 
@@ -13,7 +13,7 @@ export function withId(targetOrId: any, propertyKeyOrNothing?: string | symbol):
 }
 
 function withIdDecorator(target: object, propertyKey: string | symbol, id?: any) {
-    const info = CreatorInfo.getOrInitInfo(target);
+    const info = ComponentTemplateInfo.getOrInitInfo(target);
     info.childIds[propertyKey] = id || AUTO_ID;
 }
 
@@ -25,7 +25,7 @@ export class ComponentId {
         return --ComponentId.autoComponentId; // using negative ids to decrease chance of collision with user assigned ids
     }
 
-    public static getComponentId(parentCreator: object, path: string): any {
+    public static getComponentId(parentTemplate: object, path: string): any {
 
         //
         // Note: The component id is first stored on it's parent. It can be only
@@ -38,11 +38,11 @@ export class ComponentId {
 
         // no parent
         const pathArray = path.split('.');
-        if (!parentCreator || !pathArray.length)
+        if (!parentTemplate || !pathArray.length)
             return undefined;
 
-        // parent is not a component creator
-        const info = CreatorInfo.getInfo(parentCreator);
+        // parent is not a component template
+        const info = ComponentTemplateInfo.getInfo(parentTemplate);
         if (!info)
             return;
 

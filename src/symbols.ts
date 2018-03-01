@@ -20,9 +20,9 @@ export function getOwnSymbol(obj: any, symbol: symbol): any {
  */
 export const COMPONENT_INFO = Symbol('REDUX-APP.COMPONENT_INFO');
 /**
- * Stored on creators constructor.
+ * Stored on component templates constructors.
  */
-export const CREATOR_INFO = Symbol('REDUX-APP.CREATOR_INFO');
+export const COMPONENT_TEMPLATE_INFO = Symbol('REDUX-APP.COMPONENT_TEMPLATE_INFO');
 /**
  * Stored on any class constructor.
  */

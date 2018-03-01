@@ -1,4 +1,4 @@
-import { CreatorInfo } from '../info';
+import { ComponentTemplateInfo } from '../info';
 
 /**
  * Method decorator. 
@@ -9,6 +9,6 @@ import { CreatorInfo } from '../info';
  * (similarly to `noDispatch` methods).
  */
 export function sequence(target: object, propertyKey: string | symbol): void {
-    const info = CreatorInfo.getOrInitInfo(target);
+    const info = ComponentTemplateInfo.getOrInitInfo(target);
     info.sequences[propertyKey] = true;
 }

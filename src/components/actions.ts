@@ -1,5 +1,5 @@
 import { Action } from 'redux';
-import { ComponentInfo, CreatorInfo } from '../info';
+import { ComponentInfo, ComponentTemplateInfo } from '../info';
 import { ActionOptions, globalOptions } from '../options';
 import { IMap, Method } from '../types';
 import { getMethods } from '../utils';
@@ -14,12 +14,12 @@ export interface ReduxAppAction extends Action {
 
 export class ComponentActions {
 
-    public static createActions(creator: object): IMap<Method> {
-        const methods = getMethods(creator);
+    public static createActions(template: object): IMap<Method> {
+        const methods = getMethods(template);
         if (!methods)
             return undefined;
 
-        const creatorInfo = CreatorInfo.getInfo(creator);
+        const templateInfo = ComponentTemplateInfo.getInfo(template);
         const componentActions: any = {};
         Object.keys(methods).forEach(key => {
             componentActions[key] = function (this: Component, ...payload: any[]): void {
@@ -31,10 +31,10 @@ export class ComponentActions {
                 const oldMethod = methods[key];
 
                 // handle actions and sequences (use store dispatch)
-                if (creatorInfo.actions[key] || creatorInfo.sequences[key]) {
+                if (templateInfo.actions[key] || templateInfo.sequences[key]) {
                     const compInfo = ComponentInfo.getInfo(this);
                     const action: ReduxAppAction = {
-                        type: ComponentActions.getActionName(creator, key),
+                        type: ComponentActions.getActionName(template, key),
                         id: (compInfo ? compInfo.id : undefined),
                         payload: payload
                     };
@@ -42,7 +42,7 @@ export class ComponentActions {
                 }
 
                 // handle regular methods (just call the function)
-                if (!creatorInfo.actions[key]) {
+                if (!templateInfo.actions[key]) {
                     return oldMethod.call(this, ...payload);
                 }
             };
@@ -51,11 +51,11 @@ export class ComponentActions {
         return componentActions;
     }
 
-    public static getActionName(creator: object, methodName: string): string {
+    public static getActionName(template: object, methodName: string): string {
         const options = Object.assign(new ActionOptions(), globalOptions.action);
 
         var actionName = methodName;
-        var actionNamespace = creator.constructor.name;
+        var actionNamespace = template.constructor.name;
 
         if (options.uppercaseActions) {
             actionName = snakecase(actionName).toUpperCase();
