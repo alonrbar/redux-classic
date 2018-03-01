@@ -367,8 +367,6 @@ const app = new ReduxApp(new App(), { updateState: false }, devToolsEnhancer(und
 
 ### Global Options
 
-Available global options:
-
 ```javascript
 class GlobalOptions {
     /**
