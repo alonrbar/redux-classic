@@ -384,6 +384,11 @@ export class ReduxApp<T extends object> {
             if (IgnoreState.isIgnoredProperty(obj, key))
                 continue;
 
+            // don't attempt to assign get only properties
+            const desc = Object.getOwnPropertyDescriptor(obj, key);
+            if (desc && typeof desc.get === 'function' && typeof desc.set !== 'function')
+                continue;
+
             var subState = newState[key];
             var subObj = obj[key];
 

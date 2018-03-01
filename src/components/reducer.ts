@@ -3,7 +3,7 @@ import { IgnoreState } from '../decorators';
 import { ComponentInfo, CreatorInfo } from '../info';
 import { ROOT_COMPONENT_PATH } from '../reduxApp';
 import { IMap, Listener } from '../types';
-import { assignProperties, clearProperties, DescriptorType, getMethods, isPlainObject, isPrimitive, log, simpleCombineReducers } from '../utils';
+import { clearProperties, defineProperties, DescriptorType, getMethods, isPlainObject, isPrimitive, log, simpleCombineReducers } from '../utils';
 import { ComponentActions, ReduxAppAction } from './actions';
 import { Component } from './component';
 
@@ -46,7 +46,7 @@ export class ComponentReducer {
         const methods = ComponentReducer.createMethodsLookup(componentCreator, creatorInfo);
         const stateProto = ComponentReducer.createStateObjectPrototype(component, creatorInfo);
         const componentId = ComponentInfo.getInfo(component).id;
-        
+
         return (changeListener: Listener<Component>) => {
 
             // the reducer
@@ -118,10 +118,10 @@ export class ComponentReducer {
     //
     // private methods - state object
     //
-    
+
     private static createMethodsLookup(componentCreator: object, creatorInfo: CreatorInfo): IMap<Function> {
-        
-        const allMethods = getMethods(componentCreator);        
+
+        const allMethods = getMethods(componentCreator);
 
         const actionMethods: IMap<Function> = {};
         Object.keys(creatorInfo.actions).forEach(originalActionName => {
@@ -138,7 +138,7 @@ export class ComponentReducer {
     private static createStateObjectPrototype(component: Component, creatorInfo: CreatorInfo): object {
 
         // assign properties
-        const stateProto: any = assignProperties({}, component, [DescriptorType.Property]);
+        const stateProto: any = defineProperties({}, component, [DescriptorType.Property]);
 
         // assign methods
         const componentMethods = getMethods(component);
@@ -164,9 +164,17 @@ export class ComponentReducer {
      * that represent actions are replace with a throw call, while regular
      * methods are kept in place.
      */
-    private static createStateObject(state: object, stateProto: object): object {
+    private static createStateObject(state: any, stateProto: object): object {
         const stateObj = Object.create(stateProto);
-        Object.assign(stateObj, state);
+        for (const key of Object.keys(state)) {
+
+            // don't attempt to assign get only properties
+            const desc = Object.getOwnPropertyDescriptor(stateProto, key);
+            if (desc && typeof desc.get === 'function' && typeof desc.set !== 'function')
+                continue;
+
+            stateObj[key] = state[key];
+        }
         return stateObj;
     }
 

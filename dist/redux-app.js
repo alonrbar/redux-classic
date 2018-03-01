@@ -272,41 +272,66 @@ function simpleCombineReducers(reducers) {
 
 // CONCATENATED MODULE: ./src/utils/utils.ts
 
-function isPrimitive(val) {
-    if (!val)
-        return true;
-    var type = typeof val;
-    return type !== 'object' && type !== 'function';
+function clearProperties(obj) {
+    var keys = Object.keys(obj);
+    for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
+        var key = keys_1[_i];
+        delete obj[key];
+    }
 }
-function getMethods(obj, bind) {
-    if (bind === void 0) { bind = false; }
-    if (!obj)
-        return undefined;
-    var proto;
-    if (typeof obj === 'object') {
-        proto = Object.getPrototypeOf(obj);
-    }
-    else if (typeof obj === 'function') {
-        proto = obj.prototype;
-    }
-    else {
-        throw new Error("Expected an object or a function. Got: " + obj);
-    }
-    if (!proto)
-        return undefined;
-    var methods = {};
-    for (var _i = 0, _a = Object.keys(proto); _i < _a.length; _i++) {
+var DescriptorType;
+(function (DescriptorType) {
+    DescriptorType["None"] = "None";
+    DescriptorType["Field"] = "Field";
+    DescriptorType["Property"] = "Property";
+    DescriptorType["Method"] = "Method";
+})(DescriptorType || (DescriptorType = {}));
+function defineProperties(target, source, descriptorTypes) {
+    var descriptors = getAllPropertyDescriptors(source, descriptorTypes);
+    for (var _i = 0, _a = Object.keys(descriptors); _i < _a.length; _i++) {
         var key = _a[_i];
-        var desc = Object.getOwnPropertyDescriptor(proto, key);
-        var hasGetter = desc && typeof desc.get === 'function';
-        if (!hasGetter && typeof proto[key] === 'function') {
-            methods[key] = proto[key];
-            if (bind) {
-                methods[key] = methods[key].bind(obj);
-            }
-        }
+        Object.defineProperty(target, key, descriptors[key]);
     }
-    return methods;
+    return target;
+}
+function getAllPropertyDescriptors(obj, descriptorTypes) {
+    var result = {};
+    while (obj.constructor !== Object) {
+        var descriptors = Object.getOwnPropertyDescriptors(obj);
+        if (descriptorTypes && descriptorTypes.length) {
+            var filteredDescriptors = {};
+            for (var _i = 0, _a = Object.keys(descriptors); _i < _a.length; _i++) {
+                var key = _a[_i];
+                for (var _b = 0, descriptorTypes_1 = descriptorTypes; _b < descriptorTypes_1.length; _b++) {
+                    var flag = descriptorTypes_1[_b];
+                    var shouldAdd = false;
+                    switch (flag) {
+                        case DescriptorType.None:
+                            break;
+                        case DescriptorType.Field:
+                            shouldAdd = (typeof descriptors[key].value !== 'function' && typeof descriptors[key].get !== 'function');
+                            break;
+                        case DescriptorType.Property:
+                            shouldAdd = (typeof descriptors[key].get === 'function');
+                            break;
+                        case DescriptorType.Method:
+                            shouldAdd = (typeof descriptors[key].value === 'function' && typeof descriptors[key].get !== 'function');
+                            break;
+                        default:
+                            throw new Error("Property flag not supported: " + flag);
+                    }
+                    if (shouldAdd)
+                        filteredDescriptors[key] = descriptors[key];
+                }
+            }
+            descriptors = filteredDescriptors;
+        }
+        Object.assign(result, descriptors);
+        obj = getPrototype(obj);
+    }
+    if (result.constructor)
+        delete result.constructor;
+    return result;
 }
 function getConstructorOwnProp(obj, key) {
     if (!obj || !obj.constructor)
@@ -320,6 +345,34 @@ function getConstructorOwnProp(obj, key) {
     }
     return undefined;
 }
+function getMethods(obj, bind) {
+    if (bind === void 0) { bind = false; }
+    var methodDescriptors = getAllPropertyDescriptors(obj, [DescriptorType.Method]);
+    var methods = {};
+    for (var _i = 0, _a = Object.keys(methodDescriptors); _i < _a.length; _i++) {
+        var key = _a[_i];
+        methods[key] = methodDescriptors[key].value;
+        if (bind) {
+            methods[key] = methods[key].bind(obj);
+        }
+    }
+    return methods;
+}
+function getParentType(obj) {
+    var type = getType(obj);
+    return Object.getPrototypeOf(type.prototype).constructor;
+}
+function getPrototype(obj) {
+    if (typeof obj === 'object') {
+        return Object.getPrototypeOf(obj);
+    }
+    else if (typeof obj === 'function') {
+        return obj.prototype;
+    }
+    else {
+        throw new Error("Expected an object or a function. Got: " + obj);
+    }
+}
 function getType(obj) {
     if (!obj)
         return undefined;
@@ -328,10 +381,6 @@ function getType(obj) {
     if (typeof obj === 'object')
         return Object.getPrototypeOf(obj).constructor;
     throw new Error("Expected an object or a function. Got: " + obj);
-}
-function getParentType(obj) {
-    var type = getType(obj);
-    return Object.getPrototypeOf(type.prototype).constructor;
 }
 function isPlainObject(obj) {
     if (!obj)
@@ -344,12 +393,11 @@ function isPlainObject(obj) {
     }
     return Object.prototype.toString.call(obj) === '[object Object]';
 }
-function clearProperties(obj) {
-    var keys = Object.keys(obj);
-    for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
-        var key = keys_1[_i];
-        delete obj[key];
-    }
+function isPrimitive(val) {
+    if (!val)
+        return true;
+    var type = typeof val;
+    return type !== 'object' && type !== 'function';
 }
 
 // CONCATENATED MODULE: ./src/utils/index.ts
@@ -392,27 +440,7 @@ var creatorInfo_CreatorInfo = (function () {
 }());
 
 
-// CONCATENATED MODULE: ./src/info/creatorMethods.ts
-
-
-function getCreatorMethods(obj, inherit) {
-    if (inherit === void 0) { inherit = true; }
-    if (!creatorInfo_CreatorInfo.getInfo(obj))
-        return undefined;
-    var methods = getMethods(obj);
-    if (inherit) {
-        var parentType = getParentType(obj);
-        while (parentType !== Object) {
-            var parentMethods = getCreatorMethods(parentType, false);
-            methods = Object.assign({}, parentMethods, methods);
-            parentType = getParentType(parentType);
-        }
-    }
-    return methods;
-}
-
 // CONCATENATED MODULE: ./src/info/index.ts
-
 
 
 
@@ -437,17 +465,15 @@ var ignoreState_IgnoreState = (function () {
         var info = classInfo_ClassInfo.getInfo(propHolder);
         return info && info.ignoreState[propKey];
     };
-    IgnoreState.removeIgnoredProps = function (state, obj, ignoredProps) {
+    IgnoreState.removeIgnoredProps = function (state, obj) {
         var info = classInfo_ClassInfo.getInfo(obj);
         if (!info)
             return state;
-        Object.assign(ignoredProps, info.ignoreState);
-        var newState = Object.assign({}, state);
         for (var _i = 0, _a = Object.keys(info.ignoreState); _i < _a.length; _i++) {
             var propKey = _a[_i];
-            delete newState[propKey];
+            delete state[propKey];
         }
-        return newState;
+        return state;
     };
     return IgnoreState;
 }());
@@ -724,30 +750,37 @@ var reduxApp_ReduxApp = (function () {
         return obj;
     };
     ReduxApp.prototype.updateObject = function (obj, newState, context) {
-        var _this = this;
         var propsDeleted = [];
-        Object.keys(obj).forEach(function (key) {
+        for (var _i = 0, _a = Object.keys(obj); _i < _a.length; _i++) {
+            var key = _a[_i];
             if (ignoreState_IgnoreState.isIgnoredProperty(obj, key))
-                return;
+                continue;
             if (!newState.hasOwnProperty(key)) {
+                var desc = Object.getOwnPropertyDescriptor(obj, key);
+                if (desc && typeof desc.get === 'function')
+                    continue;
                 if (typeof obj[key] === 'function')
                     log.warn("[updateState] Function property removed in path: " + context.path + "." + key + ". Consider using a method instead.");
                 delete obj[key];
                 propsDeleted.push(key);
             }
-        });
+        }
         var propsAssigned = [];
-        Object.keys(newState).forEach(function (key) {
+        for (var _b = 0, _c = Object.keys(newState); _b < _c.length; _b++) {
+            var key = _c[_b];
             if (ignoreState_IgnoreState.isIgnoredProperty(obj, key))
-                return;
+                continue;
+            var desc = Object.getOwnPropertyDescriptor(obj, key);
+            if (desc && typeof desc.get === 'function' && typeof desc.set !== 'function')
+                continue;
             var subState = newState[key];
             var subObj = obj[key];
-            var newSubObj = _this.updateStateRecursion(subObj, subState, __assign({}, context, { path: context.path + '.' + key }));
+            var newSubObj = this.updateStateRecursion(subObj, subState, __assign({}, context, { path: context.path + '.' + key }));
             if (newSubObj !== subObj) {
                 obj[key] = newSubObj;
                 propsAssigned.push(key);
             }
-        });
+        }
         if (propsAssigned.length || propsDeleted.length) {
             var propsAssignedMessage = propsAssigned.length ? "Props assigned: " + propsAssigned.join(', ') + "." : '';
             var propsDeleteMessage = propsDeleted.length ? "Props deleted: " + propsDeleted.join(', ') + "." : '';
@@ -874,7 +907,7 @@ var reducer_ComponentReducer = (function () {
         };
     };
     ComponentReducer.createMethodsLookup = function (componentCreator, creatorInfo) {
-        var allMethods = getCreatorMethods(componentCreator);
+        var allMethods = getMethods(componentCreator);
         var actionMethods = {};
         Object.keys(creatorInfo.actions).forEach(function (originalActionName) {
             var normalizedActionName = actions_ComponentActions.getActionName(componentCreator, originalActionName);
@@ -883,7 +916,7 @@ var reducer_ComponentReducer = (function () {
         return actionMethods;
     };
     ComponentReducer.createStateObjectPrototype = function (component, creatorInfo) {
-        var stateProto = {};
+        var stateProto = defineProperties({}, component, [DescriptorType.Property]);
         var componentMethods = getMethods(component);
         for (var _i = 0, _a = Object.keys(componentMethods); _i < _a.length; _i++) {
             var key = _a[_i];
@@ -901,14 +934,19 @@ var reducer_ComponentReducer = (function () {
     };
     ComponentReducer.createStateObject = function (state, stateProto) {
         var stateObj = Object.create(stateProto);
-        Object.assign(stateObj, state);
+        for (var _i = 0, _a = Object.keys(state); _i < _a.length; _i++) {
+            var key = _a[_i];
+            var desc = Object.getOwnPropertyDescriptor(stateProto, key);
+            if (desc && typeof desc.get === 'function' && typeof desc.set !== 'function')
+                continue;
+            stateObj[key] = state[key];
+        }
         return stateObj;
     };
     ComponentReducer.finalizeStateObject = function (state, component) {
         log.verbose('[finalizeStateObject] finalizing state.');
         var finalizedState = Object.assign({}, state);
-        var handledProps = {};
-        finalizedState = ignoreState_IgnoreState.removeIgnoredProps(finalizedState, component, handledProps);
+        finalizedState = ignoreState_IgnoreState.removeIgnoredProps(finalizedState, component);
         log.verbose('[finalizeStateObject] state finalized.');
         return finalizedState;
     };
@@ -1043,11 +1081,7 @@ var component_Component = (function () {
         return ComponentClass;
     };
     Component.createSelf = function (component, store, creator, context) {
-        for (var _i = 0, _a = Object.getOwnPropertyNames(creator); _i < _a.length; _i++) {
-            var key = _a[_i];
-            var desc = Object.getOwnPropertyDescriptor(creator, key);
-            Object.defineProperty(component, key, desc);
-        }
+        defineProperties(component, creator, [DescriptorType.Field, DescriptorType.Property]);
         var selfInfo = componentInfo_ComponentInfo.initInfo(component);
         var selfClassInfo = classInfo_ClassInfo.getOrInitInfo(component);
         var creatorInfo = creatorInfo_CreatorInfo.getInfo(creator);
@@ -1090,12 +1124,13 @@ var component_Component = (function () {
 
 
 
+
 var snakecase = __webpack_require__(4);
 var actions_ComponentActions = (function () {
     function ComponentActions() {
     }
     ComponentActions.createActions = function (creator) {
-        var methods = getCreatorMethods(creator);
+        var methods = getMethods(creator);
         if (!methods)
             return undefined;
         var creatorInfo = creatorInfo_CreatorInfo.getInfo(creator);

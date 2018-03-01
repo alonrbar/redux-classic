@@ -21,6 +21,21 @@ export enum DescriptorType {
 }
 
 /**
+ * Define properties of 'source' in 'target'.
+ * @param target 
+ * @param source 
+ * @param descriptorTypes By default all properties (fields, properties, methods) are defined. 
+ * If specified will define only the specified property types.
+ */
+export function defineProperties(target: object, source: object, descriptorTypes?: DescriptorType[]): object {
+    const descriptors = getAllPropertyDescriptors(source, descriptorTypes);
+    for (const key of Object.keys(descriptors)) {
+        Object.defineProperty(target, key, descriptors[key]);
+    }
+    return target;
+}
+
+/**
  * Get own and inherited property descriptor (except those of Object).
  */
 export function getAllPropertyDescriptors(obj: any, descriptorTypes?: DescriptorType[]): IMap<PropertyDescriptor> {
@@ -104,14 +119,6 @@ export function getMethods(obj: object | Function, bind = false): IMap<Method> {
         }
     }
     return methods;
-}
-
-export function assignProperties(target: object, source: object, descriptorTypes?: DescriptorType[]): object {
-    const descriptors = getAllPropertyDescriptors(source, descriptorTypes);
-    for (const key of Object.keys(descriptors)) {
-        Object.defineProperty(target, key, descriptors[key]);
-    }
-    return target;
 }
 
 export function getParentType(obj: object | Function): Function {
