@@ -12,6 +12,12 @@ Type-safe, DRY and OO redux. Implemented with typescript.
 ## Installation
 
 ```shell
+yarn add redux-app
+```
+
+or
+
+```shell
 npm install --save redux-app
 ```
 
@@ -78,7 +84,6 @@ _Reading the source tip #1: There are two main classes in redux-app. The first i
 - [Options](#options)
   - [App Options](#app-options)
   - [Global Options](#global-options)
-  - [Action Options](#action-options)
 - [Changelog](https://github.com/alonrbar/redux-app/blob/master/CHANGELOG.md)
 
 ### Stay Pure
@@ -87,7 +92,7 @@ Although redux-app embraces a new syntax it still adheres to [the three principa
 
 - The store is still the single source of truth. An automatic process propagates it to the components, similarly to what happens in react-redux.
 - The state is still read only. **Don't mutate the component's state directly**, only via actions (methods).
-- Changes are made with pure functions so **keep your actions pure**.
+- Changes are made with pure functions so keep your actions pure.
 
 ### Features
 
@@ -139,7 +144,7 @@ class MyComponent {
     }
 
     public log(message) {
-        // plain old JavaScript method
+        // plain old javascript method
         console.log(message);
     }
 }
@@ -158,16 +163,16 @@ _working example can be found on the [redux-app-examples](https://github.com/alo
 export class App {
 
     @withId('SyncMe')
-    public counter1 = new CounterComponent();  // <-- this counter is in sync with counter2
+    public counter1 = new Counter();  // <-- this counter is in sync with counter2
 
     @withId('SyncMe')
-    public counter2 = new CounterComponent();  // <-- this counter is in sync with counter1
+    public counter2 = new Counter();  // <-- this counter is in sync with counter1
 
     @withId(123)
-    public counter3 = new CounterComponent();  // <-- manual set ID
+    public counter3 = new Counter();  // <-- manual set ID
                                                // this counter is not synced with the others
     @withId()
-    public counter4 = new CounterComponent();  // <-- auto generated unique ID (unique within the scope of the application)
+    public counter4 = new Counter();  // <-- auto generated unique ID (unique within the scope of the application)
                                                // this counter also has it's own unique state
 }
 ```
@@ -182,7 +187,7 @@ ReduxApp.getComponent(componentType, componentId?, appId?)
 
 We can use IDs to retrieve a specific component or omit the ID to get the first instance that redux-app finds.
 
-##### React Example
+##### React
 
 _working example can be found on the [redux-app-examples](https://github.com/alonrbar/redux-app-examples) page_
 
@@ -204,32 +209,34 @@ export function autoSync<T>(stateType: Constructor<T>) {
 You can then use it as you would normally use `connect`:
 
 ```jsx
-const MyReactComponent: React.SFC<MyStateComponent> = (props) => (
+const MyReactCounter: React.SFC<Counter> = (props) => (
     <div>
-        <span>{props.title}</span>
-        <button onClick={props.changeTitle}></button>
+        <span>Value: {props.value}</span>
+        <button onClick={props.increment}>Increment</button>
     </div>
 );
 
-const connected = autoSync(MyStateComponent)(MyReactComponent);
-export { connected as MyReactComponent };
+const synced = autoSync(Counter)(MyReactCounter);
+export { synced as MyReactComponent };
 ```
 
 ##### Angular and others
 
 _working example can be found on the [redux-app-examples](https://github.com/alonrbar/redux-app-examples) page_
 
+With Angular and similar frameworks (like Aurelia) it's as easy as:
+
 ```javascript
-class MyView {
-    public myComponentReference = ReduxApp.getComponent(MyStateComponent);
-    
+class MyCounterView {
+    public myCounterReference = ReduxApp.getComponent(Counter);
+
     // other view logic here...
 }
 ```
 
 #### Computed Values
 
-To calculate values from other parts of the components state instead of using a fancy selector function you can simply use a standard JavaScript getter.
+To calculate values from other parts of the components state instead of using a fancy selector function you can simply use a standard javascript getter.
 
 **Remember:** As everything else, getters should be pure and should not mutate the state.
 
@@ -393,18 +400,8 @@ enum LogLevel {
      */
     Silent = 10
 }
-```
 
-Usage:
-
-```javascript
-ReduxApp.options.logLevel = LogLevel.Debug;
-```
-
-#### Action Options
-
-```javascript
-export class ActionOptions {
+class ActionOptions {
     /**
      * Add the class name of the object that holds the action to the action name.
      * Format: <class name><separator><action name>
@@ -428,16 +425,8 @@ export class ActionOptions {
 Usage:
 
 ```javascript
+ReduxApp.options.logLevel = LogLevel.Debug;
 ReduxApp.options.action.uppercaseActions = true;
-
-class Counter {
-    value = 0;
-
-    @action
-    increment() { // <-- Will now dispatch 'COUNTER.INCREMENT' instead of 'Counter.increment'. Everything else still works the same, no further change required.
-        this.value = this.value + 1;
-    }
-}
 ```
 
 ### Changelog
