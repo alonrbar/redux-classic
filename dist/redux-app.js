@@ -97,9 +97,6 @@ function setSymbol(obj, symbol, value) {
 function getSymbol(obj, symbol) {
     return obj[symbol];
 }
-function getOwnSymbol(obj, symbol) {
-    return Object.getOwnPropertySymbols(obj).includes(symbol) && getSymbol(obj, symbol);
-}
 var COMPONENT_INFO = Symbol('REDUX-APP.COMPONENT_INFO');
 var COMPONENT_TEMPLATE_INFO = Symbol('REDUX-APP.COMPONENT_TEMPLATE_INFO');
 var CLASS_INFO = Symbol('REDUX-APP.CLASS_INFO');
@@ -270,7 +267,6 @@ function simpleCombineReducers(reducers) {
 }
 
 // CONCATENATED MODULE: ./src/utils/utils.ts
-
 function clearProperties(obj) {
     var keys = Object.keys(obj);
     for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
@@ -332,17 +328,11 @@ function getAllPropertyDescriptors(obj, descriptorTypes) {
         delete result.constructor;
     return result;
 }
-function getConstructorOwnProp(obj, key) {
+function getConstructorProp(obj, key) {
     if (!obj || !obj.constructor)
         return undefined;
     var ctor = obj.constructor;
-    if (isSymbol(key) && Object.getOwnPropertySymbols(ctor).includes(key)) {
-        return ctor[key];
-    }
-    else if (typeof key === 'string' && Object.getOwnPropertyNames(ctor).includes(key)) {
-        return ctor[key];
-    }
-    return undefined;
+    return ctor[key];
 }
 function getMethods(obj, bind) {
     if (bind === void 0) { bind = false; }
@@ -418,10 +408,10 @@ var componentTemplateInfo_ComponentTemplateInfo = (function () {
         if (!obj)
             return undefined;
         if (typeof obj === 'object') {
-            return getConstructorOwnProp(obj, COMPONENT_TEMPLATE_INFO);
+            return getConstructorProp(obj, COMPONENT_TEMPLATE_INFO);
         }
         else {
-            return getOwnSymbol(obj, COMPONENT_TEMPLATE_INFO);
+            return getSymbol(obj, COMPONENT_TEMPLATE_INFO);
         }
     };
     ComponentTemplateInfo.getOrInitInfo = function (obj) {
@@ -728,8 +718,7 @@ var reduxApp_ReduxApp = (function () {
         if (context.visited.has(obj))
             return obj;
         context.visited.add(obj);
-        var newStateType = newState.constructor;
-        if (context.forceRecursion || (obj instanceof component_Component && newStateType === Object)) {
+        if (context.forceRecursion || (obj instanceof component_Component)) {
             var changeMessage;
             if (Array.isArray(obj) && Array.isArray(newState)) {
                 changeMessage = this.updateArray(obj, newState, context);

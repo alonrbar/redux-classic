@@ -11,10 +11,6 @@ export function getSymbol(obj: any, symbol: symbol): any {
     return obj[symbol];
 }
 
-export function getOwnSymbol(obj: any, symbol: symbol): any {
-    return Object.getOwnPropertySymbols(obj).includes(symbol) && getSymbol(obj, symbol);
-}
-
 /**
  * Stored on component instances.
  */

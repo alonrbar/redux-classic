@@ -1,7 +1,7 @@
 import { Component } from '../components';
-import { COMPONENT_TEMPLATE_INFO, getOwnSymbol, getSymbol, setSymbol } from '../symbols';
+import { COMPONENT_TEMPLATE_INFO, getSymbol, setSymbol } from '../symbols';
 import { IMap } from '../types';
-import { getConstructorOwnProp } from '../utils';
+import { getConstructorProp } from '../utils';
 
 // tslint:disable:ban-types
 
@@ -22,9 +22,9 @@ export class ComponentTemplateInfo {
             return undefined;
 
         if (typeof obj === 'object') {
-            return getConstructorOwnProp(obj, COMPONENT_TEMPLATE_INFO);
+            return getConstructorProp(obj, COMPONENT_TEMPLATE_INFO);
         } else {
-            return getOwnSymbol(obj, COMPONENT_TEMPLATE_INFO);
+            return getSymbol(obj, COMPONENT_TEMPLATE_INFO);
         }
     }
 

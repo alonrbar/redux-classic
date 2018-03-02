@@ -1,4 +1,3 @@
-import { isSymbol } from '../symbols';
 import { IMap, Method } from '../types';
 
 // tslint:disable:ban-types
@@ -91,18 +90,12 @@ export function getAllPropertyDescriptors(obj: any, descriptorTypes?: Descriptor
     return result;
 }
 
-export function getConstructorOwnProp(obj: object, key: symbol | string): any {
+export function getConstructorProp(obj: object, key: symbol | string): any {
     if (!obj || !obj.constructor)
         return undefined;
 
     const ctor = (obj.constructor as any);
-    if (isSymbol(key) && Object.getOwnPropertySymbols(ctor).includes(key)) {
-        return ctor[key];
-    } else if (typeof key === 'string' && Object.getOwnPropertyNames(ctor).includes(key)) {
-        return ctor[key];
-    }
-
-    return undefined;
+    return ctor[key];
 }
 
 /**

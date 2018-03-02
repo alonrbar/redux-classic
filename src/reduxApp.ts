@@ -323,12 +323,9 @@ export class ReduxApp<T extends object> {
             return obj;
         context.visited.add(obj);
 
+        if (context.forceRecursion || (obj instanceof Component)) {
+
         // update
-        const newStateType = newState.constructor;
-
-        if (context.forceRecursion || (obj instanceof Component && newStateType === Object)) {
-
-            // update if new state is a plain object (so to keep methods while updating props)
             var changeMessage: string;
             if (Array.isArray(obj) && Array.isArray(newState)) {
                 changeMessage = this.updateArray(obj, newState, context);
