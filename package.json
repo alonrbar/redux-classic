@@ -28,9 +28,12 @@
     "src"
   ],
   "scripts": {
-    "release": "webpack && webpack --config webpack.config.dev.js",
     "dev": "webpack --config webpack.config.dev.js --watch",
-    "test": "mocha-webpack --watch --require source-map-support/register --webpack-config webpack.config.test.js \"test/**/*.tests.ts\""
+    "lint": "npm run lint-lint --silent",
+    "lint-lint": "tslint \"./{src,test}/**/*.{ts,tsx}\" --exclude \"./**/*.d.ts\"",
+    "test": "mocha-webpack --require source-map-support/register --webpack-config webpack.config.test.js \"test/**/*.tests.ts\"",
+    "test-watch": "mocha-webpack --watch --require source-map-support/register --webpack-config webpack.config.test.js \"test/**/*.tests.ts\"",
+    "release": "npm run lint && npm run test && webpack && webpack --config webpack.config.dev.js"
   },
   "dependencies": {
     "lodash.get": "4.4.2",
