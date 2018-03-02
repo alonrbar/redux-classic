@@ -24,4 +24,26 @@ describe(nameof(ComponentTemplateInfo), () => {
         expect(templateInfo).to.not.be.null;
         expect(templateInfo).to.not.be.undefined;
     });
+
+    it("derived component template class keeps it's own unique details", () => {
+
+        class BaseComponent {
+            @action
+            public foo() {
+                // noop
+            }
+        }
+
+        class DerivedClass extends BaseComponent {
+        }
+
+        const base = new BaseComponent();
+        const derived = new DerivedClass();
+        const baseInfo = ComponentTemplateInfo.getInfo(base);
+        const derivedInfo = ComponentTemplateInfo.getInfo(derived);
+        
+        expect(derivedInfo).to.be.instanceof(ComponentTemplateInfo);
+        expect(baseInfo).to.be.instanceof(ComponentTemplateInfo);
+        expect(derivedInfo).to.not.equal(baseInfo);
+    });
 });

@@ -1,7 +1,7 @@
 import { Component } from '../components';
-import { COMPONENT_TEMPLATE_INFO, getSymbol, setSymbol } from '../symbols';
+import { COMPONENT_TEMPLATE_INFO, getOwnSymbol, getSymbol, setSymbol } from '../symbols';
 import { IMap } from '../types';
-import { getConstructorProp } from '../utils';
+import { getConstructorOwnProp, getConstructorProp } from '../utils';
 
 // tslint:disable:ban-types
 
@@ -21,6 +21,38 @@ export class ComponentTemplateInfo {
         if (!obj)
             return undefined;
 
+        let ownInfo = ComponentTemplateInfo.getOwnInfo(obj);
+        if (ownInfo)
+            return ownInfo;
+
+        // if base class is a component template so should this class be
+        const baseInfo = ComponentTemplateInfo.getDerivedInfo(obj);
+        if (baseInfo)
+            return ComponentTemplateInfo.initInfo(obj);
+
+        return undefined;
+    }
+
+    public static getOrInitInfo(obj: object | Function): ComponentTemplateInfo {
+
+        // get previous
+        const info = ComponentTemplateInfo.getInfo(obj);
+        if (info)
+            return info;
+
+        // create if no previous
+        return ComponentTemplateInfo.initInfo(obj);
+    }
+
+    private static getOwnInfo(obj: object | Function): ComponentTemplateInfo {
+        if (typeof obj === 'object') {
+            return getConstructorOwnProp(obj, COMPONENT_TEMPLATE_INFO);
+        } else {
+            return getOwnSymbol(obj, COMPONENT_TEMPLATE_INFO);
+        }
+    }
+
+    private static getDerivedInfo(obj: object | Function): ComponentTemplateInfo {
         if (typeof obj === 'object') {
             return getConstructorProp(obj, COMPONENT_TEMPLATE_INFO);
         } else {
@@ -28,22 +60,19 @@ export class ComponentTemplateInfo {
         }
     }
 
-    public static getOrInitInfo(obj: object | Function): ComponentTemplateInfo {
+    private static initInfo(obj: object | Function): ComponentTemplateInfo {
+        // information is stored on the class constructor to 
+        // be available to all class instances
+        const isConstructor = (typeof obj === 'function' ? true : false);
+        const target = (isConstructor ? obj : obj.constructor);
 
-        // get previous
-        var info = ComponentTemplateInfo.getInfo(obj);
+        // derive initial info from base class, if any
+        const baseInfo = getSymbol(target, COMPONENT_TEMPLATE_INFO);
 
-        // create if no previous
-        if (!info) {
-            const isConstructor = (typeof obj === 'function' ? true : false);
-            const target = (isConstructor ? obj : obj.constructor);
-            const baseInfo = getSymbol(target, COMPONENT_TEMPLATE_INFO);
-            const selfInfo = Object.assign(new ComponentTemplateInfo(), baseInfo);
-            info = setSymbol(target, COMPONENT_TEMPLATE_INFO, selfInfo);
-        }
-
-        return info;
-    }    
+        // set own info
+        const selfInfo = Object.assign(new ComponentTemplateInfo(), baseInfo);
+        return setSymbol(target, COMPONENT_TEMPLATE_INFO, selfInfo);
+    }
 
     //
     // instance members
