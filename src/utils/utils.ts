@@ -169,33 +169,6 @@ export function getType(obj: object | Function): Function {
 }
 
 /**
- * Test if an object is a plain object, i.e. is constructed by the built-in
- * Object constructor and inherits directly from Object.prototype or null. 
- *
- * Some built-in objects pass the test, e.g. Math which is a plain object and
- * some host or exotic objects may pass also.
- * 
- * https://stackoverflow.com/questions/5876332/how-can-i-differentiate-between-an-object-literal-other-javascript-objects
- */
-export function isPlainObject(obj: any) {
-    if (!obj)
-        return false;
-
-    if (typeof obj !== 'object')
-        return false;
-
-    // if Object.getPrototypeOf supported, use it
-    if (typeof Object.getPrototypeOf === 'function') {
-        const proto = Object.getPrototypeOf(obj);
-        return proto === Object.prototype || proto === null;
-    }
-
-    // otherwise, use internal class
-    // this should be reliable as if getPrototypeOf not supported, is pre-ES5
-    return Object.prototype.toString.call(obj) === '[object Object]';
-}
-
-/**
  * Return true if 'val' is primitive. For the sake of this test 'null' and
  * 'undefined' are considered primitives.
  */

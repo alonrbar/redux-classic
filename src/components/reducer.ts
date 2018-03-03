@@ -3,7 +3,7 @@ import { IgnoreState } from '../decorators';
 import { ComponentInfo, ComponentTemplateInfo } from '../info';
 import { ROOT_COMPONENT_PATH } from '../reduxApp';
 import { IMap, Listener } from '../types';
-import { clearProperties, defineProperties, DescriptorType, getMethods, isPlainObject, isPrimitive, log, simpleCombineReducers } from '../utils';
+import { clearProperties, defineProperties, DescriptorType, getMethods, isPrimitive, log, simpleCombineReducers } from '../utils';
 import { ComponentActions, ReduxAppAction } from './actions';
 import { Component } from './component';
 
@@ -47,35 +47,36 @@ export class ComponentReducer {
         const stateProto = ComponentReducer.createStateObjectPrototype(component, templateInfo);
         const componentId = ComponentInfo.getInfo(component).id;
 
-        return (changeListener: Listener<Component>) => {
+        // reducer creator
+        return (changeListener: Listener<Component>) =>
 
             // the reducer
-            function reducer(state: object, action: ReduxAppAction) {
+            (state: object, action: ReduxAppAction) => {
 
-                log.verbose(`[reducer] Reducer of: ${componentTemplate.constructor.name}, action: ${action.type}`);
+                log.verbose(`[reducer] Reducer of: ${componentTemplate.constructor.name}, action: ${action.type}.`);
 
                 // initial state
                 if (state === undefined) {
-                    log.verbose('[reducer] State is undefined, returning initial value');
-                    return component;
+                    log.verbose('[reducer] State is undefined, returning initial value.');
+                    return ComponentReducer.finalizeStateObject(component, component);
                 }
 
                 // preloaded state
                 if (state === componentTemplate) {
-                    log.verbose("[reducer] State equals to component's template, returning initial value");
-                    return component;
+                    log.verbose("[reducer] State equals to component's template, returning initial value.");
+                    return ComponentReducer.finalizeStateObject(component, component);
                 }
 
                 // check component id
                 if (componentId !== action.id) {
-                    log.verbose(`[reducer] Component id and action.id don't match (${componentId} !== ${action.id})`);
+                    log.verbose(`[reducer] Component id and action.id don't match (${componentId} !== ${action.id}).`);
                     return state;
                 }
 
                 // check if should use this reducer
                 const actionReducer = methods[action.type];
                 if (!actionReducer) {
-                    log.verbose('[reducer] No matching action in this reducer, returning previous state');
+                    log.verbose('[reducer] No matching action in this reducer, returning previous state.');
                     return state;
                 }
 
@@ -87,19 +88,9 @@ export class ComponentReducer {
                 changeListener(component);
 
                 // return new state                
-                log.verbose('[reducer] Reducer invoked, returning new state');
-                return newState;
-            }
-
-            // reducer wrapper
-            return (state: object, action: ReduxAppAction) => {
-                let newState = reducer(state, action);
-                if (!isPrimitive(newState) && !isPlainObject(newState)) {
-                    newState = ComponentReducer.finalizeStateObject(newState, component);
-                }
-                return newState;
+                log.verbose('[reducer] Reducer invoked, returning new state.');
+                return ComponentReducer.finalizeStateObject(newState, component);
             };
-        };
     }
 
     public static combineReducersTree(root: Component, context: CombineReducersContext): Reducer<any> {
