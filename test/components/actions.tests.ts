@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { action, ReduxApp, ActionOptions } from 'src';
+import { action, ActionOptions, ReduxApp } from 'src';
 import { ComponentActions } from 'src/components';
 
 describe(nameof(ComponentActions), () => {

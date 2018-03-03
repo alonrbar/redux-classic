@@ -28,12 +28,12 @@ export class ComponentId {
     public static getComponentId(parentTemplate: object, path: string): any {
 
         //
-        // Note: The component id is first stored on it's parent. It can be only
+        // Note: The component id is first stored on it's parent. It is only
         // assigned to it once the component itself has been constructed. The
-        // differed assigned resolves situations where the component is created
-        // inside it's parent constructor or injected via DI. This could have
-        // been solved with custom getter and setter but decided to go with this
-        // approach here.
+        // differed assignment resolves situations where the component`s
+        // template is created inside it's parent constructor or injected via
+        // DI. This could have also been resolved with custom getter and setter
+        // but decided to take this approach here.
         //
 
         // no parent

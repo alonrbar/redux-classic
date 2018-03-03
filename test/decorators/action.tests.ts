@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { ReduxApp, action } from 'src';
+import { action, ReduxApp } from 'src';
 
 // tslint:disable:no-unused-expression
 

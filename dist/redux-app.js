@@ -97,6 +97,9 @@ function setSymbol(obj, symbol, value) {
 function getSymbol(obj, symbol) {
     return obj[symbol];
 }
+function getOwnSymbol(obj, symbol) {
+    return Object.getOwnPropertySymbols(obj).includes(symbol) && getSymbol(obj, symbol);
+}
 var COMPONENT_INFO = Symbol('REDUX-APP.COMPONENT_INFO');
 var COMPONENT_TEMPLATE_INFO = Symbol('REDUX-APP.COMPONENT_TEMPLATE_INFO');
 var CLASS_INFO = Symbol('REDUX-APP.CLASS_INFO');
@@ -127,15 +130,19 @@ var classInfo_ClassInfo = (function () {
 // CONCATENATED MODULE: ./src/info/componentInfo.ts
 
 var componentInfo_ComponentInfo = (function () {
-    function ComponentInfo() {
+    function ComponentInfo(template, dispatch, id) {
+        this.originalClass = template.constructor;
+        this.dispatch = dispatch;
+        this.id = id;
     }
     ComponentInfo.getInfo = function (component) {
         if (!component)
             return undefined;
         return getSymbol(component, COMPONENT_INFO);
     };
-    ComponentInfo.initInfo = function (component) {
-        return setSymbol(component, COMPONENT_INFO, new ComponentInfo());
+    ComponentInfo.initInfo = function (component, template, dispatch, id) {
+        var info = new ComponentInfo(template, dispatch, id);
+        return setSymbol(component, COMPONENT_INFO, info);
     };
     return ComponentInfo;
 }());
@@ -267,6 +274,7 @@ function simpleCombineReducers(reducers) {
 }
 
 // CONCATENATED MODULE: ./src/utils/utils.ts
+
 function clearProperties(obj) {
     var keys = Object.keys(obj);
     for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
@@ -334,6 +342,18 @@ function getConstructorProp(obj, key) {
     var ctor = obj.constructor;
     return ctor[key];
 }
+function getConstructorOwnProp(obj, key) {
+    if (!obj || !obj.constructor)
+        return undefined;
+    var ctor = obj.constructor;
+    if (isSymbol(key) && Object.getOwnPropertySymbols(ctor).includes(key)) {
+        return ctor[key];
+    }
+    else if (typeof key === 'string' && Object.getOwnPropertyNames(ctor).includes(key)) {
+        return ctor[key];
+    }
+    return undefined;
+}
 function getMethods(obj, bind) {
     if (bind === void 0) { bind = false; }
     var methodDescriptors = getAllPropertyDescriptors(obj, [DescriptorType.Method]);
@@ -347,10 +367,6 @@ function getMethods(obj, bind) {
     }
     return methods;
 }
-function getParentType(obj) {
-    var type = getType(obj);
-    return Object.getPrototypeOf(type.prototype).constructor;
-}
 function getPrototype(obj) {
     if (typeof obj === 'object') {
         return Object.getPrototypeOf(obj);
@@ -361,26 +377,6 @@ function getPrototype(obj) {
     else {
         throw new Error("Expected an object or a function. Got: " + obj);
     }
-}
-function getType(obj) {
-    if (!obj)
-        return undefined;
-    if (typeof obj === 'function')
-        return obj;
-    if (typeof obj === 'object')
-        return Object.getPrototypeOf(obj).constructor;
-    throw new Error("Expected an object or a function. Got: " + obj);
-}
-function isPlainObject(obj) {
-    if (!obj)
-        return false;
-    if (typeof obj !== 'object')
-        return false;
-    if (typeof Object.getPrototypeOf === 'function') {
-        var proto = Object.getPrototypeOf(obj);
-        return proto === Object.prototype || proto === null;
-    }
-    return Object.prototype.toString.call(obj) === '[object Object]';
 }
 function isPrimitive(val) {
     if (!val)
@@ -407,6 +403,29 @@ var componentTemplateInfo_ComponentTemplateInfo = (function () {
     ComponentTemplateInfo.getInfo = function (obj) {
         if (!obj)
             return undefined;
+        var ownInfo = ComponentTemplateInfo.getOwnInfo(obj);
+        if (ownInfo)
+            return ownInfo;
+        var baseInfo = ComponentTemplateInfo.getBaseInfo(obj);
+        if (baseInfo)
+            return ComponentTemplateInfo.initInfo(obj);
+        return undefined;
+    };
+    ComponentTemplateInfo.getOrInitInfo = function (obj) {
+        var info = ComponentTemplateInfo.getInfo(obj);
+        if (info)
+            return info;
+        return ComponentTemplateInfo.initInfo(obj);
+    };
+    ComponentTemplateInfo.getOwnInfo = function (obj) {
+        if (typeof obj === 'object') {
+            return getConstructorOwnProp(obj, COMPONENT_TEMPLATE_INFO);
+        }
+        else {
+            return getOwnSymbol(obj, COMPONENT_TEMPLATE_INFO);
+        }
+    };
+    ComponentTemplateInfo.getBaseInfo = function (obj) {
         if (typeof obj === 'object') {
             return getConstructorProp(obj, COMPONENT_TEMPLATE_INFO);
         }
@@ -414,16 +433,12 @@ var componentTemplateInfo_ComponentTemplateInfo = (function () {
             return getSymbol(obj, COMPONENT_TEMPLATE_INFO);
         }
     };
-    ComponentTemplateInfo.getOrInitInfo = function (obj) {
-        var info = ComponentTemplateInfo.getInfo(obj);
-        if (!info) {
-            var isConstructor = (typeof obj === 'function' ? true : false);
-            var target = (isConstructor ? obj : obj.constructor);
-            var baseInfo = getSymbol(target, COMPONENT_TEMPLATE_INFO);
-            var selfInfo = Object.assign(new ComponentTemplateInfo(), baseInfo);
-            info = setSymbol(target, COMPONENT_TEMPLATE_INFO, selfInfo);
-        }
-        return info;
+    ComponentTemplateInfo.initInfo = function (obj) {
+        var isConstructor = (typeof obj === 'function' ? true : false);
+        var target = (isConstructor ? obj : obj.constructor);
+        var baseInfo = getSymbol(target, COMPONENT_TEMPLATE_INFO);
+        var selfInfo = Object.assign(new ComponentTemplateInfo(), baseInfo);
+        return setSymbol(target, COMPONENT_TEMPLATE_INFO, selfInfo);
     };
     return ComponentTemplateInfo;
 }());
@@ -852,33 +867,30 @@ var reducer_ComponentReducer = (function () {
         var stateProto = ComponentReducer.createStateObjectPrototype(component, templateInfo);
         var componentId = componentInfo_ComponentInfo.getInfo(component).id;
         return function (changeListener) {
-            function reducer(state, action) {
-                log.verbose("[reducer] Reducer of: " + componentTemplate.constructor.name + ", action: " + action.type);
+            return function (state, action) {
+                log.verbose("[reducer] Reducer of: " + componentTemplate.constructor.name + ", action: " + action.type + ".");
                 if (state === undefined) {
-                    log.verbose('[reducer] State is undefined, returning initial value');
-                    return component;
+                    log.verbose('[reducer] State is undefined, returning initial value.');
+                    return ComponentReducer.finalizeStateObject(component, component);
+                }
+                if (state === componentTemplate) {
+                    log.verbose("[reducer] State equals to component's template, returning initial value.");
+                    return ComponentReducer.finalizeStateObject(component, component);
                 }
                 if (componentId !== action.id) {
-                    log.verbose("[reducer] Component id and action.id don't match (" + componentId + " !== " + action.id + ")");
+                    log.verbose("[reducer] Component id and action.id don't match (" + componentId + " !== " + action.id + ").");
                     return state;
                 }
                 var actionReducer = methods[action.type];
                 if (!actionReducer) {
-                    log.verbose('[reducer] No matching action in this reducer, returning previous state');
+                    log.verbose('[reducer] No matching action in this reducer, returning previous state.');
                     return state;
                 }
                 var newState = ComponentReducer.createStateObject(state, stateProto);
                 actionReducer.call.apply(actionReducer, [newState].concat(action.payload));
                 changeListener(component);
-                log.verbose('[reducer] Reducer invoked, returning new state');
-                return newState;
-            }
-            return function (state, action) {
-                var newState = reducer(state, action);
-                if (!isPrimitive(newState) && !isPlainObject(newState)) {
-                    newState = ComponentReducer.finalizeStateObject(newState, component);
-                }
-                return newState;
+                log.verbose('[reducer] Reducer invoked, returning new state.');
+                return ComponentReducer.finalizeStateObject(newState, component);
             };
         };
     };
@@ -918,7 +930,7 @@ var reducer_ComponentReducer = (function () {
         return stateProto;
     };
     ComponentReducer.actionInvokedError = function () {
-        throw new Error("Only 'noDispatch' methods can be invoked inside actions.");
+        throw new Error("Actions should not be invoked from within other actions.");
     };
     ComponentReducer.createStateObject = function (state, stateProto) {
         var stateObj = Object.create(stateProto);
@@ -1037,7 +1049,6 @@ var component_Component = (function () {
         var info = componentTemplateInfo_ComponentTemplateInfo.getInfo(template);
         if (!info.componentClass) {
             info.componentClass = Component.createComponentClass(template);
-            info.originalClass = template.constructor;
         }
         return info.componentClass;
     };
@@ -1052,14 +1063,11 @@ var component_Component = (function () {
     };
     Component.createSelf = function (component, store, template, context) {
         defineProperties(component, template, [DescriptorType.Field, DescriptorType.Property]);
-        var selfInfo = componentInfo_ComponentInfo.initInfo(component);
+        var id = withId_ComponentId.getComponentId(context.parentTemplate, context.path);
+        var selfInfo = componentInfo_ComponentInfo.initInfo(component, template, store.dispatch, id);
         var selfClassInfo = classInfo_ClassInfo.getOrInitInfo(component);
-        var templateInfo = componentTemplateInfo_ComponentTemplateInfo.getInfo(template);
         var templateClassInfo = classInfo_ClassInfo.getInfo(template) || new classInfo_ClassInfo();
-        selfInfo.id = withId_ComponentId.getComponentId(context.parentTemplate, context.path);
-        selfInfo.originalClass = templateInfo.originalClass;
         selfClassInfo.ignoreState = templateClassInfo.ignoreState;
-        selfInfo.dispatch = store.dispatch;
         selfInfo.reducerCreator = reducer_ComponentReducer.createReducer(component, template);
     };
     Component.createSubComponents = function (treeNode, store, template, context) {
