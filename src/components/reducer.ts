@@ -60,6 +60,12 @@ export class ComponentReducer {
                     return component;
                 }
 
+                // preloaded state
+                if (state === componentTemplate) {
+                    log.verbose("[reducer] State equals to component's template, returning initial value");
+                    return component;
+                }
+
                 // check component id
                 if (componentId !== action.id) {
                     log.verbose(`[reducer] Component id and action.id don't match (${componentId} !== ${action.id})`);
@@ -155,7 +161,7 @@ export class ComponentReducer {
     }
 
     private static actionInvokedError() {
-        throw new Error("Only 'noDispatch' methods can be invoked inside actions.");
+        throw new Error("Actions should not be invoked from within other actions.");
     }
 
     /**
