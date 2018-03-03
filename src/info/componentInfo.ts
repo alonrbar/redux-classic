@@ -16,12 +16,19 @@ export class ComponentInfo {
         return getSymbol(component, COMPONENT_INFO);
     }
 
-    public static initInfo(component: Component): ComponentInfo {
-        return setSymbol(component, COMPONENT_INFO, new ComponentInfo());
+    public static initInfo(component: Component, template: object, dispatch: Dispatch<any>, id: any): ComponentInfo {
+        const info = new ComponentInfo(template, dispatch, id);
+        return setSymbol(component, COMPONENT_INFO, info);
     }
 
-    public id: any;
-    public originalClass: Function;
-    public dispatch: Dispatch<any>;
+    public readonly id: any;
+    public readonly originalClass: Function;
+    public readonly dispatch: Dispatch<any>;
     public reducerCreator: ReducerCreator;
+
+    constructor(template: object, dispatch: Dispatch<any>, id: any) {
+        this.originalClass = template.constructor;
+        this.dispatch = dispatch;
+        this.id = id;
+    }
 }

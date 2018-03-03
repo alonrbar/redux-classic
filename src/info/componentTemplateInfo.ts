@@ -82,7 +82,6 @@ export class ComponentTemplateInfo {
     // instance members
     //
 
-    public originalClass: Function;
     public componentClass: typeof Component;
     public actions: IMap<boolean> = {};
     public sequences: IMap<boolean> = {};

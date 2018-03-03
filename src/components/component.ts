@@ -43,7 +43,6 @@ export class Component {
         const info = ComponentTemplateInfo.getInfo(template);
         if (!info.componentClass) {
             info.componentClass = Component.createComponentClass(template);
-            info.originalClass = template.constructor;
         }
         return info.componentClass;
     }
@@ -72,19 +71,13 @@ export class Component {
         defineProperties(component, template, [DescriptorType.Field, DescriptorType.Property]);
 
         // init component info        
-        const selfInfo = ComponentInfo.initInfo(component);
-        const selfClassInfo = ClassInfo.getOrInitInfo(component);
-
+        const id = ComponentId.getComponentId(context.parentTemplate, context.path);
+        const selfInfo = ComponentInfo.initInfo(component, template, store.dispatch, id);
+        
         // copy info from template
-        const templateInfo = ComponentTemplateInfo.getInfo(template);
+        const selfClassInfo = ClassInfo.getOrInitInfo(component);
         const templateClassInfo = ClassInfo.getInfo(template) || new ClassInfo();
-
-        selfInfo.id = ComponentId.getComponentId(context.parentTemplate, context.path);
-        selfInfo.originalClass = templateInfo.originalClass;
         selfClassInfo.ignoreState = templateClassInfo.ignoreState;
-
-        // dispatch
-        selfInfo.dispatch = store.dispatch;
 
         // reducer
         selfInfo.reducerCreator = ComponentReducer.createReducer(component, template);
