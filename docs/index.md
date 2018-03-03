@@ -1,7 +1,6 @@
 ---
 layout: default
 ---
-
 # redux-app
 
 Type-safe, DRY and OO redux. Implemented with typescript.
@@ -16,21 +15,26 @@ Type-safe, DRY and OO redux. Implemented with typescript.
 ## Installation
 
 ```shell
+yarn add redux-app
+```
+
+or
+
+```shell
 npm install --save redux-app
 ```
 
 ## Short Example
 
 ```javascript
-@component
 class App {
     counter = new Counter();
 }
 
-@component
 class Counter {
     value = 0;
 
+    @action
     increment() {
         this.value = this.value + 1; // <--- see Important Notice below
     }
@@ -41,7 +45,7 @@ const app = new ReduxApp(new App());
 console.log(app.root.counter.value); // 0
 console.log(app.store.getState()); // { counter: { value: 0 } }
 
-app.root.counter.increment(); // will dispatch COUNTER.INCREMENT redux action
+app.root.counter.increment(); // will dispatch a 'Counter.increment' redux action
 
 console.log(app.root.counter.value); // 1
 console.log(app.store.getState()); // { counter: { value: 1 } }
@@ -54,34 +58,33 @@ That's why we write `this.value = this.value + 1` and not `this.value++`.
 
 ## More Examples
 
-More examples can be found here [redux-app-examples](https://github.com/alonrbar/redux-app-examples).
+More examples, including usage with [Angular](https://angular.io) and [React](https://reactjs.org/), can be found here [redux-app-examples](https://github.com/alonrbar/redux-app-examples).
 
 ## How it works
 
-For each `component` decorated class the library generates an underlying `Component` object that holds the same properties and methods.
+For each decorated class the library generates an underlying `Component` object that holds the same properties and methods.
 The new Component object has it's prototype patched and all of it's methods replaced with dispatch() calls.
-The generated Component also has a hidden 'reducer' property which is later on used by redux store. The 'reducer' property itself is
-generated from the original object methods, replacing all 'this' values with the current state from the store on each call (using
-Object.assign and Function.prototype.call).
+The generated Component also has a hidden 'reducer' property which is later on used by redux store. The 'reducer' property itself is generated from the original object methods, replacing all 'this' values with the current state from the store on each call (using Object.assign and Function.prototype.call).
+
+To make it easier to debug, each generated component name follows the following pattern: OriginalClassName_ReduxAppComponent. If while debugging you don't see the _ReduxAppComponent suffix it means the class was not replaced by an underlying component and is probably lacking a decorator (@action or @sequence).
 
 _Reading the source tip #1: There are two main classes in redux-app. The first is ReduxApp and the second is Component._
 
 ## Documentation
 
-- [Important Notice](#important-notice)
-- [Examples](https://github.com/alonrbar/redux-app-examples)
-- [How it works](#how-it-works)
 - [Stay Pure](#stay-pure)
-- [Features](#features)
+- Features
   - [Async Actions](#async-actions)
-  - [The `withId` decorator - "mini ORM" feature](#withid)
-  - [`connect` to the view](#withid)
-  - [Computed Values](#computed-values)
-- [Utilities](#utilities)
+  - [Multiple Components of the Same Type](#multiple-components-of-the-same-type)
+  - [Computed Values ("selectors")](#computed-values)
+  - [Ignoring Parts of the State](#ignoring-parts-of-the-state)
+  - [Connect to a view](#connect-to-a-view)
+    - [React](#react)
+    - [Angular and others](#angular-and-others)
+- Utilities
   - [isInstanceOf](#isinstanceof)
 - [Applying Enhancers (devtools, etc.)](#applying-enhancers)
-- [Options](#options)
-  - [Component Options](#component-options)
+- Options
   - [App Options](#app-options)
   - [Global Options](#global-options)
 - [Changelog](https://github.com/alonrbar/redux-app/blob/master/CHANGELOG.md)
@@ -92,21 +95,16 @@ Although redux-app embraces a new syntax it still adheres to [the three principa
 
 - The store is still the single source of truth. An automatic process propagates it to the components, similarly to what happens in react-redux.
 - The state is still read only. **Don't mutate the component's state directly**, only via actions (methods).
-- Changes are made with pure functions so **keep your actions pure**.
+- Changes are made with pure functions so keep your actions pure.
 
-### Features
+### Async Actions
 
-#### Async Actions
-
-Async actions (thunks, sagas, epics...) and side effects are handled in redux-app by using either the `sequence` decorator or the `noDispatch`.
-Both decorators does **exactly the same** and are actually aliases of the same underlying function. What they do is
-to tell redux-app that the decorated method is a plain old javascript method and that it should not be patched (about
-the patch process see [How it works](#how-it-works)). So, to conclude, what these decorators actually do is to tell
-redux-app to _do nothing special_ with the method.
+Async actions (thunks, sagas, epics...) and side effects are handled in redux-app by using the `sequence` decorator.
+What it does is to tell redux-app that the decorated method acts (almost) as a plain old javascript method. We say _almost_ since while the method body is executed regularly it still dispatches an action so it's still easy to track and log.
 
 Remember:
 
-- Don't change the state inside `noDispatch` methods.
+- Don't change the state inside `sequence` methods.
 - If you need to dispatch a series of actions use the `sequence` decorator. Don't call actions from within other actions directly.
 
 Usage:
@@ -114,15 +112,12 @@ Usage:
 _working example can be found on the [redux-app-examples](https://github.com/alonrbar/redux-app-examples) page_
 
 ```javascript
-@component
 class MyComponent {
-
-    public setStatus(newStatus: string) { // <--- Not decorated. Will dispatch SET_STATUS action.
-        this.status = newStatus;
-    }
 
     @sequence
     public async fetchImage() {
+
+        this.log('Fetching image started')
 
         // dispatch an action
         this.setStatus('Fetching...');
@@ -139,21 +134,26 @@ class MyComponent {
 
             // more dispatch
             this.setStatus('I am done.');
+
+            this.log('Fetching image done')
         }, 2000);
     }
 
-    @noDispatch
-    public doNothing() {
-        console.log('I am a plain old method. Nothing special here.');
+    @action
+    public setStatus(newStatus: string) {
+        this.status = newStatus;
+    }
+
+    public log(message) {
+        // plain old javascript method
+        console.log(message);
     }
 }
 ```
 
-#### withId
+### Multiple Components of the Same Type
 
-The role of the `withId` decorator is double. From one hand, it enables the co-existence of two (or more) instances of the same component,
-each with it's own separate state. From the other hand, it is used to keep two separate components in sync. Every component, when dispatching
-an action attaches it's ID to the action payload. The reducer in it's turn reacts only to actions targeting it's component ID.
+The role of the `withId` decorator is double. From one hand, it enables the co-existence of two (or more) instances of the same component, each with it's own separate state. From the other hand, it is used to keep two separate components in sync. Every component, when dispatching an action attaches it's ID to the action payload. The reducer in it's turn reacts only to actions targeting it's component ID.
 The 'id' argument of the decorator can be anything (string, number, object, etc.).
 
 Example:
@@ -161,129 +161,144 @@ Example:
 _working example can be found on the [redux-app-examples](https://github.com/alonrbar/redux-app-examples) page_
 
 ```javascript
-@component
 export class App {
 
     @withId('SyncMe')
-    public counter1 = new CounterComponent();  // <-- this counter is in sync with counter2
+    public counter1 = new Counter();  // <-- this counter is in sync with counter2
 
     @withId('SyncMe')
-    public counter2 = new CounterComponent();  // <-- this counter is in sync with counter1
+    public counter2 = new Counter();  // <-- this counter is in sync with counter1
 
     @withId(123)
-    public counter3 = new CounterComponent();  // <-- manual set ID
+    public counter3 = new Counter();  // <-- manual set ID
                                                // this counter is not synced with the others
     @withId()
-    public counter4 = new CounterComponent();  // <-- auto generated unique ID (unique within the scope of the application)
+    public counter4 = new Counter();  // <-- auto generated unique ID (unique within the scope of the application)
                                                // this counter also has it's own unique state
 }
 ```
 
-#### connect
+### Connect to a view
 
-One of the most useful features of redux-app is the ability to `connect` components. Connected components are *references* to other components.
-The connection is achieved using a "smart getter".
-It is smart in that sense that it waits for the target component to be available and than replace itself
-(i.e. the getter) with a simple reference to the target object, thus preventing further unnecessary invocations of the getter.
+You can leverage the following ReduxApp static method to connect your state components to your view:
 
-You can use IDs to connect to a specific component or omit the ID to connect to the first instance that redux-app finds (useful if you have only one source instance...).
+```javascript
+ReduxApp.getComponent(componentType, componentId?, appId?)
+```
 
-You can connect a view to parts of the app tree, as shown in the next example. You can also connect two, or more, components to a single source inside your app tree. To see a working example of the latter checkout the [examples](https://github.com/alonrbar/redux-app-examples) repository.
+You can use IDs to retrieve a specific component or omit the ID to get the first instance that redux-app finds.
 
-**Remember**: When connecting components there should always be at least one non-connected instance of that component in your ReduxApp tree (a.k.a. the "source" component).
+#### React
+
+_working example can be found on the [redux-app-examples](https://github.com/alonrbar/redux-app-examples) page_
+
+Use the following snippet to create an `autoSync` function, similar to react-redux `connect`:
+
+```javascript
+import { connect } from 'react-redux';
+import { Constructor, getMethods, ReduxApp } from 'redux-app';
+
+export function autoSync<T>(stateType: Constructor<T>) {
+    return connect<T>(() => {
+        const comp = ReduxApp.getComponent(stateType);
+        const compMethods = getMethods(comp, true);
+        return Object.assign({}, comp, compMethods);
+    });
+}
+```
+
+You can then use it as you would normally use `connect`:
+
+```jsx
+const MyReactCounter: React.SFC<Counter> = (props) => (
+    <div>
+        <span>Value: {props.value}</span>
+        <button onClick={props.increment}>Increment</button>
+    </div>
+);
+
+const synced = autoSync(Counter)(MyReactCounter);
+export { synced as MyReactComponent };
+```
+
+#### Angular and others
+
+_working example can be found on the [redux-app-examples](https://github.com/alonrbar/redux-app-examples) page_
+
+With Angular and similar frameworks (like Aurelia) it's as easy as:
+
+```javascript
+class MyCounterView {
+    public myCounterReference = ReduxApp.getComponent(Counter);
+
+    // other view logic here...
+}
+```
+
+### Computed Values
+
+To calculate values from other parts of the components state instead of using a fancy selector function you can simply use a standard javascript getter.
+
+**Remember:** As everything else, getters should be pure and should not mutate the state.
 
 Example:
 
 _working example can be found on the [redux-app-examples](https://github.com/alonrbar/redux-app-examples) page_
 
 ```javascript
-@component
-class App {
-    public myComponent = new MyComponent();
-}
-
-@component
-class MyComponent {
-    public message = 'hello!';
-}
-
-const app = new ReduxApp(new App());
-
-// and elsewhere, in a regular class:
-
-class MyView {
-    @connect
-    public myComponentReference: MyComponent;    // <-- points to 'myComponent' of 'app'.
-}
-```
-
-You can pass an optional 'options' argument to the `connect` decorator:
-
-```javascript
-export class ConnectOptions {
-    /**
-     * The name of the ReduxApp instance to connect to.
-     * If not specified will connect to default app.
-     */
-    app?: string;
-    /**
-     * The ID of the target component (assuming the ID was assigned to the component 
-     * by the 'withId' decorator).
-     * If not specified will connect to the first available component of that type.
-     */
-    id?: any;
-    /**
-     * The 'connect' decorator uses a getter to connect to the it's target. By
-     * default the getter is replaced with a standard value (reference) once the
-     * first non-empty value is retrieved. Set this value to true to leave the
-     * getter in place.
-     * Default value: false
-     */
-    live?: boolean;
-}
-```
-
-#### Computed Values
-
-It is possible to automatically calculate values from other parts of the components state (similar in concept to redux selectors).
-To do that just declare a getter and decorate it with the `computed` decorator. Behind the scenes redux-app will replace the getter
-with regular values and will take care of updating it after each change to the relevant state.
-
-**Note:** As everything else, computed value getters should also be pure and should not mutate other parts of the state.
-
-Example:
-
-_working example can be found on the [redux-app-examples](https://github.com/alonrbar/redux-app-examples) page_
-
-```javascript
-@component
 class ComputedGreeter {
 
     public name: string;
 
-    @computed
-    public get welcomeString(): string { // <-- updates when 'name' changes
-        return 'hello ' + this.name;
+    public get welcomeString(): string {
+        return 'Hello ' + this.name;
     }
 
+    @action
     public setName(newVal: string) {
         this.name = newVal;
     }
 }
 ```
 
-### Utilities
+### Ignoring Parts of the State
 
-#### isInstanceOf
+You can use the `ignoreState` decorator to prevent particular properties of your components to be stored in the store.
+
+Example:
+
+```javascript
+class MyComponent {
+
+    public storeMe = 'hello';
+
+    @ignoreState
+    public ignoreMe = 'not stored';
+
+    @action
+    public changeState() {
+        this.storeMe = 'I am stored';
+    }
+}
+
+const app = new ReduxApp(new MyComponent());
+
+console.log(app.root); // { storeMe: 'hello', ignoreMe: 'not stored' }
+console.log(app.store.getState()); // { storeMe: 'hello' }
+```
+
+### isInstanceOf
 
 We've already said that classes decorated with the `component` decorator are being replaced at runtime
 with a generated subclass of the base Component class. This means you lose the ability to have assertions
 like this:
 
 ```javascript
-@component
 class MyComponent {
-    // ...
+    @action
+    public someAction() {
+        // ...
+    }
 }
 
 // and elsewhere:
@@ -295,9 +310,11 @@ if (!(obj instanceof MyComponent))
 Luckily redux-app supplies a utility method called `isInstanceOf` which you can use instead:
 
 ```javascript
-@component
 class MyComponent {
-    // ...
+    @action
+    public someAction() {
+        // ...
+    }
 }
 
 // and elsewhere:
@@ -326,44 +343,7 @@ Example:
 const app = new ReduxApp(new App(), devToolsEnhancer(undefined));
 ```
 
-### Options
-
-#### Component Options
-
-You can supply the following options to the `component` decorator.
-
-```javascript
-class SchemaOptions {
-    /**
-     * Add the class name of the object that holds the action to the action name.
-     * Format: <class name>.<action name>
-     * Default value: true.
-     */
-    actionNamespace?: boolean;
-    /**
-     * Use redux style action names. For instance, if a component defines a
-     * method called 'incrementCounter' the matching action name will be
-     * 'INCREMENT_COUNTER'.
-     * Default value: true.
-     */
-    uppercaseActions?: boolean;
-}
-```
-
-Usage:
-
-```javascript
-@component({ uppercaseActions: false })
-class Counter {
-    value = 0;
-
-    increment() { // <-- Will now dispatch 'Counter.increment' instead of 'COUNTER.INCREMENT'. Everything else still works the same, no further change required.
-        this.value = this.value + 1;
-    }
-}
-```
-
-#### App Options
+### App Options
 
 ```javascript
 export class AppOptions {
@@ -388,9 +368,7 @@ Usage:
 const app = new ReduxApp(new App(), { updateState: false }, devToolsEnhancer(undefined));
 ```
 
-#### Global Options
-
-Available global options:
+### Global Options
 
 ```javascript
 class GlobalOptions {
@@ -399,16 +377,9 @@ class GlobalOptions {
      */
     logLevel: LogLevel;
     /**
-     * When set to 'true' every component will have an additional __originalClassName__ property.
-     * Can be useful for debugging.
-     * Default value: false.
+     * Customize actions naming.
      */
-    emitClassNames: boolean;
-    /**
-     * Global defaults.
-     * Options supplied explicitly via the decorator will override options specified here.
-     */
-    schema: SchemaOptions;
+    action: ActionOptions;
 }
 
 enum LogLevel {
@@ -424,12 +395,33 @@ enum LogLevel {
      */
     Silent = 10
 }
+
+class ActionOptions {
+    /**
+     * Add the class name of the object that holds the action to the action name.
+     * Format: <class name><separator><action name>
+     * Default value: true.
+     */
+    actionNamespace?: boolean;
+    /**
+     * Default value: . (dot)
+     */
+    actionNamespaceSeparator?: string;
+    /**
+     * Use redux style action names. For instance, if a component defines a
+     * method called 'incrementCounter' the matching action name will be
+     * 'INCREMENT_COUNTER'.
+     * Default value: false.
+     */
+    uppercaseActions?: boolean;
+}
 ```
 
 Usage:
 
 ```javascript
 ReduxApp.options.logLevel = LogLevel.Debug;
+ReduxApp.options.action.uppercaseActions = true;
 ```
 
 ### Changelog
