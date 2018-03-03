@@ -129,15 +129,6 @@ export function getMethods(obj: object | Function, bind = false): IMap<Method> {
     return methods;
 }
 
-export function getParentType(obj: object | Function): Function {
-
-    // get own type
-    var type = getType(obj);
-
-    // get parent type
-    return Object.getPrototypeOf(type.prototype).constructor;
-}
-
 export function getPrototype(obj: object | Function): object {
     if (typeof obj === 'object') {
         return Object.getPrototypeOf(obj);
@@ -146,26 +137,6 @@ export function getPrototype(obj: object | Function): object {
     } else {
         throw new Error("Expected an object or a function. Got: " + obj);
     }
-}
-
-/**
- * If 'obj' is a function it's assumed to be a constructor function and returned as-is.
- * If 'obj' is an object it's type is returned.
- * Otherwise the function throws.
- */
-export function getType(obj: object | Function): Function {
-    if (!obj)
-        return undefined;
-
-    // constructor function
-    if (typeof obj === 'function')
-        return obj;
-
-    // object
-    if (typeof obj === 'object')
-        return Object.getPrototypeOf(obj).constructor;
-
-    throw new Error("Expected an object or a function. Got: " + obj);
 }
 
 /**
