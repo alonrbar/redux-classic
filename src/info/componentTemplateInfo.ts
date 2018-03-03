@@ -26,7 +26,7 @@ export class ComponentTemplateInfo {
             return ownInfo;
 
         // if base class is a component template so should this class be
-        const baseInfo = ComponentTemplateInfo.getDerivedInfo(obj);
+        const baseInfo = ComponentTemplateInfo.getBaseInfo(obj);
         if (baseInfo)
             return ComponentTemplateInfo.initInfo(obj);
 
@@ -44,6 +44,10 @@ export class ComponentTemplateInfo {
         return ComponentTemplateInfo.initInfo(obj);
     }
 
+    //
+    // private static
+    //
+
     private static getOwnInfo(obj: object | Function): ComponentTemplateInfo {
         if (typeof obj === 'object') {
             return getConstructorOwnProp(obj, COMPONENT_TEMPLATE_INFO);
@@ -52,7 +56,7 @@ export class ComponentTemplateInfo {
         }
     }
 
-    private static getDerivedInfo(obj: object | Function): ComponentTemplateInfo {
+    private static getBaseInfo(obj: object | Function): ComponentTemplateInfo {
         if (typeof obj === 'object') {
             return getConstructorProp(obj, COMPONENT_TEMPLATE_INFO);
         } else {

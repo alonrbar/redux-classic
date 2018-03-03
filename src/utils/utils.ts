@@ -186,7 +186,7 @@ export function isPlainObject(obj: any) {
 
     // if Object.getPrototypeOf supported, use it
     if (typeof Object.getPrototypeOf === 'function') {
-        var proto = Object.getPrototypeOf(obj);
+        const proto = Object.getPrototypeOf(obj);
         return proto === Object.prototype || proto === null;
     }
 

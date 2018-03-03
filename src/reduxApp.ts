@@ -141,7 +141,7 @@ export class ReduxApp<T extends object> {
             throw new Error(`An app with name '${this.name}' already exists.`);
         appsRepository[this.name] = this;
 
-        // create the store        
+        // create the store
         const initialReducer = (state: any) => state;
         this.store = createStore<T>(initialReducer as any, preLoadedState, enhancer);
 
@@ -157,11 +157,13 @@ export class ReduxApp<T extends object> {
         });
         const rootReducer = ComponentReducer.combineReducersTree(this.root, reducersContext);
 
-        // update the store
+        // listen to state changes
         if (options.updateState) {
             const stateListener = this.updateState(reducersContext);
             this.subscriptionDisposer = this.store.subscribe(stateListener);
         }
+
+        // update the store
         this.store.replaceReducer(rootReducer);
     }
 
@@ -325,7 +327,7 @@ export class ReduxApp<T extends object> {
 
         if (context.forceRecursion || (obj instanceof Component)) {
 
-        // update
+            // update
             var changeMessage: string;
             if (Array.isArray(obj) && Array.isArray(newState)) {
                 changeMessage = this.updateArray(obj, newState, context);
