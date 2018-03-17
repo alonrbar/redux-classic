@@ -2,6 +2,56 @@
 
 ## [Unreleased](https://github.com/alonrbar/redux-app/tree/develop)
 
+## [2.0.0 - 2018-03-17](https://github.com/alonrbar/redux-app/tree/v2.0.0)
+
+### Added
+
+- Actions are now opt-in and declared via the `action` decorator.
+- Dynamic component class name generation - generated components name follows
+  the following pattern: "OriginalClassName_ReduxAppComponent" (As a consequence
+  the `emitClassNames` was removed as it is no longer needed).
+- Improve overall performance (remove state "finalization" step).
+
+### Changed
+
+- `uppercaseActions` option defaults to false.
+- Rename SchemaOptions to ActionOptions
+- Don't remove getters from state.
+
+### Removed
+
+- Remove 5 decorators: `component`, `connect`, `computed`, `method` and `noDispatch`.
+- Remove `convertToPlainObject` option.
+- Remove package-lock.json (using yarn.lock).
+
+### Fixed
+
+- Fix duplicate component creation when created from the same template instance.
+
+## [1.11.1 - 2018-27-2](https://github.com/alonrbar/redux-app/tree/v1.11.1)
+
+### Deprecated
+
+- The use of `connect` deprecated and **will be remove in the next version**.
+
+  There are several reasons for that: it is a source of bugs, it makes other
+  features harder to implement and it encourages a pseudo dependency injection
+  anti-pattern (DI is great, the pseudo form that `connect` encourage isn't -
+  if you want to use DI you should use a proper DI container).
+
+### Fixed
+
+- Fix `ReduxApp.getComponent` typings.
+
+## [1.11.0 - 2018-02-03](https://github.com/alonrbar/redux-app/tree/v1.11.0)
+
+### Added
+
+- New `ReduxApp` static method: `getComponent`. Primarily aimed for better
+  integration with React (check out the new react
+  [examples](https://github.com/alonrbar/redux-app-examples/blob/master/src/react)).
+- yarn.lock file.
+
 ### Changed
 
 - Differentiate between `noDispatch` and `sequence` methods. The first stays the
@@ -9,7 +59,8 @@
   role. First, it **dispatches** an action which is **ignored** by the reducer.
   Second, it's being invoked as a regular method as it used to. While this
   change should not have any actual impact on application behavior it makes it
-  easier to debug and track the flow of the application.
+  easier to debug and track the flow of the application (through the various
+  Redux loggers out there).
 
 ## [1.10.3 - 2017-12-21](https://github.com/alonrbar/redux-app/tree/v1.10.3)
 

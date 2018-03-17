@@ -114,8 +114,6 @@ class MyComponent {
     @sequence
     public async fetchImage() {
 
-        this.log('Fetching image started')
-
         // dispatch an action
         this.setStatus('Fetching...');
 
@@ -132,18 +130,12 @@ class MyComponent {
             // more dispatch
             this.setStatus('I am done.');
 
-            this.log('Fetching image done')
         }, 2000);
     }
 
     @action
     public setStatus(newStatus: string) {
         this.status = newStatus;
-    }
-
-    public log(message) {
-        // plain old javascript method
-        console.log(message);
     }
 }
 ```
@@ -189,7 +181,21 @@ You can use IDs to retrieve a specific component or omit the ID to get the first
 
 _working example can be found on the [redux-app-examples](https://github.com/alonrbar/redux-app-examples) page_
 
-Use the following snippet to create an `autoSync` function, similar to react-redux `connect`:
+Use the snippet below to create an `autoSync` function. You can then use it as you would normally use react-redux's `connect`:
+
+```jsx
+const MyReactCounter: React.SFC<Counter> = (props) => (
+    <div>
+        <span>Value: {props.value}</span>
+        <button onClick={props.increment}>Increment</button>
+    </div>
+);
+
+const synced = autoSync(Counter)(MyReactCounter); // <-- using 'autoSync' here
+export { synced as MyReactComponent };
+```
+
+The `autoSync` snippet:
 
 ```javascript
 import { connect } from 'react-redux';
@@ -202,20 +208,6 @@ export function autoSync<T>(stateType: Constructor<T>) {
         return Object.assign({}, comp, compMethods);
     });
 }
-```
-
-You can then use it as you would normally use `connect`:
-
-```jsx
-const MyReactCounter: React.SFC<Counter> = (props) => (
-    <div>
-        <span>Value: {props.value}</span>
-        <button onClick={props.increment}>Increment</button>
-    </div>
-);
-
-const synced = autoSync(Counter)(MyReactCounter);
-export { synced as MyReactComponent };
 ```
 
 #### Angular and others
@@ -234,7 +226,7 @@ class MyCounterView {
 
 ### Computed Values
 
-To calculate values from other parts of the components state instead of using a fancy selector function you can simply use a standard javascript getter.
+To calculate values from other parts of the components state instead of using a fancy _selector_ function you can simply use a standard javascript getter.
 
 **Remember:** As everything else, getters should be pure and should not mutate the state.
 

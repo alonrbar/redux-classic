@@ -1,3 +1,6 @@
-# page 1
+---
+layout: default
+---
+# Migration from v1
 
-body of page1
+TODO...

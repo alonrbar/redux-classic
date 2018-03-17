@@ -148,34 +148,6 @@ var componentInfo_ComponentInfo = (function () {
 }());
 
 
-// CONCATENATED MODULE: ./src/utils/defineProperty.ts
-var dataDescriptor = {
-    writable: true,
-    configurable: true,
-    enumerable: true
-};
-var accessorDescriptor = {
-    configurable: true,
-    enumerable: true
-};
-function deferredDefineProperty(target, propertyKey, descriptor) {
-    var init = function (isGet) { return function (newVal) {
-        Object.defineProperty(this, propertyKey, descriptor);
-        if (isGet) {
-            return this[propertyKey];
-        }
-        else {
-            this[propertyKey] = newVal;
-        }
-    }; };
-    return Object.defineProperty(target, propertyKey, {
-        get: init(true),
-        set: init(false),
-        enumerable: true,
-        configurable: true
-    });
-}
-
 // CONCATENATED MODULE: ./src/options.ts
 var ActionOptions = (function () {
     function ActionOptions() {
@@ -386,7 +358,6 @@ function isPrimitive(val) {
 }
 
 // CONCATENATED MODULE: ./src/utils/index.ts
-
 
 
 
