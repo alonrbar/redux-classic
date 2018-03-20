@@ -28,7 +28,7 @@
 
 - Fix duplicate component creation when created from the same template instance.
 
-## [1.11.1 - 2018-27-2](https://github.com/alonrbar/redux-app/tree/v1.11.1)
+## [1.11.1 - 2018-02-27](https://github.com/alonrbar/redux-app/tree/v1.11.1)
 
 ### Deprecated
 
