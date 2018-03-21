@@ -26,7 +26,12 @@ export class ComponentActions {
 
                 // verify 'this' arg
                 if (!(this instanceof Component))
-                    throw new Error(`Component method invoked with non-Component as 'this'. Bound 'this' argument is: ${this}`);
+                    throw new Error(
+                        `Component method invoked with non-Component as 'this'. ` +
+                        `Component: ${template.constructor.name}, ` + 
+                        `Method: ${key}, ` +
+                        `Bound 'this' argument is: ${this}.`
+                    );
 
                 const oldMethod = methods[key];
 

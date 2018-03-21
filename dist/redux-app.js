@@ -1091,7 +1091,10 @@ var actions_ComponentActions = (function () {
                     payload[_i] = arguments[_i];
                 }
                 if (!(this instanceof component_Component))
-                    throw new Error("Component method invoked with non-Component as 'this'. Bound 'this' argument is: " + this);
+                    throw new Error("Component method invoked with non-Component as 'this'. " +
+                        ("Component: " + template.constructor.name + ", ") +
+                        ("Method: " + key + ", ") +
+                        ("Bound 'this' argument is: " + this + "."));
                 var oldMethod = methods[key];
                 if (templateInfo.actions[key] || templateInfo.sequences[key]) {
                     var compInfo = componentInfo_ComponentInfo.getInfo(this);

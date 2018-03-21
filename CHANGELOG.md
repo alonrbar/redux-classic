@@ -2,6 +2,10 @@
 
 ## [Unreleased](https://github.com/alonrbar/redux-app/tree/develop)
 
+### Added
+
+- More details when throwing "Component method invoked with non-Component as 'this'".
+
 ## [2.0.0 - 2018-03-17](https://github.com/alonrbar/redux-app/tree/v2.0.0)
 
 ### Added
