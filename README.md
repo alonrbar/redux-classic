@@ -24,6 +24,11 @@ npm install --save redux-app
 ## Short Example
 
 ```javascript
+
+//
+// declare "reducers" and state
+//
+
 class App {
     counter = new Counter();
 }
@@ -37,7 +42,15 @@ class Counter {
     }
 }
 
+//
+// instantiate
+//
+
 const app = new ReduxApp(new App());
+
+//
+// use
+//
 
 console.log(app.root.counter.value); // 0
 console.log(app.store.getState()); // { counter: { value: 0 } }
