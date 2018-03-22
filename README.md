@@ -173,10 +173,10 @@ export class App {
 
     @withId(123)
     public counter3 = new Counter();  // <-- manual set ID
-                                               // this counter is not synced with the others
+                                      //     this counter is not synced with the others
     @withId()
     public counter4 = new Counter();  // <-- auto generated unique ID (unique within the scope of the application)
-                                               // this counter also has it's own unique state
+                                      //     this counter also has it's own unique state
 }
 ```
 
