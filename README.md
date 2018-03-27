@@ -11,6 +11,8 @@ Type-safe, DRY and OO redux. Implemented with typescript.
 
 ## This is a clone of [redux-app](https://github.com/alonrbar/redux-app) and is planned to be the main repo
 
+## Note: the public API is about to change - please still use [redux-app](https://github.com/alonrbar/redux-app) until this repo is stable
+
 ## Installation
 
 ```shell
