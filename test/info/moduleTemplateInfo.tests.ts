@@ -6,7 +6,7 @@ import { ModuleTemplateInfo } from 'src/info';
 
 describe(nameof(ModuleTemplateInfo), () => {
 
-    it("ordinary class that extends a component template class is considered a component template", () => {
+    it("ordinary class that extends a module template class is considered a module template", () => {
 
         class BaseModule {
             @action
@@ -25,7 +25,7 @@ describe(nameof(ModuleTemplateInfo), () => {
         expect(templateInfo).to.not.be.undefined;
     });
 
-    it("derived component template class keeps it's own unique details", () => {
+    it("derived module template class keeps it's own unique details", () => {
 
         class BaseModule {
             @action

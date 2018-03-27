@@ -13,7 +13,7 @@ describe('withId', () => {
         }
     }
 
-    it("syncs components with the same id but not others", () => {
+    it("syncs modules with the same id but not others", () => {
 
         class App {
 
@@ -40,7 +40,7 @@ describe('withId', () => {
         }
     });
 
-    it("syncs deeply nested components", () => {
+    it("syncs deeply nested modules", () => {
 
         const iAmAnId = {};
 
@@ -87,7 +87,7 @@ describe('withId', () => {
         }
     });
 
-    it("multiple components decorated with no parameters (auto-id) are not synced with one another", () => {
+    it("multiple modules decorated with no parameters (auto-id) are not synced with one another", () => {
 
         class App {
 

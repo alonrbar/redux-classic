@@ -5,7 +5,7 @@ import { action, ignoreState, ReduxClassic } from 'src';
 
 describe(nameof(ignoreState), () => {
 
-    it("non-decorated property exist both in the store and in the component tree", () => {
+    it("non-decorated property exist both in the store and in the module tree", () => {
 
         class App {
 
@@ -33,7 +33,7 @@ describe(nameof(ignoreState), () => {
         }
     });
 
-    it("decorated property exist only on the component tree (and not in the store)", () => {
+    it("decorated property exist only on the module tree (and not in the store)", () => {
 
         class App {
 

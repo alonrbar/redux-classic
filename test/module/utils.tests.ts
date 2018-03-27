@@ -5,7 +5,7 @@ import { FakeStore } from '../testTypes';
 
 // tslint:disable:no-unused-expression
 
-describe('component utils', () => {
+describe('module utils', () => {
     describe(nameof(isInstanceOf), () => {
 
         it("returns true on an instance of a simple class", () => {
@@ -19,7 +19,7 @@ describe('component utils', () => {
             expect(isInstanceOf(myModule, MyModule)).to.be.true;
         });
 
-        it("returns true on a component", () => {
+        it("returns true on a module", () => {
 
             class MyModule {
                 
@@ -51,7 +51,7 @@ describe('component utils', () => {
             expect(isInstanceOf(myModule, OtherModule)).to.be.false;
         });
 
-        it("returns false on a component", () => {
+        it("returns false on a module", () => {
 
             class MyModule {
                 

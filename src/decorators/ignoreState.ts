@@ -3,7 +3,7 @@ import { ClassInfo } from '../info';
 /**
  * Property decorator.
  * 
- * Instruct redux-app to not store this property in the store.
+ * The property will not be stored in the store.
  */
 export function ignoreState(target: object, propertyKey: string | symbol): void {
 

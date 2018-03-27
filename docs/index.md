@@ -66,7 +66,7 @@ For each decorated class the library generates an underlying `Module` object tha
 The new Module object has it's prototype patched and all of it's methods replaced with dispatch() calls.
 The generated Module also has a hidden 'reducer' property which is later on used by redux store. The 'reducer' property itself is generated from the original object methods, replacing all 'this' values with the current state from the store on each call (using Object.assign and Function.prototype.call).
 
-To make it easier to debug, each generated component name follows the following pattern: OriginalClassName_ReduxAppModule. If while debugging you don't see the _ReduxAppModule suffix it means the class was not replaced by an underlying component and is probably lacking a decorator (@action or @sequence).
+To make it easier to debug, each generated module name follows the following pattern: OriginalClassName_ReduxModule. If while debugging you don't see the _ReduxModule suffix it means the class was not replaced by an underlying module and is probably lacking a decorator (@action or @sequence).
 
 _Reading the source tip #1: There are two main classes in redux-app. The first is ReduxClassic and the second is Module._
 
@@ -75,7 +75,7 @@ _Reading the source tip #1: There are two main classes in redux-app. The first i
 - [Stay Pure](#stay-pure)
 - Features
   - [Async Actions](#async-actions)
-  - [Multiple Modules of the Same Type](#multiple-components-of-the-same-type)
+  - [Multiple Modules of the Same Type](#multiple-modules-of-the-same-type)
   - [Computed Values ("selectors")](#computed-values)
   - [Ignoring Parts of the State](#ignoring-parts-of-the-state)
   - [Connect to a view](#connect-to-a-view)
@@ -93,8 +93,8 @@ _Reading the source tip #1: There are two main classes in redux-app. The first i
 
 Although redux-app embraces a new syntax it still adheres to [the three principals of redux](http://redux.js.org/docs/introduction/ThreePrinciples.html):
 
-- The store is still the single source of truth. An automatic process propagates it to the components, similarly to what happens in react-redux.
-- The state is still read only. **Don't mutate the component's state directly**, only via actions (methods).
+- The store is still the single source of truth. An automatic process propagates it to the modules, similarly to what happens in react-redux.
+- The state is still read only. **Don't mutate the module's state directly**, only via actions (methods).
 - Changes are made with pure functions so keep your actions pure.
 
 ### Async Actions
@@ -153,7 +153,7 @@ class MyModule {
 
 ### Multiple Modules of the Same Type
 
-The role of the `withId` decorator is double. From one hand, it enables the co-existence of two (or more) instances of the same component, each with it's own separate state. From the other hand, it is used to keep two separate components in sync. Every component, when dispatching an action attaches it's ID to the action payload. The reducer in it's turn reacts only to actions targeting it's component ID.
+The role of the `withId` decorator is double. From one hand, it enables the co-existence of two (or more) instances of the same module, each with it's own separate state. From the other hand, it is used to keep two separate modules in sync. Every module, when dispatching an action attaches it's ID to the action payload. The reducer in it's turn reacts only to actions targeting it's module ID.
 The 'id' argument of the decorator can be anything (string, number, object, etc.).
 
 Example:
@@ -180,13 +180,13 @@ export class App {
 
 ### Connect to a view
 
-You can leverage the following ReduxClassic static method to connect your state components to your view:
+You can leverage the following ReduxClassic static method to connect your state modules to your view:
 
 ```javascript
-ReduxClassic.getModule(componentType, componentId?, appId?)
+ReduxClassic.getModule(moduleType, moduleId?, appId?)
 ```
 
-You can use IDs to retrieve a specific component or omit the ID to get the first instance that redux-app finds.
+You can use IDs to retrieve a specific module or omit the ID to get the first instance that redux-app finds.
 
 #### React
 
@@ -237,7 +237,7 @@ class MyCounterView {
 
 ### Computed Values
 
-To calculate values from other parts of the components state instead of using a fancy selector function you can simply use a standard javascript getter.
+To calculate values from other parts of the modules state instead of using a fancy selector function you can simply use a standard javascript getter.
 
 **Remember:** As everything else, getters should be pure and should not mutate the state.
 
@@ -263,7 +263,7 @@ class ComputedGreeter {
 
 ### Ignoring Parts of the State
 
-You can use the `ignoreState` decorator to prevent particular properties of your components to be stored in the store.
+You can use the `ignoreState` decorator to prevent particular properties of your modules to be stored in the store.
 
 Example:
 
@@ -289,7 +289,7 @@ console.log(app.store.getState()); // { storeMe: 'hello' }
 
 ### isInstanceOf
 
-We've already said that classes decorated with the `component` decorator are being replaced at runtime
+We've already said that classes decorated with the `module` decorator are being replaced at runtime
 with a generated subclass of the base Module class. This means you lose the ability to have assertions
 like this:
 
@@ -352,7 +352,7 @@ export class AppOptions {
      */
     name?: string;
     /**
-     * By default each component is assigned (with some optimizations) with it's
+     * By default each module is assigned (with some optimizations) with it's
      * relevant sub state on each store change. Set this to false to disable
      * this updating process. The store's state will still be updated as usual
      * and can always be retrieved using store.getState().
@@ -408,7 +408,7 @@ class ActionOptions {
      */
     actionNamespaceSeparator?: string;
     /**
-     * Use redux style action names. For instance, if a component defines a
+     * Use redux style action names. For instance, if a module defines a
      * method called 'incrementCounter' the matching action name will be
      * 'INCREMENT_COUNTER'.
      * Default value: false.

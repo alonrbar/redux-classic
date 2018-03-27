@@ -20,7 +20,7 @@ describe(nameof(Module), () => {
             Module.create(store, new Root());
         });
 
-        it("components nested inside standard objects are constructed", () => {
+        it("modules nested inside standard objects are constructed", () => {
 
             class Root {
                 public first = {
@@ -44,18 +44,18 @@ describe(nameof(Module), () => {
                 }
             }
 
-            // create component tree
+            // create module tree
             const store = new FakeStore();
             const root: any = Module.create(store, new Root());
 
-            expect(root).to.be.an.instanceOf(Module); // root is always a component
+            expect(root).to.be.an.instanceOf(Module); // root is always a module
             expect(root.first).to.not.be.an.instanceOf(Module);
             expect(root.first.second).to.not.be.an.instanceOf(Module);
             expect(root.first.second.third).to.not.be.an.instanceOf(Module);
             expect(root.first.second.third.some).to.be.an.instanceOf(Module);
         });
 
-        it("multiple components created from the same creator instance are pointing to the same component instance", () => {
+        it("multiple modules created from the same creator instance are pointing to the same module instance", () => {
 
             class Root {
                 public link: IAmModule;
@@ -81,7 +81,7 @@ describe(nameof(Module), () => {
                 }
             }
 
-            // create component tree
+            // create module tree
             const store = new FakeStore();
             const root: any = Module.create(store, new Root());
 
@@ -131,15 +131,15 @@ describe(nameof(Module), () => {
                 public circle: CircularObjectHolder;
             }
 
-            // create component tree
+            // create module tree
             const store = new FakeStore();
             const root: Root = (Module.create(store, new Root()) as any);
 
-            expect(root.circularComp.original).to.equal(root.originalComp, 'different components');
+            expect(root.circularComp.original).to.equal(root.originalComp, 'different modules');
             expect(root.circularObj.original).to.equal(root.originalObj, 'different objects');
         });
 
-        it("components nested inside standard objects are connected to store's dispatch function", () => {
+        it("modules nested inside standard objects are connected to store's dispatch function", () => {
 
             class Root {
                 public first = {
@@ -168,7 +168,7 @@ describe(nameof(Module), () => {
             const store = new FakeStore();
             (store.dispatch as any) = () => { isConnected = true; };
 
-            // create component tree
+            // create module tree
             const root: any = Module.create(store, new Root());
 
             // before dispatching
@@ -179,7 +179,7 @@ describe(nameof(Module), () => {
             expect(isConnected).to.be.true;
         });
 
-        it("standard object nested inside components are not connected to store's dispatch function", () => {
+        it("standard object nested inside modules are not connected to store's dispatch function", () => {
 
             class Root {
                 public first = {
@@ -207,7 +207,7 @@ describe(nameof(Module), () => {
             const store = new FakeStore();
             (store.dispatch as any) = () => { isConnected = true; };
 
-            // create component tree
+            // create module tree
             const root: any = Module.create(store, new Root());
 
             // assert
@@ -215,7 +215,7 @@ describe(nameof(Module), () => {
             expect(isConnected).to.be.false;
         });
 
-        it("two different component classes with the same method name has separate methods", () => {
+        it("two different module classes with the same method name has separate methods", () => {
 
             class Root {
                 public first = new First();
@@ -243,7 +243,7 @@ describe(nameof(Module), () => {
             expect(root.first.foo.toString).to.not.equal(root.second.foo);
         });
 
-        it("two component instances of the same class has the same methods", () => {
+        it("two module instances of the same class has the same methods", () => {
 
             class TheModule {
 
@@ -259,7 +259,7 @@ describe(nameof(Module), () => {
             expect(comp1.foo).to.equal(comp2.foo);
         });
 
-        it("derived component dispatches parent actions with derived namespace", () => {
+        it("derived module dispatches parent actions with derived namespace", () => {
 
             class Base {
 
@@ -282,7 +282,7 @@ describe(nameof(Module), () => {
             var dispatchedAction: any;
             (store.dispatch as any) = (actionObject: any) => { dispatchedAction = actionObject; };
 
-            // create component tree
+            // create module tree
             const comp: any = Module.create(store, new Derived());
 
             // has methods
@@ -296,7 +296,7 @@ describe(nameof(Module), () => {
             expect(dispatchedAction.type.toLowerCase()).to.include(nameof(Derived).toLowerCase());
         });
 
-        it('component getters are preserved', () => {
+        it('module getters are preserved', () => {
 
             class MyModule {
 

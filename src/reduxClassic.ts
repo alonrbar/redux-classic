@@ -45,7 +45,7 @@ export class ReduxClassic<T extends object> {
     //
 
     /**
-     * Global redux-app options
+     * Global options
      */
     public static options: GlobalOptions = globalOptions;
 
@@ -57,27 +57,27 @@ export class ReduxClassic<T extends object> {
     }
 
     /**
-     * @param type The type of the component.
-     * @param componentId The ID of the component (assuming the ID was assigned
-     * to the component by the 'withId' decorator). If not specified will get to
-     * the first available component of that type.
+     * @param type The type of the module.
+     * @param moduleId The ID of the module (assuming the ID was assigned
+     * to the module by the 'withId' decorator). If not specified will get to
+     * the first available module of that type.
      * @param appId The name of the ReduxClassic instance to search in. If not
      * specified will search in default app.
      * @throws If not found.
      */
-    public static getModule<T>(type: Constructor<T>, componentId?: string, appId?: string): T {
+    public static getModule<T>(type: Constructor<T>, moduleId?: string, appId?: string): T {
         const app = ReduxClassic.getTree(appId);
         if (!app)
             throw new Error(`App not found (id: '${appId || DEFAULT_APP_NAME}')`);
 
-        // get the component
+        // get the module
         const warehouse = app.getTypeWarehouse(type);
-        if (componentId) {
+        if (moduleId) {
 
             // get by id
-            const comp = warehouse.get(componentId);
+            const comp = warehouse.get(moduleId);
             if (!comp)
-                throw new Error(`Module not found. Type: ${type.name}. Id: '${componentId}'.`);
+                throw new Error(`Module not found. Type: ${type.name}. Id: '${moduleId}'.`);
             return comp;
         } else {
 
@@ -109,7 +109,7 @@ export class ReduxClassic<T extends object> {
 
     public readonly name: string;
     /**
-     * The root component of the application.
+     * The root module of the application.
      */
     public readonly root: T;
     /**
@@ -242,8 +242,8 @@ export class ReduxClassic<T extends object> {
         }
     }
 
-    private registerModules(components: IMap<Module>): void {
-        for (const comp of Object.values(components)) {
+    private registerModules(modules: IMap<Module>): void {
+        for (const comp of Object.values(modules)) {
             const compInfo = ModuleInfo.getInfo(comp);
             const warehouse = this.getTypeWarehouse(compInfo.originalClass);
             const key = compInfo.id || ModuleId.nextAvailableId();
@@ -266,7 +266,7 @@ export class ReduxClassic<T extends object> {
 
             //
             // Reducers are invoked with regular objects, therefor we use this
-            // method which copies the resulted values back to the components.
+            // method which copies the resulted values back to the modules.
             //
 
             const start = Date.now();
@@ -280,7 +280,7 @@ export class ReduxClassic<T extends object> {
                 this.updateStateRecursion(this.root, newState, new UpdateContext({ forceRecursion: true }));
             } else {
 
-                // standard update - update only changed components
+                // standard update - update only changed modules
                 this.updateChangedModules({ [ROOT_MODULE_PATH]: newState }, reducersContext.changedModules);
             }
 

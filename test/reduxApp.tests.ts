@@ -14,12 +14,12 @@ describe(nameof(ReduxClassic), () => {
                 public value: string = null;
             }
 
-            // create component tree            
+            // create module tree            
             const app = ReduxClassic.create(new Root());
             app.dispose();
         });
 
-        it("components nested inside standard objects are constructed", () => {
+        it("modules nested inside standard objects are constructed", () => {
 
             class Root {
                 public first = {
@@ -42,7 +42,7 @@ describe(nameof(ReduxClassic), () => {
                 }
             }
 
-            // create component tree
+            // create module tree
             const app = ReduxClassic.create(new Root());
             try {
 
@@ -53,7 +53,7 @@ describe(nameof(ReduxClassic), () => {
             }
         });
 
-        it("handles pre-loaded state of nested component", () => {
+        it("handles pre-loaded state of nested module", () => {
 
             class Root {
                 public first = {
@@ -85,7 +85,7 @@ describe(nameof(ReduxClassic), () => {
                 }
             };
 
-            // create component tree
+            // create module tree
             const root = new Root();
             expect(root.first.second.theModule).to.be.an.instanceOf(ThisIsAModule);
             expect(root.first.second.theModule.value).to.eql('before');
@@ -138,7 +138,7 @@ describe(nameof(ReduxClassic), () => {
                 }
             };
 
-            // create component tree
+            // create module tree
             const root = new Root();
             expect(root.first.second.theModule.value).to.eql('before');
 
@@ -186,7 +186,7 @@ describe(nameof(ReduxClassic), () => {
 
         describe('updateState option', () => {
 
-            it("component tree is not updated when 'updateState' options is turned off", () => {
+            it("module tree is not updated when 'updateState' options is turned off", () => {
 
                 class App {
     
@@ -242,9 +242,9 @@ describe(nameof(ReduxClassic), () => {
 
         describe('properties', () => {
 
-            it('removes component properties that do not exists on the new state', () => {
+            it('removes module properties that do not exists on the new state', () => {
 
-                // create the component
+                // create the module
                 class MyModule {
                     public prop1: string = undefined;
                     public prop2: string = undefined;
@@ -272,9 +272,9 @@ describe(nameof(ReduxClassic), () => {
                 }
             });
     
-            it('does not remove component properties that exists on the new state but are undefined', () => {
+            it('does not remove module properties that exists on the new state but are undefined', () => {
     
-                // create the component
+                // create the module
                 class MyModule {
                     public prop1: string = undefined;
                     public prop2: string = undefined;
@@ -301,9 +301,9 @@ describe(nameof(ReduxClassic), () => {
                 }
             });
     
-            it('does not remove component getters', () => {
+            it('does not remove module getters', () => {
     
-                // create the component
+                // create the module
                 class MyModule {
     
                     public get prop1(): string {
@@ -337,7 +337,7 @@ describe(nameof(ReduxClassic), () => {
 
         describe('actions', () => {
             
-            it("actions of a component are invoked only once, even if it appears several time in the tree", () => {
+            it("actions of a module are invoked only once, even if it appears several time in the tree", () => {
 
                 class Root {
                     public link: IAmModule;
@@ -367,7 +367,7 @@ describe(nameof(ReduxClassic), () => {
                     }
                 }
     
-                // create component tree
+                // create module tree
                 const app = ReduxClassic.create(new Root());
                 try {
     
@@ -389,7 +389,7 @@ describe(nameof(ReduxClassic), () => {
                 }
             });
     
-            it("actions of a component nested inside standard objects can be invoked multiple times", () => {
+            it("actions of a module nested inside standard objects can be invoked multiple times", () => {
     
                 class Root {
                     public first = {
@@ -414,7 +414,7 @@ describe(nameof(ReduxClassic), () => {
                     }
                 }
     
-                // create component tree
+                // create module tree
                 const app = ReduxClassic.create(new Root());
                 try {
     
@@ -433,7 +433,7 @@ describe(nameof(ReduxClassic), () => {
 
         });
 
-        it("components nested inside standard objects are synced with the store's state", () => {
+        it("modules nested inside standard objects are synced with the store's state", () => {
 
             class Root {
                 public first = {
@@ -459,7 +459,7 @@ describe(nameof(ReduxClassic), () => {
                 }
             }
 
-            // create component tree
+            // create module tree
             const app = ReduxClassic.create(new Root());
             try {
 
@@ -560,7 +560,7 @@ describe(nameof(ReduxClassic), () => {
 
     describe('getModule', () => {
 
-        it("retrieves a component by type", () => {
+        it("retrieves a module by type", () => {
 
             class Root {
                 public comp = new MyModule();
@@ -595,7 +595,7 @@ describe(nameof(ReduxClassic), () => {
             }
         });
 
-        it("retrieves a component by type and id", () => {
+        it("retrieves a module by type and id", () => {
 
             class Root {
                 @withId('first comp')

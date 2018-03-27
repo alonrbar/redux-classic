@@ -25,7 +25,7 @@ export class ModuleTemplateInfo {
         if (ownInfo)
             return ownInfo;
 
-        // if base class is a component template so should this class be
+        // if base class is a module template so should this class be
         const baseInfo = ModuleTemplateInfo.getBaseInfo(obj);
         if (baseInfo)
             return ModuleTemplateInfo.initInfo(obj);
