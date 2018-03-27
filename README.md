@@ -9,7 +9,7 @@ Type-safe, DRY and OO redux. Implemented with typescript.
 
 [Change Log](https://github.com/alonrbar/redux-classic/blob/master/CHANGELOG.md)
 
-## This is a clone of [redux-classic](https://github.com/alonrbar/redux-classic) and is planned to be the main repo
+## This is a clone of [redux-app](https://github.com/alonrbar/redux-app) and is planned to be the main repo
 
 ## Installation
 
