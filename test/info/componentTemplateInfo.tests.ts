@@ -1,25 +1,25 @@
 import { expect } from 'chai';
 import { action } from 'src';
-import { ComponentTemplateInfo } from 'src/info';
+import { ModuleTemplateInfo } from 'src/info';
 
 // tslint:disable:no-unused-expression
 
-describe(nameof(ComponentTemplateInfo), () => {
+describe(nameof(ModuleTemplateInfo), () => {
 
     it("ordinary class that extends a component template class is considered a component template", () => {
 
-        class BaseComponent {
+        class BaseModule {
             @action
             public foo() {
                 // noop
             }
         }
 
-        class DerivedClass extends BaseComponent {
+        class DerivedClass extends BaseModule {
         }
 
         const obj = new DerivedClass();
-        const templateInfo = ComponentTemplateInfo.getInfo(obj);
+        const templateInfo = ModuleTemplateInfo.getInfo(obj);
         
         expect(templateInfo).to.not.be.null;
         expect(templateInfo).to.not.be.undefined;
@@ -27,23 +27,23 @@ describe(nameof(ComponentTemplateInfo), () => {
 
     it("derived component template class keeps it's own unique details", () => {
 
-        class BaseComponent {
+        class BaseModule {
             @action
             public foo() {
                 // noop
             }
         }
 
-        class DerivedClass extends BaseComponent {
+        class DerivedClass extends BaseModule {
         }
 
-        const base = new BaseComponent();
+        const base = new BaseModule();
         const derived = new DerivedClass();
-        const baseInfo = ComponentTemplateInfo.getInfo(base);
-        const derivedInfo = ComponentTemplateInfo.getInfo(derived);
+        const baseInfo = ModuleTemplateInfo.getInfo(base);
+        const derivedInfo = ModuleTemplateInfo.getInfo(derived);
         
-        expect(derivedInfo).to.be.instanceof(ComponentTemplateInfo);
-        expect(baseInfo).to.be.instanceof(ComponentTemplateInfo);
+        expect(derivedInfo).to.be.instanceof(ModuleTemplateInfo);
+        expect(baseInfo).to.be.instanceof(ModuleTemplateInfo);
         expect(derivedInfo).to.not.equal(baseInfo);
     });
 });

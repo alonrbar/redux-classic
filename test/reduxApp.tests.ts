@@ -1,10 +1,10 @@
 import { expect } from 'chai';
-import { action, ReduxApp, withId } from 'src';
-import { Component } from 'src/components';
+import { action, ReduxClassic, withId } from 'src';
+import { Module } from 'src/module';
 
 // tslint:disable:no-unused-expression
 
-describe(nameof(ReduxApp), () => {
+describe(nameof(ReduxClassic), () => {
 
     describe('constructor', () => {
 
@@ -15,7 +15,7 @@ describe(nameof(ReduxApp), () => {
             }
 
             // create component tree            
-            const app = new ReduxApp(new Root());
+            const app = ReduxClassic.create(new Root());
             app.dispose();
         });
 
@@ -32,10 +32,10 @@ describe(nameof(ReduxApp), () => {
             }
 
             class Level3 {
-                public some = new ThisIsAComponent();
+                public some = new ThisIsAModule();
             }
 
-            class ThisIsAComponent {
+            class ThisIsAModule {
                 @action
                 public dispatchMe() {
                     /* noop */
@@ -43,10 +43,10 @@ describe(nameof(ReduxApp), () => {
             }
 
             // create component tree
-            const app = new ReduxApp(new Root());
+            const app = ReduxClassic.create(new Root());
             try {
 
-                expect(app.root.first.second.third.some).to.be.an.instanceOf(Component);
+                expect(app.root.first.second.third.some).to.be.an.instanceOf(Module);
 
             } finally {
                 app.dispose();
@@ -62,10 +62,10 @@ describe(nameof(ReduxApp), () => {
             }
 
             class Level2 {
-                public theComponent = new ThisIsAComponent();
+                public theModule = new ThisIsAModule();
             }
 
-            class ThisIsAComponent {
+            class ThisIsAModule {
 
                 public value: string = 'before';
 
@@ -78,7 +78,7 @@ describe(nameof(ReduxApp), () => {
             const preLoadedState = {
                 first: {
                     second: {
-                        theComponent: {
+                        theModule: {
                             value: 'I am here!'
                         }
                     }
@@ -87,20 +87,20 @@ describe(nameof(ReduxApp), () => {
 
             // create component tree
             const root = new Root();
-            expect(root.first.second.theComponent).to.be.an.instanceOf(ThisIsAComponent);
-            expect(root.first.second.theComponent.value).to.eql('before');
+            expect(root.first.second.theModule).to.be.an.instanceOf(ThisIsAModule);
+            expect(root.first.second.theModule.value).to.eql('before');
 
             // create the app
-            const app = new ReduxApp(root, undefined, preLoadedState);
+            const app = ReduxClassic.create(root, undefined, preLoadedState);
             try {
 
-                expect(app.root.first.second.theComponent).to.be.an.instanceOf(Component);
-                expect(app.root.first.second.theComponent.value).to.eql('I am here!');
+                expect(app.root.first.second.theModule).to.be.an.instanceOf(Module);
+                expect(app.root.first.second.theModule.value).to.eql('I am here!');
 
                 // verify state is updating
-                app.root.first.second.theComponent.changeValue();
-                expect(app.root.first.second.theComponent).to.be.an.instanceOf(Component);
-                expect(app.root.first.second.theComponent.value).to.eql('after');
+                app.root.first.second.theModule.changeValue();
+                expect(app.root.first.second.theModule).to.be.an.instanceOf(Module);
+                expect(app.root.first.second.theModule.value).to.eql('after');
 
             } finally {
                 app.dispose();
@@ -116,10 +116,10 @@ describe(nameof(ReduxApp), () => {
             }
 
             class Level2 {
-                public theComponent = new ThisIsAComponent();
+                public theModule = new ThisIsAModule();
             }
 
-            class ThisIsAComponent {
+            class ThisIsAModule {
 
                 public value: string = 'before';
 
@@ -131,7 +131,7 @@ describe(nameof(ReduxApp), () => {
             const preLoadedState = {
                 first: {
                     second: {
-                        theComponent: {
+                        theModule: {
                             value: 'I am here!'
                         }
                     }
@@ -140,17 +140,17 @@ describe(nameof(ReduxApp), () => {
 
             // create component tree
             const root = new Root();
-            expect(root.first.second.theComponent.value).to.eql('before');
+            expect(root.first.second.theModule.value).to.eql('before');
 
             // create the app
-            const app = new ReduxApp(root, undefined, preLoadedState);
+            const app = ReduxClassic.create(root, undefined, preLoadedState);
             try {
 
-                expect(app.root.first.second.theComponent.value).to.eql('I am here!');
+                expect(app.root.first.second.theModule.value).to.eql('I am here!');
 
                 // verify state is updating
-                app.root.first.second.theComponent.changeValue();
-                expect(app.root.first.second.theComponent.value).to.eql('after');
+                app.root.first.second.theModule.changeValue();
+                expect(app.root.first.second.theModule.value).to.eql('after');
 
             } finally {
                 app.dispose();
@@ -171,7 +171,7 @@ describe(nameof(ReduxApp), () => {
                 }
             }
 
-            const app = new ReduxApp(new Root([new Some(), new Some(), new Some()]), undefined);
+            const app = ReduxClassic.create(new Root([new Some(), new Some(), new Some()]), undefined);
 
             try {
                 const state = app.store.getState();
@@ -198,7 +198,7 @@ describe(nameof(ReduxApp), () => {
                     }
                 }
     
-                const app = new ReduxApp(new App(), { updateState: false });
+                const app = ReduxClassic.create(new App(), { updateState: false });
                 try {
     
                     expect(app.root.num).to.eq(0);
@@ -224,7 +224,7 @@ describe(nameof(ReduxApp), () => {
                     }
                 }
     
-                const app = new ReduxApp(new App(), { updateState: false });
+                const app = ReduxClassic.create(new App(), { updateState: false });
                 try {
     
                     expect(app.store.getState().num).to.eq(0);
@@ -245,7 +245,7 @@ describe(nameof(ReduxApp), () => {
             it('removes component properties that do not exists on the new state', () => {
 
                 // create the component
-                class MyComponent {
+                class MyModule {
                     public prop1: string = undefined;
                     public prop2: string = undefined;
     
@@ -255,7 +255,7 @@ describe(nameof(ReduxApp), () => {
                         this.prop2 = 'hello';
                     }
                 }
-                const app = new ReduxApp(new MyComponent());
+                const app = ReduxClassic.create(new MyModule());
                 try {
     
                     // test before
@@ -275,7 +275,7 @@ describe(nameof(ReduxApp), () => {
             it('does not remove component properties that exists on the new state but are undefined', () => {
     
                 // create the component
-                class MyComponent {
+                class MyModule {
                     public prop1: string = undefined;
                     public prop2: string = undefined;
     
@@ -284,7 +284,7 @@ describe(nameof(ReduxApp), () => {
                         this.prop2 = 'hello';
                     }
                 }
-                const app = new ReduxApp(new MyComponent());
+                const app = ReduxClassic.create(new MyModule());
                 try {
     
                     // test before
@@ -304,7 +304,7 @@ describe(nameof(ReduxApp), () => {
             it('does not remove component getters', () => {
     
                 // create the component
-                class MyComponent {
+                class MyModule {
     
                     public get prop1(): string {
                         return 'hi';
@@ -316,7 +316,7 @@ describe(nameof(ReduxApp), () => {
                         this.prop2 = 'hello';
                     }
                 }
-                const app = new ReduxApp(new MyComponent());
+                const app = ReduxClassic.create(new MyModule());
                 try {
     
                     // test before
@@ -340,23 +340,23 @@ describe(nameof(ReduxApp), () => {
             it("actions of a component are invoked only once, even if it appears several time in the tree", () => {
 
                 class Root {
-                    public link: IAmComponent;
-                    public original = new IAmComponent();
-                    public nested: NestedComponent;
+                    public link: IAmModule;
+                    public original = new IAmModule();
+                    public nested: NestedModule;
     
                     constructor() {
                         this.link = this.original;
-                        this.nested = new NestedComponent(this.link);
+                        this.nested = new NestedModule(this.link);
                     }
                 }
     
-                class NestedComponent {
-                    constructor(public readonly link: IAmComponent) {
+                class NestedModule {
+                    constructor(public readonly link: IAmModule) {
                     }
                 }
     
                 let count = 0;
-                class IAmComponent {
+                class IAmModule {
     
                     public value = 0;
     
@@ -368,7 +368,7 @@ describe(nameof(ReduxApp), () => {
                 }
     
                 // create component tree
-                const app = new ReduxApp(new Root());
+                const app = ReduxClassic.create(new Root());
                 try {
     
                     // before dispatching
@@ -415,7 +415,7 @@ describe(nameof(ReduxApp), () => {
                 }
     
                 // create component tree
-                const app = new ReduxApp(new Root());
+                const app = ReduxClassic.create(new Root());
                 try {
     
                     expect(app.root.first.second.third.counter.value).to.eql(0);
@@ -446,10 +446,10 @@ describe(nameof(ReduxApp), () => {
             }
 
             class Level3 {
-                public some = new ThisIsAComponent();
+                public some = new ThisIsAModule();
             }
 
-            class ThisIsAComponent {
+            class ThisIsAModule {
 
                 public value = 0;
 
@@ -460,7 +460,7 @@ describe(nameof(ReduxApp), () => {
             }
 
             // create component tree
-            const app = new ReduxApp(new Root());
+            const app = ReduxClassic.create(new Root());
             try {
 
                 // before dispatching
@@ -517,7 +517,7 @@ describe(nameof(ReduxApp), () => {
                 public value = 0;
             }
 
-            const app = new ReduxApp(new App());
+            const app = ReduxClassic.create(new App());
             try {
 
                 // push
@@ -558,16 +558,16 @@ describe(nameof(ReduxApp), () => {
         });
     });
 
-    describe('getComponent', () => {
+    describe('getModule', () => {
 
         it("retrieves a component by type", () => {
 
             class Root {
-                public comp = new MyComponent();
-                public otherComp = new MyOtherComponent();
+                public comp = new MyModule();
+                public otherComp = new MyOtherModule();
             }
 
-            class MyComponent {
+            class MyModule {
 
                 @action
                 public myAction() {
@@ -575,7 +575,7 @@ describe(nameof(ReduxApp), () => {
                 }
             }
 
-            class MyOtherComponent {
+            class MyOtherModule {
 
                 @action
                 public myAction() {
@@ -584,10 +584,10 @@ describe(nameof(ReduxApp), () => {
             }
 
             const appId = Math.random().toString();
-            const app = new ReduxApp(new Root(), { name: appId });
+            const app = ReduxClassic.create(new Root(), { name: appId });
             try {
 
-                const comp = ReduxApp.getComponent(MyComponent, undefined, appId);
+                const comp = ReduxClassic.getModule(MyModule, undefined, appId);
                 expect(comp).to.equal(app.root.comp);
                 expect(comp).to.not.equal(app.root.otherComp);
             } finally {
@@ -599,13 +599,13 @@ describe(nameof(ReduxApp), () => {
 
             class Root {
                 @withId('first comp')
-                public comp1 = new MyComponent();
+                public comp1 = new MyModule();
                 @withId('second comp')
-                public comp2 = new MyComponent();
-                public otherComp = new MyOtherComponent();
+                public comp2 = new MyModule();
+                public otherComp = new MyOtherModule();
             }
 
-            class MyComponent {
+            class MyModule {
 
                 @action
                 public myAction() {
@@ -613,7 +613,7 @@ describe(nameof(ReduxApp), () => {
                 }
             }
 
-            class MyOtherComponent {
+            class MyOtherModule {
 
                 @action
                 public myAction() {
@@ -622,10 +622,10 @@ describe(nameof(ReduxApp), () => {
             }
 
             const appId = Math.random().toString();
-            const app = new ReduxApp(new Root(), { name: appId });
+            const app = ReduxClassic.create(new Root(), { name: appId });
             try {
 
-                const comp = ReduxApp.getComponent(MyComponent, 'second comp', appId);
+                const comp = ReduxClassic.getModule(MyModule, 'second comp', appId);
                 expect(comp).to.equal(app.root.comp2);
                 expect(comp).to.not.equal(app.root.comp1);
                 expect(comp).to.not.equal(app.root.otherComp);

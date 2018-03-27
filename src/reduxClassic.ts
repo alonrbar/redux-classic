@@ -1,7 +1,7 @@
 import { createStore, Store, StoreEnhancer } from 'redux';
-import { CombineReducersContext, Component, ComponentCreationContext, ComponentReducer } from './components';
-import { ComponentId, IgnoreState } from './decorators';
-import { ComponentInfo } from './info';
+import { IgnoreState, ModuleId } from './decorators';
+import { ModuleInfo } from './info';
+import { CombineReducersContext, Module, ModuleCreationContext, ModuleReducer } from './module';
 import { AppOptions, globalOptions, GlobalOptions } from './options';
 import { Constructor, IMap, Listener } from './types';
 import { isPrimitive, log } from './utils';
@@ -13,11 +13,11 @@ const getProp = require('lodash.get');
 // internal
 //
 
-export const ROOT_COMPONENT_PATH = 'root';
+export const ROOT_MODULE_PATH = 'root';
 
 export const DEFAULT_APP_NAME = 'default';
 
-export const appsRepository: IMap<ReduxApp<any>> = {};
+export const appsRepository: IMap<ReduxClassic<any>> = {};
 
 export type AppWarehouse = Map<Function, Map<any, any>>;
 
@@ -26,7 +26,7 @@ var appsCount = 0;
 class UpdateContext {
 
     public visited = new Set();
-    public path = ROOT_COMPONENT_PATH;
+    public path = ROOT_MODULE_PATH;
     public forceRecursion = false;
 
     constructor(initial?: Partial<UpdateContext>) {
@@ -38,7 +38,7 @@ class UpdateContext {
 // public
 //
 
-export class ReduxApp<T extends object> {
+export class ReduxClassic<T extends object> {
 
     //
     // static
@@ -49,11 +49,11 @@ export class ReduxApp<T extends object> {
      */
     public static options: GlobalOptions = globalOptions;
 
-    public static createApp<T extends object>(appTemplate: T, enhancer?: StoreEnhancer<T>): ReduxApp<T>;
-    public static createApp<T extends object>(appTemplate: T, options: AppOptions, enhancer?: StoreEnhancer<T>): ReduxApp<T>;
-    public static createApp<T extends object>(appTemplate: T, options: AppOptions, preloadedState: any, enhancer?: StoreEnhancer<T>): ReduxApp<T>;
-    public static createApp<T extends object>(appTemplate: T, ...params: any[]): ReduxApp<T> {
-        return new ReduxApp(appTemplate, ...params);
+    public static create<T extends object>(rootModuleTemplate: T, enhancer?: StoreEnhancer<T>): ReduxClassic<T>;
+    public static create<T extends object>(rootModuleTemplate: T, options: AppOptions, enhancer?: StoreEnhancer<T>): ReduxClassic<T>;
+    public static create<T extends object>(rootModuleTemplate: T, options: AppOptions, preloadedState: any, enhancer?: StoreEnhancer<T>): ReduxClassic<T>;
+    public static create<T extends object>(rootModuleTemplate: T, ...params: any[]): ReduxClassic<T> {
+        return  new ReduxClassic(rootModuleTemplate, ...params);
     }
 
     /**
@@ -61,12 +61,12 @@ export class ReduxApp<T extends object> {
      * @param componentId The ID of the component (assuming the ID was assigned
      * to the component by the 'withId' decorator). If not specified will get to
      * the first available component of that type.
-     * @param appId The name of the ReduxApp instance to search in. If not
+     * @param appId The name of the ReduxClassic instance to search in. If not
      * specified will search in default app.
      * @throws If not found.
      */
-    public static getComponent<T>(type: Constructor<T>, componentId?: string, appId?: string): T {
-        const app = ReduxApp.getApp(appId);
+    public static getModule<T>(type: Constructor<T>, componentId?: string, appId?: string): T {
+        const app = ReduxClassic.getTree(appId);
         if (!app)
             throw new Error(`App not found (id: '${appId || DEFAULT_APP_NAME}')`);
 
@@ -77,29 +77,29 @@ export class ReduxApp<T extends object> {
             // get by id
             const comp = warehouse.get(componentId);
             if (!comp)
-                throw new Error(`Component not found. Type: ${type.name}. Id: '${componentId}'.`);
+                throw new Error(`Module not found. Type: ${type.name}. Id: '${componentId}'.`);
             return comp;
         } else {
 
             // get the first value
             const comp = warehouse.values().next().value;
             if (!comp)
-                throw new Error(`Component not found. Type: ${type.name}.`);
+                throw new Error(`Module not found. Type: ${type.name}.`);
             return comp;
         }
     }
 
     /**
-     * Get an existing ReduxApp instance.
+     * Get an existing ReduxClassic instance.
      * 
-     * @param appId The name of the ReduxApp instance to retrieve. If not
+     * @param appId The name of the ReduxClassic instance to retrieve. If not
      * specified will return the default app.
      */
-    private static getApp<T extends object = any>(appId?: string): ReduxApp<T> {
+    private static getTree<T extends object = any>(appId?: string): ReduxClassic<T> {
         const applicationId = appId || DEFAULT_APP_NAME;
         const app = appsRepository[applicationId];
         if (!app)
-            log.debug(`[ReduxApp] Application '${applicationId}' does not exist.`);
+            log.debug(`[ReduxClassic] Application '${applicationId}' does not exist.`);
         return app;
     }
 
@@ -127,13 +127,13 @@ export class ReduxApp<T extends object> {
     // constructor
     //
 
-    constructor(appTemplate: T, enhancer?: StoreEnhancer<T>);
-    constructor(appTemplate: T, options: AppOptions, enhancer?: StoreEnhancer<T>);
-    constructor(appTemplate: T, options: AppOptions, preloadedState: any, enhancer?: StoreEnhancer<T>);
-    constructor(appTemplate: T, ...params: any[]) {
+    private constructor(rootModuleTemplate: T, enhancer?: StoreEnhancer<T>);
+    private constructor(rootModuleTemplate: T, options: AppOptions, enhancer?: StoreEnhancer<T>);
+    private constructor(rootModuleTemplate: T, options: AppOptions, preloadedState: any, enhancer?: StoreEnhancer<T>);
+    private constructor(rootModuleTemplate: T, ...params: any[]) {
 
         // handle different overloads
-        var { options, preLoadedState, enhancer } = this.resolveParameters(appTemplate, params);
+        var { options, preLoadedState, enhancer } = this.resolveParameters(rootModuleTemplate, params);
 
         // assign name and register self
         this.name = this.getAppName(options.name);
@@ -146,16 +146,16 @@ export class ReduxApp<T extends object> {
         this.store = createStore<T>(initialReducer as any, preLoadedState, enhancer);
 
         // create the app
-        const creationContext = new ComponentCreationContext({ appName: this.name });
-        const rootComponent = Component.create(this.store, appTemplate, creationContext);
-        this.root = (rootComponent as any);
-        this.registerComponents(creationContext.createdComponents);
+        const creationContext = new ModuleCreationContext({ appName: this.name });
+        const rootModule = Module.create(this.store, rootModuleTemplate, creationContext);
+        this.root = (rootModule as any);
+        this.registerModules(creationContext.createdModules);
 
         // create the root reducer
         const reducersContext = new CombineReducersContext({
-            componentPaths: Object.keys(creationContext.createdComponents)
+            modulePaths: Object.keys(creationContext.createdModules)
         });
-        const rootReducer = ComponentReducer.combineReducersTree(this.root, reducersContext);
+        const rootReducer = ModuleReducer.combineReducersTree(this.root, reducersContext);
 
         // listen to state changes
         if (options.updateState) {
@@ -185,7 +185,7 @@ export class ReduxApp<T extends object> {
     // private utils
     //    
 
-    private resolveParameters(appTemplate: any, params: any[]) {
+    private resolveParameters(rootModuleTemplate: any, params: any[]) {
         var result: {
             options?: AppOptions,
             preLoadedState?: T,
@@ -196,7 +196,7 @@ export class ReduxApp<T extends object> {
 
             // no parameters
             result.options = new AppOptions();
-            result.preLoadedState = appTemplate;
+            result.preLoadedState = rootModuleTemplate;
 
         } else if (params.length === 1) {
 
@@ -205,13 +205,13 @@ export class ReduxApp<T extends object> {
                 // only enhancer
                 result.options = new AppOptions();
                 result.enhancer = params[0];
-                result.preLoadedState = appTemplate;
+                result.preLoadedState = rootModuleTemplate;
 
             } else {
 
                 // only options
                 result.options = Object.assign(new AppOptions(), params[0]);
-                result.preLoadedState = appTemplate;
+                result.preLoadedState = rootModuleTemplate;
 
             }
         } else if (params.length === 2) {
@@ -242,11 +242,11 @@ export class ReduxApp<T extends object> {
         }
     }
 
-    private registerComponents(components: IMap<Component>): void {
+    private registerModules(components: IMap<Module>): void {
         for (const comp of Object.values(components)) {
-            const compInfo = ComponentInfo.getInfo(comp);
+            const compInfo = ModuleInfo.getInfo(comp);
             const warehouse = this.getTypeWarehouse(compInfo.originalClass);
-            const key = compInfo.id || ComponentId.nextAvailableId();
+            const key = compInfo.id || ModuleId.nextAvailableId();
             warehouse.set(key, comp);
         }
     }
@@ -281,7 +281,7 @@ export class ReduxApp<T extends object> {
             } else {
 
                 // standard update - update only changed components
-                this.updateChangedComponents({ [ROOT_COMPONENT_PATH]: newState }, reducersContext.changedComponents);
+                this.updateChangedModules({ [ROOT_MODULE_PATH]: newState }, reducersContext.changedModules);
             }
 
             // reset reducers context
@@ -289,21 +289,21 @@ export class ReduxApp<T extends object> {
 
             const end = Date.now();
 
-            log.debug(`[updateState] Component tree updated in ${end - start}ms.`);
+            log.debug(`[updateState] Module tree updated in ${end - start}ms.`);
         };
     }
 
-    private updateChangedComponents(newState: any, changedComponents: IMap<Component>): void {
+    private updateChangedModules(newState: any, changedModules: IMap<Module>): void {
 
-        const changedPaths = Object.keys(changedComponents);
+        const changedPaths = Object.keys(changedModules);
         const updateContext = new UpdateContext();
 
         for (let path of changedPaths) {
 
-            const curComponent = changedComponents[path];
+            const curModule = changedModules[path];
             var newSubState = getProp(newState, path);
 
-            this.updateStateRecursion(curComponent, newSubState, {
+            this.updateStateRecursion(curModule, newSubState, {
                 ...updateContext,
                 path
             });
@@ -325,7 +325,7 @@ export class ReduxApp<T extends object> {
             return obj;
         context.visited.add(obj);
 
-        if (context.forceRecursion || (obj instanceof Component)) {
+        if (context.forceRecursion || (obj instanceof Module)) {
 
             // update
             var changeMessage: string;

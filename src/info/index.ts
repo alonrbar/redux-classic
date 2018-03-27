@@ -1,3 +1,3 @@
 export * from './classInfo';
-export * from './componentInfo';
-export * from './componentTemplateInfo';
+export * from './moduleInfo';
+export * from './moduleTemplateInfo';

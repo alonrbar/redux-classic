@@ -1,4 +1,4 @@
-import { ComponentTemplateInfo } from '../info';
+import { ModuleTemplateInfo } from '../info';
 
 /**
  * Method decorator.
@@ -6,6 +6,6 @@ import { ComponentTemplateInfo } from '../info';
  * Mark this method as a Redux action.
  */
 export function action(target: object, propertyKey: string | symbol): void {
-    const info = ComponentTemplateInfo.getOrInitInfo(target);
+    const info = ModuleTemplateInfo.getOrInitInfo(target);
     info.actions[propertyKey] = true;
 }

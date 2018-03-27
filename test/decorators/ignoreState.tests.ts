@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { action, ignoreState, ReduxApp } from 'src';
+import { action, ignoreState, ReduxClassic } from 'src';
 
 // tslint:disable:no-unused-expression
 
@@ -17,7 +17,7 @@ describe(nameof(ignoreState), () => {
             }
         }
 
-        const app = new ReduxApp(new App());
+        const app = ReduxClassic.create(new App());
         try {
 
             expect(app.root.value).to.eql(0);
@@ -46,7 +46,7 @@ describe(nameof(ignoreState), () => {
             }
         }
 
-        const app = new ReduxApp(new App());
+        const app = ReduxClassic.create(new App());
         try {
 
             expect(app.root.value).to.be.a('number');
@@ -75,7 +75,7 @@ describe(nameof(ignoreState), () => {
             }
         }
 
-        const app = new ReduxApp(new App());
+        const app = ReduxClassic.create(new App());
         try {
 
             expect(app.root.value).to.eql(0);
@@ -103,7 +103,7 @@ describe(nameof(ignoreState), () => {
             }
         }
 
-        const app = new ReduxApp(new App());
+        const app = ReduxClassic.create(new App());
         try {
 
             expect(app.root.value).to.eql(0);

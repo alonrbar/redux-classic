@@ -1,34 +1,34 @@
 import { Action } from 'redux';
-import { ComponentInfo, ComponentTemplateInfo } from '../info';
+import { ModuleInfo, ModuleTemplateInfo } from '../info';
 import { ActionOptions, globalOptions } from '../options';
 import { IMap, Method } from '../types';
 import { getMethods } from '../utils';
-import { Component } from './component';
+import { Module } from './module';
 var snakecase = require('lodash.snakecase');
 
 // tslint:disable-next-line:interface-name
-export interface ReduxAppAction extends Action {
+export interface ReduxClassicAction extends Action {
     id: any;
     payload: any[];
 }
 
-export class ComponentActions {
+export class ModuleActions {
 
     public static createActions(template: object): IMap<Method> {
         const methods = getMethods(template);
         if (!methods)
             return undefined;
 
-        const templateInfo = ComponentTemplateInfo.getInfo(template);
-        const componentActions: any = {};
+        const templateInfo = ModuleTemplateInfo.getInfo(template);
+        const actions: any = {};
         Object.keys(methods).forEach(key => {
-            componentActions[key] = function (this: Component, ...payload: any[]): void {
+            actions[key] = function (this: Module, ...payload: any[]): void {
 
                 // verify 'this' arg
-                if (!(this instanceof Component))
+                if (!(this instanceof Module))
                     throw new Error(
-                        `Component method invoked with non-Component as 'this'. ` +
-                        `Component: ${template.constructor.name}, ` + 
+                        `Module method invoked with non-module as 'this'. ` +
+                        `Module: ${template.constructor.name}, ` + 
                         `Method: ${key}, ` +
                         `Bound 'this' argument is: ${this}.`
                     );
@@ -37,13 +37,13 @@ export class ComponentActions {
 
                 // handle actions and sequences (use store dispatch)
                 if (templateInfo.actions[key] || templateInfo.sequences[key]) {
-                    const compInfo = ComponentInfo.getInfo(this);
-                    const action: ReduxAppAction = {
-                        type: ComponentActions.getActionName(template, key),
-                        id: (compInfo ? compInfo.id : undefined),
+                    const moduleInfo = ModuleInfo.getInfo(this);
+                    const action: ReduxClassicAction = {
+                        type: ModuleActions.getActionName(template, key),
+                        id: (moduleInfo ? moduleInfo.id : undefined),
                         payload: payload
                     };
-                    compInfo.dispatch(action);
+                    moduleInfo.dispatch(action);
                 }
 
                 // handle regular methods (just call the function)
@@ -53,7 +53,7 @@ export class ComponentActions {
             };
         });
 
-        return componentActions;
+        return actions;
     }
 
     public static getActionName(template: object, methodName: string): string {

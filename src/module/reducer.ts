@@ -1,22 +1,22 @@
 import { Reducer, ReducersMapObject } from 'redux';
 import { IgnoreState } from '../decorators';
-import { ComponentInfo, ComponentTemplateInfo } from '../info';
-import { ROOT_COMPONENT_PATH } from '../reduxApp';
+import { ModuleInfo, ModuleTemplateInfo } from '../info';
+import { ROOT_MODULE_PATH } from '../reduxClassic';
 import { IMap, Listener } from '../types';
 import { clearProperties, defineProperties, DescriptorType, getMethods, isPrimitive, log, simpleCombineReducers } from '../utils';
-import { ComponentActions, ReduxAppAction } from './actions';
-import { Component } from './component';
+import { ModuleActions, ReduxClassicAction } from './actions';
+import { Module } from './module';
 
 // tslint:disable:member-ordering ban-types
 
-export type ReducerCreator = (changeListener: Listener<Component>) => Reducer<object>;
+export type ReducerCreator = (changeListener: Listener<Module>) => Reducer<object>;
 
 export class CombineReducersContext {
 
     public visited = new Set();
-    public path = ROOT_COMPONENT_PATH;
-    public componentPaths: string[] = [];
-    public changedComponents: IMap<Component> = {};
+    public path = ROOT_MODULE_PATH;
+    public modulePaths: string[] = [];
+    public changedModules: IMap<Module> = {};
     public invoked = false;
 
     constructor(initial?: Partial<CombineReducersContext>) {
@@ -24,12 +24,12 @@ export class CombineReducersContext {
     }
 
     public reset(): void {
-        clearProperties(this.changedComponents);
+        clearProperties(this.changedModules);
         this.invoked = false;
     }
 }
 
-export class ComponentReducer {
+export class ModuleReducer {
 
     private static readonly identityReducer = (state: any) => state;
 
@@ -37,39 +37,39 @@ export class ComponentReducer {
     // public methods
     //
 
-    public static createReducer(component: Component, componentTemplate: object): ReducerCreator {
+    public static createReducer(mod: Module, moduleTemplate: object): ReducerCreator {
 
-        const templateInfo = ComponentTemplateInfo.getInfo(componentTemplate);
+        const templateInfo = ModuleTemplateInfo.getInfo(moduleTemplate);
         if (!templateInfo)
-            throw new Error(`Inconsistent component '${componentTemplate.constructor.name}'. The 'component' class decorator is missing.`);
+            throw new Error(`Inconsistent module '${moduleTemplate.constructor.name}'.`);
 
-        const methods = ComponentReducer.createMethodsLookup(componentTemplate, templateInfo);
-        const stateProto = ComponentReducer.createStateObjectPrototype(component, templateInfo);
-        const componentId = ComponentInfo.getInfo(component).id;
+        const methods = ModuleReducer.createMethodsLookup(moduleTemplate, templateInfo);
+        const stateProto = ModuleReducer.createStateObjectPrototype(mod, templateInfo);
+        const moduleId = ModuleInfo.getInfo(mod).id;
 
         // reducer creator
-        return (changeListener: Listener<Component>) =>
+        return (changeListener: Listener<Module>) =>
 
             // the reducer
-            (state: object, action: ReduxAppAction) => {
+            (state: object, action: ReduxClassicAction) => {
 
-                log.verbose(`[reducer] Reducer of: ${componentTemplate.constructor.name}, action: ${action.type}.`);
+                log.verbose(`[reducer] Reducer of: ${moduleTemplate.constructor.name}, action: ${action.type}.`);
 
                 // initial state
                 if (state === undefined) {
                     log.verbose('[reducer] State is undefined, returning initial value.');
-                    return ComponentReducer.finalizeStateObject(component, component);
+                    return ModuleReducer.finalizeStateObject(mod, mod);
                 }
 
                 // preloaded state
-                if (state === componentTemplate) {
-                    log.verbose("[reducer] State equals to component's template, returning initial value.");
-                    return ComponentReducer.finalizeStateObject(component, component);
+                if (state === moduleTemplate) {
+                    log.verbose("[reducer] State equals to module's template, returning initial value.");
+                    return ModuleReducer.finalizeStateObject(mod, mod);
                 }
 
-                // check component id
-                if (componentId !== action.id) {
-                    log.verbose(`[reducer] Component id and action.id don't match (${componentId} !== ${action.id}).`);
+                // check module id
+                if (moduleId !== action.id) {
+                    log.verbose(`[reducer] Module id and action.id don't match (${moduleId} !== ${action.id}).`);
                     return state;
                 }
 
@@ -81,23 +81,23 @@ export class ComponentReducer {
                 }
 
                 // call the action-reducer with the new state as the 'this' argument
-                const newState = ComponentReducer.createStateObject(state, stateProto);
+                const newState = ModuleReducer.createStateObject(state, stateProto);
                 actionReducer.call(newState, ...action.payload);
 
                 // notify changes
-                changeListener(component);
+                changeListener(mod);
 
                 // return new state                
                 log.verbose('[reducer] Reducer invoked, returning new state.');
-                return ComponentReducer.finalizeStateObject(newState, component);
+                return ModuleReducer.finalizeStateObject(newState, mod);
             };
     }
 
-    public static combineReducersTree(root: Component, context: CombineReducersContext): Reducer<any> {
+    public static combineReducersTree(root: Module, context: CombineReducersContext): Reducer<any> {
 
-        const reducer = ComponentReducer.combineReducersRecursion(root, context);
+        const reducer = ModuleReducer.combineReducersRecursion(root, context);
 
-        return (state: any, action: ReduxAppAction) => {
+        return (state: any, action: ReduxClassicAction) => {
             const start = Date.now();
 
             context.invoked = true;
@@ -116,13 +116,13 @@ export class ComponentReducer {
     // private methods - state object
     //
 
-    private static createMethodsLookup(componentTemplate: object, templateInfo: ComponentTemplateInfo): IMap<Function> {
+    private static createMethodsLookup(moduleTemplate: object, templateInfo: ModuleTemplateInfo): IMap<Function> {
 
-        const allMethods = getMethods(componentTemplate);
+        const allMethods = getMethods(moduleTemplate);
 
         const actionMethods: IMap<Function> = {};
         Object.keys(templateInfo.actions).forEach(originalActionName => {
-            const normalizedActionName = ComponentActions.getActionName(componentTemplate, originalActionName);
+            const normalizedActionName = ModuleActions.getActionName(moduleTemplate, originalActionName);
             actionMethods[normalizedActionName] = allMethods[originalActionName];
         });
 
@@ -132,20 +132,20 @@ export class ComponentReducer {
     /**
      * See description of 'createStateObject'.
      */
-    private static createStateObjectPrototype(component: Component, templateInfo: ComponentTemplateInfo): object {
+    private static createStateObjectPrototype(mod: Module, templateInfo: ModuleTemplateInfo): object {
 
         // assign properties
-        const stateProto: any = defineProperties({}, component, [DescriptorType.Property]);
+        const stateProto: any = defineProperties({}, mod, [DescriptorType.Property]);
 
         // assign methods
-        const componentMethods = getMethods(component);
-        for (let key of Object.keys(componentMethods)) {
+        const moduleMethods = getMethods(mod);
+        for (let key of Object.keys(moduleMethods)) {
             if (!templateInfo.actions[key]) {
                 // regular method
-                stateProto[key] = componentMethods[key].bind(component);
+                stateProto[key] = moduleMethods[key].bind(mod);
             } else {
                 // action (not allowed)
-                stateProto[key] = ComponentReducer.actionInvokedError;
+                stateProto[key] = ModuleReducer.actionInvokedError;
             }
         }
         return stateProto;
@@ -157,9 +157,9 @@ export class ComponentReducer {
 
     /**
      * Create a "state object". The state object receives it's properties from
-     * the current state and it's methods from the owning component. Methods
-     * that represent actions are replace with a throw call, while regular
-     * methods are kept in place.
+     * the current state and it's methods from the owning module. Methods that
+     * represent actions are replace with a throw call, while regular methods
+     * are kept in place.
      */
     private static createStateObject(state: any, stateProto: object): object {
         const stateObj = Object.create(stateProto);
@@ -175,12 +175,12 @@ export class ComponentReducer {
         return stateObj;
     }
 
-    private static finalizeStateObject(state: object, component: Component): object {
+    private static finalizeStateObject(state: object, mod: Module): object {
 
         log.verbose('[finalizeStateObject] finalizing state.');
         let finalizedState = Object.assign({}, state);
 
-        finalizedState = IgnoreState.removeIgnoredProps(finalizedState, component);
+        finalizedState = IgnoreState.removeIgnoredProps(finalizedState, mod);
 
         log.verbose('[finalizeStateObject] state finalized.');
         return finalizedState;
@@ -201,19 +201,19 @@ export class ComponentReducer {
             return undefined;
         context.visited.add(obj);
 
-        // ignore branches with no descendant components
-        if (!context.componentPaths.some(path => path.startsWith(context.path)))
-            return ComponentReducer.identityReducer;
+        // ignore branches with no descendant modules
+        if (!context.modulePaths.some(path => path.startsWith(context.path)))
+            return ModuleReducer.identityReducer;
 
         // get the root reducer
         let rootReducer: Reducer<any>;
-        const info = ComponentInfo.getInfo(obj as any);
+        const info = ModuleInfo.getInfo(obj as any);
         if (info) {
             rootReducer = info.reducerCreator(comp => {
-                context.changedComponents[context.path] = comp;
+                context.changedModules[context.path] = comp;
             });
         } else {
-            rootReducer = ComponentReducer.identityReducer;
+            rootReducer = ModuleReducer.identityReducer;
         }
 
         // gather the sub-reducers
@@ -221,7 +221,7 @@ export class ComponentReducer {
         for (let key of Object.keys(obj)) {
 
             // other objects
-            const newSubReducer = ComponentReducer.combineReducersRecursion((obj as any)[key], new CombineReducersContext({
+            const newSubReducer = ModuleReducer.combineReducersRecursion((obj as any)[key], new CombineReducersContext({
                 ...context,
                 path: (context.path === '' ? key : context.path + '.' + key)
             }));
@@ -235,13 +235,13 @@ export class ComponentReducer {
         if (Object.keys(subReducers).length) {
             const combinedSubReducer = simpleCombineReducers(subReducers);
 
-            resultReducer = (state: object, action: ReduxAppAction) => {
+            resultReducer = (state: object, action: ReduxClassicAction) => {
 
                 const thisState = rootReducer(state, action);
                 const subStates = combinedSubReducer(thisState, action);
 
                 // merge self and sub states
-                const combinedState = ComponentReducer.mergeState(thisState, subStates);
+                const combinedState = ModuleReducer.mergeState(thisState, subStates);
 
                 return combinedState;
             };

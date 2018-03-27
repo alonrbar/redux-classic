@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { action, isInstanceOf } from 'src';
-import { Component } from 'src/components';
+import { Module } from 'src/module';
 import { FakeStore } from '../testTypes';
 
 // tslint:disable:no-unused-expression
@@ -10,18 +10,18 @@ describe('component utils', () => {
 
         it("returns true on an instance of a simple class", () => {
 
-            class MyComponent {
+            class MyModule {
                 public value = 'hi';
             }
 
-            const myComponent = new MyComponent();
+            const myModule = new MyModule();
 
-            expect(isInstanceOf(myComponent, MyComponent)).to.be.true;
+            expect(isInstanceOf(myModule, MyModule)).to.be.true;
         });
 
         it("returns true on a component", () => {
 
-            class MyComponent {
+            class MyModule {
                 
                 public value = 'hi';
 
@@ -31,29 +31,29 @@ describe('component utils', () => {
                 }
             }
 
-            const myComponent = Component.create(new FakeStore(), new MyComponent());
+            const myModule = Module.create(new FakeStore(), new MyModule());
 
-            expect(isInstanceOf(myComponent, MyComponent)).to.be.true;
+            expect(isInstanceOf(myModule, MyModule)).to.be.true;
         });
 
         it("returns false on an instance of a simple class", () => {
 
-            class MyComponent {
+            class MyModule {
                 public value = 'hi';
             }
 
-            class OtherComponent {
+            class OtherModule {
                 public value = 'hi';
             }
 
-            const myComponent = new MyComponent();
+            const myModule = new MyModule();
 
-            expect(isInstanceOf(myComponent, OtherComponent)).to.be.false;
+            expect(isInstanceOf(myModule, OtherModule)).to.be.false;
         });
 
         it("returns false on a component", () => {
 
-            class MyComponent {
+            class MyModule {
                 
                 public value = 'hi';
 
@@ -63,7 +63,7 @@ describe('component utils', () => {
                 }
             }
 
-            class OtherComponent {
+            class OtherModule {
                 
                 public value = 'hi';
 
@@ -73,10 +73,10 @@ describe('component utils', () => {
                 }
             }
 
-            const myComponent = Component.create(new FakeStore(), new MyComponent());
-            Component.create(new FakeStore(), new OtherComponent());
+            const myModule = Module.create(new FakeStore(), new MyModule());
+            Module.create(new FakeStore(), new OtherModule());
 
-            expect(isInstanceOf(myComponent, OtherComponent)).to.be.false;
+            expect(isInstanceOf(myModule, OtherModule)).to.be.false;
         });
     });
 });

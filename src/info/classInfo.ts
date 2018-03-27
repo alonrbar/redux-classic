@@ -2,7 +2,7 @@ import { CLASS_INFO, getSymbol, setSymbol } from '../symbols';
 import { IMap } from '../types';
 
 /**
- * Metadata stored on instances of regular and/or component classes.
+ * Metadata stored on instances of regular and/or module classes.
  */
 export class ClassInfo {
 

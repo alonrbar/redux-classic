@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { action, ReduxApp } from 'src';
+import { action, ReduxClassic } from 'src';
 
 // tslint:disable:no-unused-expression
 
@@ -19,7 +19,7 @@ describe(nameof(action), () => {
 
         var dispatched = false;
 
-        const app = new ReduxApp(new App());
+        const app = ReduxClassic.create(new App());
         app.store.subscribe(() => dispatched = true);
 
         app.root.increment();
@@ -40,7 +40,7 @@ describe(nameof(action), () => {
 
         var dispatched = false;
 
-        const app = new ReduxApp(new App());
+        const app = ReduxClassic.create(new App());
         app.store.subscribe(() => dispatched = true);
 
         app.root.increment();

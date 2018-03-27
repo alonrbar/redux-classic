@@ -7,19 +7,19 @@ class Log {
     public verbose(message: string, ...optionalParams: any[]): void {
         if (!this.shouldLog(LogLevel.Verbose))
             return;
-        console.debug('VERBOSE [redux-app] ' + message, ...optionalParams);
+        console.debug('VERBOSE [redux-classic] ' + message, ...optionalParams);
     }
 
     public debug(message: string, ...optionalParams: any[]): void {
         if (!this.shouldLog(LogLevel.Debug))
             return;
-        console.log('DEBUG [redux-app] ' + message, ...optionalParams);
+        console.log('DEBUG [redux-classic] ' + message, ...optionalParams);
     }
 
     public warn(message: string, ...optionalParams: any[]): void {
         if (!this.shouldLog(LogLevel.Warn))
             return;
-        console.warn('WARN [redux-app] ' + message, ...optionalParams);
+        console.warn('WARN [redux-classic] ' + message, ...optionalParams);
     }
 
     private shouldLog(level: LogLevel): boolean {

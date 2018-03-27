@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { action, ReduxApp, withId } from 'src';
+import { action, ReduxClassic, withId } from 'src';
 
 describe('withId', () => {
 
@@ -26,7 +26,7 @@ describe('withId', () => {
             public counter3 = new Counter();
         }
 
-        const app = new ReduxApp(new App());
+        const app = ReduxClassic.create(new App());
         try {
 
             app.root.counter1.increment();
@@ -74,7 +74,7 @@ describe('withId', () => {
             public first = new Level1First();
             public second = new Level1Second();
         }
-        const app = new ReduxApp(new App());
+        const app = ReduxClassic.create(new App());
         try {
 
             app.root.first.nested.nested.counter.increment();
@@ -100,7 +100,7 @@ describe('withId', () => {
             @withId()
             public counter3 = new Counter();
         }
-        const app = new ReduxApp(new App());
+        const app = ReduxClassic.create(new App());
         try {
 
             app.root.counter1.increment();

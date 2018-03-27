@@ -1,13 +1,13 @@
 import { expect } from 'chai';
-import { action, ActionOptions, ReduxApp } from 'src';
-import { ComponentActions } from 'src/components';
+import { action, ActionOptions, ReduxClassic } from 'src';
+import { ModuleActions } from 'src/module';
 
-describe(nameof(ComponentActions), () => {
-    describe(nameof(ComponentActions.getActionName), () => {
+describe(nameof(ModuleActions), () => {
+    describe(nameof(ModuleActions.getActionName), () => {
 
         it('returns a "lower-cased styled" action name by default', () => {
 
-            class MyComponent {
+            class MyModule {
 
                 @action
                 public action(): void {
@@ -15,19 +15,19 @@ describe(nameof(ComponentActions), () => {
                 }
             }
 
-            const creator = new MyComponent();
+            const creator = new MyModule();
 
-            const actionName = ComponentActions.getActionName(creator, nameof(creator.action));
-            expect(actionName).to.eql('MyComponent.action');
+            const actionName = ModuleActions.getActionName(creator, nameof(creator.action));
+            expect(actionName).to.eql('MyModule.action');
         });
 
         it('returns a "redux styled" action name when uppercaseActions option is true', () => {
             try {
 
                 // set global options before instantiating
-                ReduxApp.options.action.uppercaseActions = true;
+                ReduxClassic.options.action.uppercaseActions = true;
 
-                class MyComponent {
+                class MyModule {
 
                     @action
                     public action(): void {
@@ -35,14 +35,14 @@ describe(nameof(ComponentActions), () => {
                     }
                 }
     
-                const creator = new MyComponent();
+                const creator = new MyModule();
     
-                const actionName = ComponentActions.getActionName(creator, nameof(creator.action));
-                expect(actionName).to.eql('MY_COMPONENT.ACTION');
+                const actionName = ModuleActions.getActionName(creator, nameof(creator.action));
+                expect(actionName).to.eql('MY_MODULE.ACTION');
 
             } finally {
                 // restore defaults
-                ReduxApp.options.action = new ActionOptions();
+                ReduxClassic.options.action = new ActionOptions();
             }
         });
 

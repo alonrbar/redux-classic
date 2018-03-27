@@ -40,7 +40,7 @@ class Counter {
     }
 }
 
-const app = new ReduxApp(new App());
+const app = ReduxClassic.create(new App());
 
 console.log(app.root.counter.value); // 0
 console.log(app.store.getState()); // { counter: { value: 0 } }
@@ -62,20 +62,20 @@ More examples, including usage with [Angular](https://angular.io) and [React](ht
 
 ## How it works
 
-For each decorated class the library generates an underlying `Component` object that holds the same properties and methods.
-The new Component object has it's prototype patched and all of it's methods replaced with dispatch() calls.
-The generated Component also has a hidden 'reducer' property which is later on used by redux store. The 'reducer' property itself is generated from the original object methods, replacing all 'this' values with the current state from the store on each call (using Object.assign and Function.prototype.call).
+For each decorated class the library generates an underlying `Module` object that holds the same properties and methods.
+The new Module object has it's prototype patched and all of it's methods replaced with dispatch() calls.
+The generated Module also has a hidden 'reducer' property which is later on used by redux store. The 'reducer' property itself is generated from the original object methods, replacing all 'this' values with the current state from the store on each call (using Object.assign and Function.prototype.call).
 
-To make it easier to debug, each generated component name follows the following pattern: OriginalClassName_ReduxAppComponent. If while debugging you don't see the _ReduxAppComponent suffix it means the class was not replaced by an underlying component and is probably lacking a decorator (@action or @sequence).
+To make it easier to debug, each generated component name follows the following pattern: OriginalClassName_ReduxAppModule. If while debugging you don't see the _ReduxAppModule suffix it means the class was not replaced by an underlying component and is probably lacking a decorator (@action or @sequence).
 
-_Reading the source tip #1: There are two main classes in redux-app. The first is ReduxApp and the second is Component._
+_Reading the source tip #1: There are two main classes in redux-app. The first is ReduxClassic and the second is Module._
 
 ## Documentation
 
 - [Stay Pure](#stay-pure)
 - Features
   - [Async Actions](#async-actions)
-  - [Multiple Components of the Same Type](#multiple-components-of-the-same-type)
+  - [Multiple Modules of the Same Type](#multiple-components-of-the-same-type)
   - [Computed Values ("selectors")](#computed-values)
   - [Ignoring Parts of the State](#ignoring-parts-of-the-state)
   - [Connect to a view](#connect-to-a-view)
@@ -112,7 +112,7 @@ Usage:
 _working example can be found on the [redux-app-examples](https://github.com/alonrbar/redux-app-examples) page_
 
 ```javascript
-class MyComponent {
+class MyModule {
 
     @sequence
     public async fetchImage() {
@@ -151,7 +151,7 @@ class MyComponent {
 }
 ```
 
-### Multiple Components of the Same Type
+### Multiple Modules of the Same Type
 
 The role of the `withId` decorator is double. From one hand, it enables the co-existence of two (or more) instances of the same component, each with it's own separate state. From the other hand, it is used to keep two separate components in sync. Every component, when dispatching an action attaches it's ID to the action payload. The reducer in it's turn reacts only to actions targeting it's component ID.
 The 'id' argument of the decorator can be anything (string, number, object, etc.).
@@ -180,10 +180,10 @@ export class App {
 
 ### Connect to a view
 
-You can leverage the following ReduxApp static method to connect your state components to your view:
+You can leverage the following ReduxClassic static method to connect your state components to your view:
 
 ```javascript
-ReduxApp.getComponent(componentType, componentId?, appId?)
+ReduxClassic.getModule(componentType, componentId?, appId?)
 ```
 
 You can use IDs to retrieve a specific component or omit the ID to get the first instance that redux-app finds.
@@ -196,11 +196,11 @@ Use the following snippet to create an `autoSync` function, similar to react-red
 
 ```javascript
 import { connect } from 'react-redux';
-import { Constructor, getMethods, ReduxApp } from 'redux-app';
+import { Constructor, getMethods, ReduxClassic } from 'redux-app';
 
 export function autoSync<T>(stateType: Constructor<T>) {
     return connect<T>(() => {
-        const comp = ReduxApp.getComponent(stateType);
+        const comp = ReduxClassic.getModule(stateType);
         const compMethods = getMethods(comp, true);
         return Object.assign({}, comp, compMethods);
     });
@@ -218,7 +218,7 @@ const MyReactCounter: React.SFC<Counter> = (props) => (
 );
 
 const synced = autoSync(Counter)(MyReactCounter);
-export { synced as MyReactComponent };
+export { synced as MyReactModule };
 ```
 
 #### Angular and others
@@ -229,7 +229,7 @@ With Angular and similar frameworks (like Aurelia) it's as easy as:
 
 ```javascript
 class MyCounterView {
-    public myCounterReference = ReduxApp.getComponent(Counter);
+    public myCounterReference = ReduxClassic.getModule(Counter);
 
     // other view logic here...
 }
@@ -268,7 +268,7 @@ You can use the `ignoreState` decorator to prevent particular properties of your
 Example:
 
 ```javascript
-class MyComponent {
+class MyModule {
 
     public storeMe = 'hello';
 
@@ -281,7 +281,7 @@ class MyComponent {
     }
 }
 
-const app = new ReduxApp(new MyComponent());
+const app = ReduxClassic.create(new MyModule());
 
 console.log(app.root); // { storeMe: 'hello', ignoreMe: 'not stored' }
 console.log(app.store.getState()); // { storeMe: 'hello' }
@@ -290,11 +290,11 @@ console.log(app.store.getState()); // { storeMe: 'hello' }
 ### isInstanceOf
 
 We've already said that classes decorated with the `component` decorator are being replaced at runtime
-with a generated subclass of the base Component class. This means you lose the ability to have assertions
+with a generated subclass of the base Module class. This means you lose the ability to have assertions
 like this:
 
 ```javascript
-class MyComponent {
+class MyModule {
     @action
     public someAction() {
         // ...
@@ -303,14 +303,14 @@ class MyComponent {
 
 // and elsewhere:
 
-if (!(obj instanceof MyComponent))
-    throw new Error("Invalid argument. Expected instance of MyComponent");
+if (!(obj instanceof MyModule))
+    throw new Error("Invalid argument. Expected instance of MyModule");
 ```
 
 Luckily redux-app supplies a utility method called `isInstanceOf` which you can use instead:
 
 ```javascript
-class MyComponent {
+class MyModule {
     @action
     public someAction() {
         // ...
@@ -319,15 +319,15 @@ class MyComponent {
 
 // and elsewhere:
 
-if (!isInstanceOf(obj, MyComponent))
-    throw new Error("Invalid argument. Expected instance of MyComponent");
+if (!isInstanceOf(obj, MyModule))
+    throw new Error("Invalid argument. Expected instance of MyModule");
 ```
 
-The updated code will throw either if `obj` is instance of `MyComponent` or if it is an instance of a Component that was generated from the `MyComponent` class. In all other cases the call to `isInstanceOf` will return `false` and no exception will be thrown.
+The updated code will throw either if `obj` is instance of `MyModule` or if it is an instance of a Module that was generated from the `MyModule` class. In all other cases the call to `isInstanceOf` will return `false` and no exception will be thrown.
 
 ### Applying Enhancers
 
-The `ReduxApp` class has few constructor overloads that lets you pass additional store arguments (for instance, the awesome [devtool extension](https://github.com/zalmoxisus/redux-devtools-extension) enhancer).
+The `ReduxClassic` class has few constructor overloads that lets you pass additional store arguments (for instance, the awesome [devtool extension](https://github.com/zalmoxisus/redux-devtools-extension) enhancer).
 
 ```javascript
 constructor(appCreator: T, enhancer?: StoreEnhancer<T>);
@@ -340,7 +340,7 @@ constructor(appCreator: T, options: AppOptions, preloadedState: T, enhancer?: St
 Example:
 
 ```javascript
-const app = new ReduxApp(new App(), devToolsEnhancer(undefined));
+const app = ReduxClassic.create(new App(), devToolsEnhancer(undefined));
 ```
 
 ### App Options
@@ -365,7 +365,7 @@ export class AppOptions {
 Usage:
 
 ```javascript
-const app = new ReduxApp(new App(), { updateState: false }, devToolsEnhancer(undefined));
+const app = ReduxClassic.create(new App(), { updateState: false }, devToolsEnhancer(undefined));
 ```
 
 ### Global Options
@@ -420,8 +420,8 @@ class ActionOptions {
 Usage:
 
 ```javascript
-ReduxApp.options.logLevel = LogLevel.Debug;
-ReduxApp.options.action.uppercaseActions = true;
+ReduxClassic.options.logLevel = LogLevel.Debug;
+ReduxClassic.options.action.uppercaseActions = true;
 ```
 
 ### Changelog

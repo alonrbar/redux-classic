@@ -16,15 +16,15 @@ export function getOwnSymbol(obj: any, symbol: symbol): any {
 }
 
 /**
- * Stored on component instances.
+ * Stored on module instances.
  */
-export const COMPONENT_INFO = Symbol('REDUX-APP.COMPONENT_INFO');
+export const MODULE_INFO = Symbol('REDUX-CLASSIC.MODULE_INFO');
 /**
- * Stored on component templates constructors.
+ * Stored on module templates constructors.
  */
-export const COMPONENT_TEMPLATE_INFO = Symbol('REDUX-APP.COMPONENT_TEMPLATE_INFO');
+export const MODULE_TEMPLATE_INFO = Symbol('REDUX-CLASSIC.MODULE_TEMPLATE_INFO');
 /**
  * Stored on any class constructor.
  */
-export const CLASS_INFO = Symbol('REDUX-APP.CLASS_INFO');
-export const AUTO_ID = Symbol('REDUX-APP.AUTO_ID');
+export const CLASS_INFO = Symbol('REDUX-CLASSIC.CLASS_INFO');
+export const AUTO_ID = Symbol('REDUX-CLASSIC.AUTO_ID');

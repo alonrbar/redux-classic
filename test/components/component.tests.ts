@@ -1,12 +1,12 @@
 import { expect } from 'chai';
 import { action } from 'src';
-import { Component } from 'src/components';
-import { ComponentInfo } from 'src/info';
+import { ModuleInfo } from 'src/info';
+import { Module } from 'src/module';
 import { FakeStore } from '../testTypes';
 
 // tslint:disable:no-unused-expression
 
-describe(nameof(Component), () => {
+describe(nameof(Module), () => {
 
     describe('create', () => {
 
@@ -17,7 +17,7 @@ describe(nameof(Component), () => {
             }
 
             const store = new FakeStore();
-            Component.create(store, new Root());
+            Module.create(store, new Root());
         });
 
         it("components nested inside standard objects are constructed", () => {
@@ -33,10 +33,10 @@ describe(nameof(Component), () => {
             }
 
             class Level3 {
-                public some = new ThisIsAComponent();
+                public some = new ThisIsAModule();
             }
 
-            class ThisIsAComponent {
+            class ThisIsAModule {
 
                 @action
                 public dispatchMe() {
@@ -46,34 +46,34 @@ describe(nameof(Component), () => {
 
             // create component tree
             const store = new FakeStore();
-            const root: any = Component.create(store, new Root());
+            const root: any = Module.create(store, new Root());
 
-            expect(root).to.be.an.instanceOf(Component); // root is always a component
-            expect(root.first).to.not.be.an.instanceOf(Component);
-            expect(root.first.second).to.not.be.an.instanceOf(Component);
-            expect(root.first.second.third).to.not.be.an.instanceOf(Component);
-            expect(root.first.second.third.some).to.be.an.instanceOf(Component);
+            expect(root).to.be.an.instanceOf(Module); // root is always a component
+            expect(root.first).to.not.be.an.instanceOf(Module);
+            expect(root.first.second).to.not.be.an.instanceOf(Module);
+            expect(root.first.second.third).to.not.be.an.instanceOf(Module);
+            expect(root.first.second.third.some).to.be.an.instanceOf(Module);
         });
 
         it("multiple components created from the same creator instance are pointing to the same component instance", () => {
 
             class Root {
-                public link: IAmComponent;
-                public original = new IAmComponent();
-                public nested: NestedComponent;
+                public link: IAmModule;
+                public original = new IAmModule();
+                public nested: NestedModule;
 
                 constructor() {
                     this.link = this.original;
-                    this.nested = new NestedComponent(this.link);
+                    this.nested = new NestedModule(this.link);
                 }
             }
 
-            class NestedComponent {
-                constructor(public readonly link: IAmComponent) {
+            class NestedModule {
+                constructor(public readonly link: IAmModule) {
                 }
             }
 
-            class IAmComponent {
+            class IAmModule {
 
                 @action
                 public dispatchMe() {
@@ -83,7 +83,7 @@ describe(nameof(Component), () => {
 
             // create component tree
             const store = new FakeStore();
-            const root: any = Component.create(store, new Root());
+            const root: any = Module.create(store, new Root());
 
             expect(root.link).to.equal(root.original);
             expect(root.original).to.equal(root.nested.link);
@@ -93,27 +93,27 @@ describe(nameof(Component), () => {
 
             class Root {
 
-                public originalComp = new CanBeCircularComponent();
-                public circularComp: CircularComponentHolder;
+                public originalComp = new CanBeCircularModule();
+                public circularComp: CircularModuleHolder;
 
                 public originalObj = new CanBeCircularObject();
                 public circularObj: CircularObjectHolder;
 
                 constructor() {
-                    this.circularComp = new CircularComponentHolder(this.originalComp);
+                    this.circularComp = new CircularModuleHolder(this.originalComp);
                     this.circularObj = new CircularObjectHolder(this.originalObj);
                 }
             }
 
-            class CircularComponentHolder {
-                constructor(public readonly original: CanBeCircularComponent) {
+            class CircularModuleHolder {
+                constructor(public readonly original: CanBeCircularModule) {
                     original.circle = this;
                 }
             }
 
-            class CanBeCircularComponent {
+            class CanBeCircularModule {
 
-                public circle: CircularComponentHolder;
+                public circle: CircularModuleHolder;
 
                 @action
                 public dispatchMe() {
@@ -133,7 +133,7 @@ describe(nameof(Component), () => {
 
             // create component tree
             const store = new FakeStore();
-            const root: Root = (Component.create(store, new Root()) as any);
+            const root: Root = (Module.create(store, new Root()) as any);
 
             expect(root.circularComp.original).to.equal(root.originalComp, 'different components');
             expect(root.circularObj.original).to.equal(root.originalObj, 'different objects');
@@ -152,10 +152,10 @@ describe(nameof(Component), () => {
             }
 
             class Level3 {
-                public some = new ThisIsAComponent();
+                public some = new ThisIsAModule();
             }
 
-            class ThisIsAComponent {
+            class ThisIsAModule {
 
                 @action
                 public dispatchMe() {
@@ -169,7 +169,7 @@ describe(nameof(Component), () => {
             (store.dispatch as any) = () => { isConnected = true; };
 
             // create component tree
-            const root: any = Component.create(store, new Root());
+            const root: any = Module.create(store, new Root());
 
             // before dispatching
             expect(isConnected).to.be.false;
@@ -192,10 +192,10 @@ describe(nameof(Component), () => {
             }
 
             class Level3 {
-                public some = new ThisIsNotAComponent();
+                public some = new ThisIsNotAModule();
             }
 
-            class ThisIsNotAComponent {
+            class ThisIsNotAModule {
 
                 public dispatchMe() {
                     /* noop */
@@ -208,7 +208,7 @@ describe(nameof(Component), () => {
             (store.dispatch as any) = () => { isConnected = true; };
 
             // create component tree
-            const root: any = Component.create(store, new Root());
+            const root: any = Module.create(store, new Root());
 
             // assert
             root.first.second.third.some.dispatchMe();
@@ -238,14 +238,14 @@ describe(nameof(Component), () => {
                 }
             }
 
-            var root: Root = Component.create(new FakeStore(), new Root()) as any;
+            var root: Root = Module.create(new FakeStore(), new Root()) as any;
 
             expect(root.first.foo.toString).to.not.equal(root.second.foo);
         });
 
         it("two component instances of the same class has the same methods", () => {
 
-            class TheComponent {
+            class TheModule {
 
                 @action
                 public foo() {
@@ -253,8 +253,8 @@ describe(nameof(Component), () => {
                 }
             }
 
-            var comp1: TheComponent = Component.create(new FakeStore(), new TheComponent()) as any;
-            var comp2: TheComponent = Component.create(new FakeStore(), new TheComponent()) as any;
+            var comp1: TheModule = Module.create(new FakeStore(), new TheModule()) as any;
+            var comp2: TheModule = Module.create(new FakeStore(), new TheModule()) as any;
 
             expect(comp1.foo).to.equal(comp2.foo);
         });
@@ -283,7 +283,7 @@ describe(nameof(Component), () => {
             (store.dispatch as any) = (actionObject: any) => { dispatchedAction = actionObject; };
 
             // create component tree
-            const comp: any = Component.create(store, new Derived());
+            const comp: any = Module.create(store, new Derived());
 
             // has methods
             expect(comp).to.have.property('foo');
@@ -298,7 +298,7 @@ describe(nameof(Component), () => {
 
         it('component getters are preserved', () => {
 
-            class MyComponent {
+            class MyModule {
 
                 public get prop1(): string {
                     return 'hi';
@@ -312,7 +312,7 @@ describe(nameof(Component), () => {
             }
 
             const store = new FakeStore();
-            const comp = Component.create(store, new MyComponent());
+            const comp = Module.create(store, new MyModule());
 
             expect(comp).to.haveOwnProperty('prop1');
             expect(comp).to.haveOwnProperty('prop2');
@@ -339,8 +339,8 @@ describe(nameof(Component), () => {
             }
 
             const store = new FakeStore();
-            const comp = Component.create(store, new Person());
-            const info = ComponentInfo.getInfo(comp);
+            const comp = Module.create(store, new Person());
+            const info = ModuleInfo.getInfo(comp);
             const reducer = info.reducerCreator(() => { /* noop */ });
 
             expect(() => reducer({}, { type: 'Person.shouldThrow' })).to.throw(Error);
@@ -362,8 +362,8 @@ describe(nameof(Component), () => {
             }
 
             const store = new FakeStore();
-            const comp = Component.create(store, new Person());
-            const info = ComponentInfo.getInfo(comp);
+            const comp = Module.create(store, new Person());
+            const info = ModuleInfo.getInfo(comp);
             const reducer = info.reducerCreator(() => { /* noop */ });
 
             var newState = reducer({}, { type: 'Person.changeName', payload: ['alon'] }) as any;
