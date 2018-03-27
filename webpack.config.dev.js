@@ -7,8 +7,8 @@ module.exports = {
     devtool: 'sourcemap',
     output: {
         path: path.resolve('./dist'),
-        filename: 'redux-app.js',
-        library: 'redux-app',
+        filename: 'redux-classic.js',
+        library: 'redux-classic',
         libraryTarget: 'umd',
         umdNamedDefine: true,
         devtoolModuleFilenameTemplate: '[absolute-resource-path]',

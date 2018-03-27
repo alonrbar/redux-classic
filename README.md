@@ -1,24 +1,26 @@
-# redux-app
+# redux-classic
 
 Type-safe, DRY and OO redux. Implemented with typescript.
 
-[![npm version](https://img.shields.io/npm/v/redux-app.svg)](https://www.npmjs.com/package/redux-app)
-[![npm license](https://img.shields.io/npm/l/redux-app.svg)](https://www.npmjs.com/package/redux-app)
-[![dependencies](https://david-dm.org/alonrbar/redux-app.svg)](https://github.com/alonrbar/redux-app)
-[![dependencies](https://david-dm.org/alonrbar/redux-app/dev-status.svg)](https://github.com/alonrbar/redux-app)
+[![npm version](https://img.shields.io/npm/v/redux-classic.svg)](https://www.npmjs.com/package/redux-classic)
+[![npm license](https://img.shields.io/npm/l/redux-classic.svg)](https://www.npmjs.com/package/redux-classic)
+[![dependencies](https://david-dm.org/alonrbar/redux-classic.svg)](https://github.com/alonrbar/redux-classic)
+[![dependencies](https://david-dm.org/alonrbar/redux-classic/dev-status.svg)](https://github.com/alonrbar/redux-classic)
 
-[Change Log](https://github.com/alonrbar/redux-app/blob/master/CHANGELOG.md)
+[Change Log](https://github.com/alonrbar/redux-classic/blob/master/CHANGELOG.md)
+
+## This is a clone of [redux-classic](https://github.com/alonrbar/redux-classic) and is planned to be the main repo
 
 ## Installation
 
 ```shell
-yarn add redux-app
+yarn add redux-classic
 ```
 
 or
 
 ```shell
-npm install --save redux-app
+npm install --save redux-classic
 ```
 
 ## Short Example
@@ -55,7 +57,7 @@ That's why we write `this.value = this.value + 1` and not `this.value++`.
 
 ## More Examples
 
-More examples, including usage with [Angular](https://angular.io) and [React](https://reactjs.org/), can be found here [redux-app-examples](https://github.com/alonrbar/redux-app-examples).
+More examples, including usage with [Angular](https://angular.io) and [React](https://reactjs.org/), can be found here [redux-classic-examples](https://github.com/alonrbar/redux-classic-examples).
 
 ## How it works
 
@@ -65,7 +67,7 @@ The generated Component also has a hidden 'reducer' property which is later on u
 
 To make it easier to debug, each generated component name follows the following pattern: OriginalClassName_ReduxAppComponent. If while debugging you don't see the _ReduxAppComponent suffix it means the class was not replaced by an underlying component and is probably lacking a decorator (@action or @sequence).
 
-_Reading the source tip #1: There are two main classes in redux-app. The first is ReduxApp and the second is Component._
+_Reading the source tip #1: There are two main classes in redux-classic. The first is ReduxApp and the second is Component._
 
 ## Documentation
 
@@ -84,11 +86,11 @@ _Reading the source tip #1: There are two main classes in redux-app. The first i
 - Options
   - [App Options](#app-options)
   - [Global Options](#global-options)
-- [Changelog](https://github.com/alonrbar/redux-app/blob/master/CHANGELOG.md)
+- [Changelog](https://github.com/alonrbar/redux-classic/blob/master/CHANGELOG.md)
 
 ### Stay Pure
 
-Although redux-app embraces a new syntax it still adheres to [the three principals of redux](http://redux.js.org/docs/introduction/ThreePrinciples.html):
+Although redux-classic embraces a new syntax it still adheres to [the three principals of redux](http://redux.js.org/docs/introduction/ThreePrinciples.html):
 
 - The store is still the single source of truth. An automatic process propagates it to the components, similarly to what happens in react-redux.
 - The state is still read only. **Don't mutate the component's state directly**, only via actions (methods).
@@ -96,8 +98,8 @@ Although redux-app embraces a new syntax it still adheres to [the three principa
 
 ### Async Actions
 
-Async actions (thunks, sagas, epics...) and side effects are handled in redux-app by using the `sequence` decorator.
-What it does is to tell redux-app that the decorated method acts (almost) as a plain old javascript method. We say _almost_ since while the method body is executed regularly it still dispatches an action so it's still easy to track and log.
+Async actions (thunks, sagas, epics...) and side effects are handled in redux-classic by using the `sequence` decorator.
+What it does is to tell redux-classic that the decorated method acts (almost) as a plain old javascript method. We say _almost_ since while the method body is executed regularly it still dispatches an action so it's still easy to track and log.
 
 Remember:
 
@@ -106,7 +108,7 @@ Remember:
 
 Usage:
 
-_working example can be found on the [redux-app-examples](https://github.com/alonrbar/redux-app-examples) page_
+_working example can be found on the [redux-classic-examples](https://github.com/alonrbar/redux-classic-examples) page_
 
 ```javascript
 class MyComponent {
@@ -147,7 +149,7 @@ The 'id' argument of the decorator can be anything (string, number, object, etc.
 
 Example:
 
-_working example can be found on the [redux-app-examples](https://github.com/alonrbar/redux-app-examples) page_
+_working example can be found on the [redux-classic-examples](https://github.com/alonrbar/redux-classic-examples) page_
 
 ```javascript
 export class App {
@@ -175,11 +177,11 @@ You can leverage the following ReduxApp static method to connect your state comp
 ReduxApp.getComponent(componentType, componentId?, appId?)
 ```
 
-You can use IDs to retrieve a specific component or omit the ID to get the first instance that redux-app finds.
+You can use IDs to retrieve a specific component or omit the ID to get the first instance that redux-classic finds.
 
 #### React
 
-_working example can be found on the [redux-app-examples](https://github.com/alonrbar/redux-app-examples) page_
+_working example can be found on the [redux-classic-examples](https://github.com/alonrbar/redux-classic-examples) page_
 
 Use the snippet below to create an `autoSync` function. You can then use it as you would normally use react-redux's `connect`:
 
@@ -199,7 +201,7 @@ The `autoSync` snippet:
 
 ```javascript
 import { connect } from 'react-redux';
-import { Constructor, getMethods, ReduxApp } from 'redux-app';
+import { Constructor, getMethods, ReduxApp } from 'redux-classic';
 
 export function autoSync<T>(stateType: Constructor<T>) {
     return connect<T>(() => {
@@ -212,7 +214,7 @@ export function autoSync<T>(stateType: Constructor<T>) {
 
 #### Angular and others
 
-_working example can be found on the [redux-app-examples](https://github.com/alonrbar/redux-app-examples) page_
+_working example can be found on the [redux-classic-examples](https://github.com/alonrbar/redux-classic-examples) page_
 
 With Angular and similar frameworks (like Aurelia) it's as easy as:
 
@@ -232,7 +234,7 @@ To calculate values from other parts of the components state instead of using a 
 
 Example:
 
-_working example can be found on the [redux-app-examples](https://github.com/alonrbar/redux-app-examples) page_
+_working example can be found on the [redux-classic-examples](https://github.com/alonrbar/redux-classic-examples) page_
 
 ```javascript
 class ComputedGreeter {
@@ -296,7 +298,7 @@ if (!(obj instanceof MyComponent))
     throw new Error("Invalid argument. Expected instance of MyComponent");
 ```
 
-Luckily redux-app supplies a utility method called `isInstanceOf` which you can use instead:
+Luckily redux-classic supplies a utility method called `isInstanceOf` which you can use instead:
 
 ```javascript
 class MyComponent {
@@ -415,4 +417,4 @@ ReduxApp.options.action.uppercaseActions = true;
 
 ### Changelog
 
-The change log can be found [here](https://github.com/alonrbar/redux-app/blob/master/CHANGELOG.md).
+The change log can be found [here](https://github.com/alonrbar/redux-classic/blob/master/CHANGELOG.md).

@@ -6,8 +6,8 @@ module.exports = {
     entry: ['./src/index.ts'],
     output: {
         path: path.resolve('./dist'),
-        filename: 'redux-app.min.js',
-        library: 'redux-app',
+        filename: 'redux-classic.min.js',
+        library: 'redux-classic',
         libraryTarget: 'umd',
         umdNamedDefine: true
     },
