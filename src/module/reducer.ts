@@ -1,22 +1,20 @@
-import { Reducer, ReducersMapObject } from 'redux';
+import { Reducer } from 'redux';
 import { IgnoreState } from '../decorators';
 import { ModuleInfo, ModuleTemplateInfo } from '../info';
-import { ROOT_MODULE_PATH } from '../reduxClassic';
 import { IMap, Listener } from '../types';
-import { clearProperties, defineProperties, DescriptorType, getMethods, isPrimitive, log, simpleCombineReducers } from '../utils';
+import { clearProperties, defineProperties, DescriptorType, getMethods, log } from '../utils';
 import { ModuleActions, ReduxClassicAction } from './actions';
-import { Module } from './module';
+import { ReduxModule } from './module';
 
 // tslint:disable:member-ordering ban-types
 
-export type ReducerCreator = (changeListener: Listener<Module>) => Reducer<object>;
+export type ReducerCreator = (changeListener: Listener<ReduxModule>) => Reducer<object>;
 
 export class CombineReducersContext {
 
     public visited = new Set();
-    public path = ROOT_MODULE_PATH;
     public modulePaths: string[] = [];
-    public changedModules: IMap<Module> = {};
+    public changedModules: IMap<ReduxModule> = {};
     public invoked = false;
 
     constructor(initial?: Partial<CombineReducersContext>) {
@@ -31,13 +29,11 @@ export class CombineReducersContext {
 
 export class ModuleReducer {
 
-    private static readonly identityReducer = (state: any) => state;
-
     //
     // public methods
     //
 
-    public static createReducer(mod: Module, moduleTemplate: object): ReducerCreator {
+    public static createReducer(mod: ReduxModule, moduleTemplate: object): ReducerCreator {
 
         const templateInfo = ModuleTemplateInfo.getInfo(moduleTemplate);
         if (!templateInfo)
@@ -48,7 +44,7 @@ export class ModuleReducer {
         const moduleId = ModuleInfo.getInfo(mod).id;
 
         // reducer creator
-        return (changeListener: Listener<Module>) =>
+        return (changeListener: Listener<ReduxModule>) =>
 
             // the reducer
             (state: object, action: ReduxClassicAction) => {
@@ -93,25 +89,6 @@ export class ModuleReducer {
             };
     }
 
-    public static combineReducersTree(root: Module, context: CombineReducersContext): Reducer<any> {
-
-        const reducer = ModuleReducer.combineReducersRecursion(root, context);
-
-        return (state: any, action: ReduxClassicAction) => {
-            const start = Date.now();
-
-            context.invoked = true;
-            log.debug(`[rootReducer] Reducing action: ${action.type}.`);
-
-            const newState = reducer(state, action);
-
-            const end = Date.now();
-            log.debug(`[rootReducer] Reducer tree processed in ${end - start}ms.`);
-
-            return newState;
-        };
-    }
-
     //
     // private methods - state object
     //
@@ -132,7 +109,7 @@ export class ModuleReducer {
     /**
      * See description of 'createStateObject'.
      */
-    private static createStateObjectPrototype(mod: Module, templateInfo: ModuleTemplateInfo): object {
+    private static createStateObjectPrototype(mod: ReduxModule, templateInfo: ModuleTemplateInfo): object {
 
         // assign properties
         const stateProto: any = defineProperties({}, mod, [DescriptorType.Property]);
@@ -175,7 +152,7 @@ export class ModuleReducer {
         return stateObj;
     }
 
-    private static finalizeStateObject(state: object, mod: Module): object {
+    private static finalizeStateObject(state: object, mod: ReduxModule): object {
 
         log.verbose('[finalizeStateObject] finalizing state.');
         let finalizedState = Object.assign({}, state);
@@ -184,88 +161,5 @@ export class ModuleReducer {
 
         log.verbose('[finalizeStateObject] state finalized.');
         return finalizedState;
-    }
-
-    //
-    // private methods - combine reducers
-    //
-
-    private static combineReducersRecursion(obj: any, context: CombineReducersContext): Reducer<any> {
-
-        // no need to search inside primitives
-        if (isPrimitive(obj))
-            return undefined;
-
-        // prevent endless loops on circular references
-        if (context.visited.has(obj))
-            return undefined;
-        context.visited.add(obj);
-
-        // ignore branches with no descendant modules
-        if (!context.modulePaths.some(path => path.startsWith(context.path)))
-            return ModuleReducer.identityReducer;
-
-        // get the root reducer
-        let rootReducer: Reducer<any>;
-        const info = ModuleInfo.getInfo(obj as any);
-        if (info) {
-            rootReducer = info.reducerCreator(comp => {
-                context.changedModules[context.path] = comp;
-            });
-        } else {
-            rootReducer = ModuleReducer.identityReducer;
-        }
-
-        // gather the sub-reducers
-        const subReducers: ReducersMapObject = {};
-        for (let key of Object.keys(obj)) {
-
-            // other objects
-            const newSubReducer = ModuleReducer.combineReducersRecursion((obj as any)[key], new CombineReducersContext({
-                ...context,
-                path: (context.path === '' ? key : context.path + '.' + key)
-            }));
-            if (typeof newSubReducer === 'function')
-                subReducers[key] = newSubReducer;
-        }
-
-        let resultReducer = rootReducer;
-
-        // combine reducers
-        if (Object.keys(subReducers).length) {
-            const combinedSubReducer = simpleCombineReducers(subReducers);
-
-            resultReducer = (state: object, action: ReduxClassicAction) => {
-
-                const thisState = rootReducer(state, action);
-                const subStates = combinedSubReducer(thisState, action);
-
-                // merge self and sub states
-                const combinedState = ModuleReducer.mergeState(thisState, subStates);
-
-                return combinedState;
-            };
-        }
-
-        return resultReducer;
-    }
-
-    private static mergeState(state: any, subStates: any): any {
-
-        if (Array.isArray(state) && Array.isArray(subStates)) {
-
-            // merge arrays
-            for (let i = 0; i < subStates.length; i++)
-                state[i] = subStates[i];
-            return state;
-
-        } else {
-
-            // merge objects
-            return {
-                ...state,
-                ...subStates
-            };
-        }
     }
 }

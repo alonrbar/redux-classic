@@ -1,4 +1,4 @@
-import { Module } from '../module';
+import { ReduxModule } from '../module';
 import { getOwnSymbol, getSymbol, MODULE_TEMPLATE_INFO, setSymbol } from '../symbols';
 import { IMap } from '../types';
 import { getConstructorOwnProp, getConstructorProp } from '../utils';
@@ -82,7 +82,7 @@ export class ModuleTemplateInfo {
     // instance members
     //
 
-    public moduleClass: typeof Module;
+    public moduleClass: typeof ReduxModule;
     public actions: IMap<boolean> = {};
     public sequences: IMap<boolean> = {};
     public childIds: any = {};

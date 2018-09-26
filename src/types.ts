@@ -13,3 +13,9 @@ export interface IMap<T> {
 }
 
 export type Listener<T = any> = (arg?: T) => void;
+
+export declare type ResolverKey<T> = Constructor<T> | symbol;
+
+export interface IResolver {
+    get<T>(key: ResolverKey<T>, params?: any): T;
+}

@@ -27,4 +27,3 @@ export const MODULE_TEMPLATE_INFO = Symbol('REDUX-CLASSIC.MODULE_TEMPLATE_INFO')
  * Stored on any class constructor.
  */
 export const CLASS_INFO = Symbol('REDUX-CLASSIC.CLASS_INFO');
-export const AUTO_ID = Symbol('REDUX-CLASSIC.AUTO_ID');

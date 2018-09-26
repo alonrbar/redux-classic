@@ -1,12 +1,12 @@
 import { expect } from 'chai';
 import { action } from 'src';
 import { ModuleInfo } from 'src/info';
-import { Module } from 'src/module';
+import { ReduxModule } from 'src/module';
 import { FakeStore } from '../testTypes';
 
 // tslint:disable:no-unused-expression
 
-describe(nameof(Module), () => {
+describe(nameof(ReduxModule), () => {
 
     describe('create', () => {
 
@@ -17,7 +17,7 @@ describe(nameof(Module), () => {
             }
 
             const store = new FakeStore();
-            Module.create(store, new Root());
+            ReduxModule.create(store, new Root());
         });
 
         it("modules nested inside standard objects are constructed", () => {
@@ -46,13 +46,13 @@ describe(nameof(Module), () => {
 
             // create module tree
             const store = new FakeStore();
-            const root: any = Module.create(store, new Root());
+            const root: any = ReduxModule.create(store, new Root());
 
-            expect(root).to.be.an.instanceOf(Module); // root is always a module
-            expect(root.first).to.not.be.an.instanceOf(Module);
-            expect(root.first.second).to.not.be.an.instanceOf(Module);
-            expect(root.first.second.third).to.not.be.an.instanceOf(Module);
-            expect(root.first.second.third.some).to.be.an.instanceOf(Module);
+            expect(root).to.be.an.instanceOf(ReduxModule); // root is always a module
+            expect(root.first).to.not.be.an.instanceOf(ReduxModule);
+            expect(root.first.second).to.not.be.an.instanceOf(ReduxModule);
+            expect(root.first.second.third).to.not.be.an.instanceOf(ReduxModule);
+            expect(root.first.second.third.some).to.be.an.instanceOf(ReduxModule);
         });
 
         it("multiple modules created from the same creator instance are pointing to the same module instance", () => {
@@ -83,7 +83,7 @@ describe(nameof(Module), () => {
 
             // create module tree
             const store = new FakeStore();
-            const root: any = Module.create(store, new Root());
+            const root: any = ReduxModule.create(store, new Root());
 
             expect(root.link).to.equal(root.original);
             expect(root.original).to.equal(root.nested.link);
@@ -133,7 +133,7 @@ describe(nameof(Module), () => {
 
             // create module tree
             const store = new FakeStore();
-            const root: Root = (Module.create(store, new Root()) as any);
+            const root: Root = (ReduxModule.create(store, new Root()) as any);
 
             expect(root.circularComp.original).to.equal(root.originalComp, 'different modules');
             expect(root.circularObj.original).to.equal(root.originalObj, 'different objects');
@@ -169,7 +169,7 @@ describe(nameof(Module), () => {
             (store.dispatch as any) = () => { isConnected = true; };
 
             // create module tree
-            const root: any = Module.create(store, new Root());
+            const root: any = ReduxModule.create(store, new Root());
 
             // before dispatching
             expect(isConnected).to.be.false;
@@ -208,7 +208,7 @@ describe(nameof(Module), () => {
             (store.dispatch as any) = () => { isConnected = true; };
 
             // create module tree
-            const root: any = Module.create(store, new Root());
+            const root: any = ReduxModule.create(store, new Root());
 
             // assert
             root.first.second.third.some.dispatchMe();
@@ -238,7 +238,7 @@ describe(nameof(Module), () => {
                 }
             }
 
-            var root: Root = Module.create(new FakeStore(), new Root()) as any;
+            var root: Root = ReduxModule.create(new FakeStore(), new Root()) as any;
 
             expect(root.first.foo.toString).to.not.equal(root.second.foo);
         });
@@ -253,8 +253,8 @@ describe(nameof(Module), () => {
                 }
             }
 
-            var comp1: TheModule = Module.create(new FakeStore(), new TheModule()) as any;
-            var comp2: TheModule = Module.create(new FakeStore(), new TheModule()) as any;
+            var comp1: TheModule = ReduxModule.create(new FakeStore(), new TheModule()) as any;
+            var comp2: TheModule = ReduxModule.create(new FakeStore(), new TheModule()) as any;
 
             expect(comp1.foo).to.equal(comp2.foo);
         });
@@ -283,7 +283,7 @@ describe(nameof(Module), () => {
             (store.dispatch as any) = (actionObject: any) => { dispatchedAction = actionObject; };
 
             // create module tree
-            const comp: any = Module.create(store, new Derived());
+            const comp: any = ReduxModule.create(store, new Derived());
 
             // has methods
             expect(comp).to.have.property('foo');
@@ -312,7 +312,7 @@ describe(nameof(Module), () => {
             }
 
             const store = new FakeStore();
-            const comp = Module.create(store, new MyModule());
+            const comp = ReduxModule.create(store, new MyModule());
 
             expect(comp).to.haveOwnProperty('prop1');
             expect(comp).to.haveOwnProperty('prop2');
@@ -339,7 +339,7 @@ describe(nameof(Module), () => {
             }
 
             const store = new FakeStore();
-            const comp = Module.create(store, new Person());
+            const comp = ReduxModule.create(store, new Person());
             const info = ModuleInfo.getInfo(comp);
             const reducer = info.reducerCreator(() => { /* noop */ });
 
@@ -362,7 +362,7 @@ describe(nameof(Module), () => {
             }
 
             const store = new FakeStore();
-            const comp = Module.create(store, new Person());
+            const comp = ReduxModule.create(store, new Person());
             const info = ModuleInfo.getInfo(comp);
             const reducer = info.reducerCreator(() => { /* noop */ });
 

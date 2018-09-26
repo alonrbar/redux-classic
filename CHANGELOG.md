@@ -1,5 +1,7 @@
 # Change Log
 
+## NOTICE - THE PROJECT IS ABANDONED (2018-06-28)
+
 ## [Unreleased](https://github.com/alonrbar/redux-app/tree/develop)
 
 ### Added

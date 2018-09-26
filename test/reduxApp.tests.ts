@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { action, ReduxClassic, withId } from 'src';
-import { Module } from 'src/module';
+import { ReduxModule } from 'src/module';
 
 // tslint:disable:no-unused-expression
 
@@ -46,7 +46,7 @@ describe(nameof(ReduxClassic), () => {
             const app = ReduxClassic.create(new Root());
             try {
 
-                expect(app.root.first.second.third.some).to.be.an.instanceOf(Module);
+                expect(app.root.first.second.third.some).to.be.an.instanceOf(ReduxModule);
 
             } finally {
                 app.dispose();
@@ -94,12 +94,12 @@ describe(nameof(ReduxClassic), () => {
             const app = ReduxClassic.create(root, undefined, preLoadedState);
             try {
 
-                expect(app.root.first.second.theModule).to.be.an.instanceOf(Module);
+                expect(app.root.first.second.theModule).to.be.an.instanceOf(ReduxModule);
                 expect(app.root.first.second.theModule.value).to.eql('I am here!');
 
                 // verify state is updating
                 app.root.first.second.theModule.changeValue();
-                expect(app.root.first.second.theModule).to.be.an.instanceOf(Module);
+                expect(app.root.first.second.theModule).to.be.an.instanceOf(ReduxModule);
                 expect(app.root.first.second.theModule.value).to.eql('after');
 
             } finally {

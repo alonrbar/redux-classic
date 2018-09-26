@@ -1,53 +1,6 @@
 
 // tslint:disable:whitespace
 
-//
-// action options
-//
-
-export class ActionOptions {
-    /**
-     * Concatenate the module name and the action name.
-     * Format: <module name><separator><action name>
-     * Default value: true.
-     */
-    public actionNamespace? = true;
-    /**
-     * Default value: . (dot)
-     */
-    public actionNamespaceSeparator? = '.';
-    /**
-     * Use redux style action names. For instance, if a module defines a
-     * method called 'incrementCounter' the matching action name will be
-     * 'INCREMENT_COUNTER'.
-     * Default value: true.
-     */
-    public uppercaseActions? = false;
-}
-
-//
-// app options
-//
-
-export class AppOptions {
-    /**
-     * Name of the newly created app.     
-     */
-    public name?: string;
-    /**
-     * By default each module is assigned (with some optimizations) with it's
-     * relevant sub state on each store change. Set this to false to disable
-     * this updating process. The store's state will still be updated as usual
-     * and can always be retrieved using store.getState().
-     * Default value: true.
-     */
-    public updateState? = true;    
-}
-
-//
-// global options
-//
-
 export enum LogLevel {
     /**
      * Emit no logs
@@ -62,7 +15,7 @@ export enum LogLevel {
     Silent = 10
 }
 
-export class GlobalOptions {
+export class ReduxClassicOptions {
     /**
      * Default value: LogLevel.Warn
      */
@@ -70,7 +23,5 @@ export class GlobalOptions {
     /**
      * Customize actions naming.
      */
-    public action = new ActionOptions();
+    public actionNameResolver: (className: string, methodName: string) => string;
 }
-
-export const globalOptions = new GlobalOptions();

@@ -1,33 +1,11 @@
 {
   "name": "redux-classic",
-  "version": "0.0.1",
-  "description": "Type-safe, DRY and OO redux. Implemented with typescript.",
-  "keywords": [
-    "redux",
-    "typescript",
-    "class",
-    "classic",
-    "es6",
-    "dry",
-    "object oriented",
-    "encapsulation"
-  ],
+  "version": "0.0.2",
+  "description": "ABANDONED - USE REDUX-APP",  
   "author": "Alon Bar",
-  "license": "MIT",
-  "homepage": "https://github.com/alonrbar/redux-classic",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/alonrbar/redux-classic.git"
-  },
-  "bugs": {
-    "url": "https://github.com/alonrbar/redux-classic/issues"
-  },
+  "license": "MIT",  
   "main": "dist/redux-classic.js",
-  "typings": "dist/index.d.ts",
-  "files": [
-    "dist",
-    "src"
-  ],
+  "typings": "dist/index.d.ts",  
   "scripts": {
     "dev": "webpack --config webpack.config.dev.js --watch",
     "lint": "npm run lint-lint --silent",

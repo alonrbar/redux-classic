@@ -3,7 +3,7 @@ import { ModuleInfo, ModuleTemplateInfo } from '../info';
 import { ActionOptions, globalOptions } from '../options';
 import { IMap, Method } from '../types';
 import { getMethods } from '../utils';
-import { Module } from './module';
+import { ReduxModule } from './module';
 var snakecase = require('lodash.snakecase');
 
 // tslint:disable-next-line:interface-name
@@ -22,10 +22,10 @@ export class ModuleActions {
         const templateInfo = ModuleTemplateInfo.getInfo(template);
         const actions: any = {};
         Object.keys(methods).forEach(key => {
-            actions[key] = function (this: Module, ...payload: any[]): void {
+            actions[key] = function (this: ReduxModule, ...payload: any[]): void {
 
                 // verify 'this' arg
-                if (!(this instanceof Module))
+                if (!(this instanceof ReduxModule))
                     throw new Error(
                         `Module method invoked with non-module as 'this'. ` +
                         `Module: ${template.constructor.name}, ` + 

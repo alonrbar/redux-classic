@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { action, isInstanceOf } from 'src';
-import { Module } from 'src/module';
+import { ReduxModule } from 'src/module';
 import { FakeStore } from '../testTypes';
 
 // tslint:disable:no-unused-expression
@@ -31,7 +31,7 @@ describe('module utils', () => {
                 }
             }
 
-            const myModule = Module.create(new FakeStore(), new MyModule());
+            const myModule = ReduxModule.create(new FakeStore(), new MyModule());
 
             expect(isInstanceOf(myModule, MyModule)).to.be.true;
         });
@@ -73,8 +73,8 @@ describe('module utils', () => {
                 }
             }
 
-            const myModule = Module.create(new FakeStore(), new MyModule());
-            Module.create(new FakeStore(), new OtherModule());
+            const myModule = ReduxModule.create(new FakeStore(), new MyModule());
+            ReduxModule.create(new FakeStore(), new OtherModule());
 
             expect(isInstanceOf(myModule, OtherModule)).to.be.false;
         });
